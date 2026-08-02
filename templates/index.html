@@ -576,16 +576,19 @@ https://docs.google.com/forms/d/e/1FAIpQLSe4NB9S6OaQLNuQz5TPSezS8YcoUE_7P4KwYadP
                         <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px; font-size: 0.82rem; white-space: pre-line; border: 1px solid var(--border-color); max-height: 180px; overflow-y: auto;">
                             ${currentPayload.body}
                         </div>
+                        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.78rem; color: #94a3b8; line-height: 1.4;">
+                            💡 <strong>Attachment Guidance:</strong> Web browsers prevent external URLs from pre-attaching local files. Click <strong>🚀 Send Email Now</strong> to automatically attach & send the tailored PDF resume via Gmail SMTP.
+                        </div>
                         <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
                             <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: var(--accent-blue); color: var(--accent-blue);">
-                                📄 Download ATS Resume PDF
+                                📄 Download Tailored ATS Resume PDF
                             </a>
                             <div style="display: flex; gap: 0.5rem;">
-                                <a href="${payload.gmail_compose_url}" target="_blank" class="btn-sample" style="background: rgba(255,255,255,0.08); border-color: var(--border-color); color: #fff;">
-                                    📩 Open & Preview in Gmail
+                                <a href="${currentPayload.gmail_compose_url}" target="_blank" class="btn-sample" style="background: rgba(255,255,255,0.08); border-color: var(--border-color); color: #fff;">
+                                    📩 Open Draft in Web Gmail
                                 </a>
                                 <button id="btn-send-email" class="btn-sample" style="background: var(--accent-blue); color: #fff; font-weight: 600; padding: 0.5rem 1rem;" onclick="triggerSendEmail()">
-                                    🚀 Send Email Now
+                                    🚀 Send Email Now (With PDF Attached)
                                 </button>
                             </div>
                         </div>

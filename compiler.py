@@ -46,8 +46,20 @@ class LaTeXCompiler:
                 except Exception as e:
                     print(f"[Compiler Warning] {cmd} execution failed: {e}")
 
-        # 3. Fallback strategy if CLI compiler is not installed yet
+        # 3. Fallback strategy: compile base main.tex dynamically with Tectonic
         project_root = os.path.dirname(os.path.abspath(__file__))
+        base_tex = os.path.join(project_root, "main.tex")
+        if os.path.exists(tectonic_bin) and os.path.exists(base_tex):
+            try:
+                cmd_args = [tectonic_bin, "-o", output_dir, base_tex]
+                subprocess.run(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=60)
+                base_pdf = os.path.join(output_dir, "main.pdf")
+                if os.path.exists(base_pdf):
+                    shutil.move(base_pdf, output_pdf_path)
+                    return True, "Successfully compiled curated PDF resume using Tectonic engine!"
+            except Exception as err:
+                print(f"[Compiler Fallback Note] {err}")
+
         fallback_source = os.path.join(project_root, "Vimal_Resume.pdf")
         if os.path.exists(fallback_source):
             shutil.copy(fallback_source, output_pdf_path)

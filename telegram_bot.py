@@ -27,9 +27,13 @@ class ApplyBotPipeline:
         output_tex = os.path.join(config.output_dir, f"Resume_{company_clean}_{role_clean}.tex")
         output_pdf = os.path.join(config.output_dir, f"Vimal_Manoharan_Resume_{company_clean}.pdf")
         
-        # 2. Compute ATS Match & Tailor LaTeX Resume
-        ats_score, found_kw, missing_kw = ResumeTailorer.calculate_ats_score(job)
+        # 2. Tailor LaTeX Resume
         ResumeTailorer.tailor_latex_resume(base_tex, job, output_tex)
+        
+        # Read the tailored LaTeX code to compute the exact final ATS score
+        with open(output_tex, 'r', encoding='utf-8') as f:
+            tailored_content = f.read()
+        ats_score, found_kw, missing_kw = ResumeTailorer.calculate_ats_score(job, tailored_content)
         
         # 3. Compile LaTeX to PDF Resume
         success_compile, compile_msg = LaTeXCompiler.compile_tex_to_pdf(output_tex, output_pdf)

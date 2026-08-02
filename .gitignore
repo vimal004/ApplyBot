@@ -43,3 +43,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Local PDF files
+Vimal_Resume.pdf
