@@ -1,0 +1,131 @@
+%-------------------------
+% Resume in Latex
+% Base Candidate: Vimal Manoharan
+% Template based on: Jake Gutierrez / sb2nov resume format
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{iftex}
+\ifpdftex
+  \input{glyphtounicode}
+\fi
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\ifpdftex
+  \pdfgentounicode=1
+\fi
+
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Vimal Manoharan} \\ \vspace{1pt}
+    \small +91 76038 32537 $|$ \href{mailto:2004.vimal@gmail.com}{\underline{2004.vimal@gmail.com}} $|$ 
+    \href{https://linkedin.com/in/vimalmanoharan04}{\underline{linkedin.com/in/vimalmanoharan04}} $|$
+    \href{https://github.com/vimal004}{\underline{github.com/vimal004}}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {SRM Institute of Science and Technology}{Chennai, India}
+      {Bachelor of Technology in Computer Science Engineering (CGPA: 8.91/10.0)}{Sep. 2022 -- May 2026}
+  \resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Data Analyst Intern}{Jun. 2024 -- Aug. 2024}
+      {FLIP}{Remote, India}
+      \resumeItemListStart
+        \resumeItem{Utilized SQL to query and analyze large datasets, optimizing data extraction and visualization for actionable insights.}
+        \resumeItem{Developed and maintained data visualizations using Tableau, ensuring clear and concise communication of complex data trends to stakeholders.}
+        \resumeItem{Collaborated with cross-functional teams to design and implement data-driven solutions, leveraging Python (Pandas, NumPy) and R for data analysis and modeling.}
+        \resumeItem{Applied statistical concepts and data visualization techniques to identify patterns and trends in data, informing business decisions and driving growth.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {React Native Frontend Developer Intern}{Sep. 2025 -- Mar. 2026}
+      {Aakar Labs}{Chennai, India}
+      \resumeItemListStart
+        \resumeItem{Collaborated within an Agile, product-focused team environment to design and pair-program iterative mobile interfaces for Aaku, an AI-powered travel companion utilizing React Native and Expo.}
+        \resumeItem{Partnered closely with backend AI engineers to assist in the development and validation of an AI agent trip planning feature, ensuring dynamic frontend rendering of multi-agent execution workflows.}
+        \resumeItem{Applied structured Object-Oriented patterns to engineer reusable UI components and state-driven flows across planning, trip progression, and contextual journey interaction modules.}
+        \resumeItem{Integrated REST APIs and optimized frontend rendering performance, lowering end-user latency to support seamless, real-time client itinerary updates.}
+        \resumeItem{Engaged in regular cross-functional feedback sessions with backend engineers and product designers to iteratively improve multi-step planning architectures and UX consistency.}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Software Developer Intern}{Aug. 2025 -- Oct. 2025}
+      {KSK Electronics Pvt. Ltd.}{Chennai, India}
+      \resumeItemListStart
+        \resumeItem{Developed and refactored a full-stack ERP platform using React, Node.js, and MongoDB, migrating business-critical financial records from Zoho SaaS through clean, maintainable code architectures.}
+        \resumeItem{Architected and deployed a corporate RAG (Retrieval-Augmented Generation) SOP framework using LangChain and Chroma DB, allowing employees to instantly retrieve exact policy explanations and FAQ answers.}
+        \resumeItem{Implemented Object-Oriented design and role-based access control (RBAC), optimizing backend database queries to reduce stock retrieval latency.}
+        \resumeItem{Established Continuous Integration (CI) concepts by containerizing services with Docker and deploying onto AWS EC2 with Nginx, significantly advancing delivery reliability and platform uptime.

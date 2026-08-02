@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApplyBot - Telegram Referral Auto-Applier & ATS Resume Tailorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1c2742;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 1.35rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 30%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .candidate-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.9rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-emerald);
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s ease;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .sample-btns {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sample {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-sample:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: #fff;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .job-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .info-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 0.9rem;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ats-meter {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .ats-score-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-emerald) var(--score-pct, 85%), rgba(255, 255, 255, 0.1) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .ats-score-circle::after {
+            content: '';
+            position: absolute;
+            width: 46px;
+            height: 46px;
+            background: var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .ats-score-text {
+            position: relative;
+            z-index: 2;
+            color: var(--text-primary);
+        }
+
+        .action-box {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(10, 185, 129, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .action-box.email-mode {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .profile-table {
+            width: 100%;
+            font-size: 0.8rem;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        .profile-table td {
+            padding: 0.35rem 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .profile-table td:first-child {
+            color: var(--text-muted);
+            font-weight: 500;
+            width: 35%;
+        }
+
+        .profile-table td:last-child {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚡</div>
+            <div class="brand-title">ApplyBot</div>
+        </div>
+        <div class="candidate-badge">
+            <div class="status-dot"></div>
+            <span>Vimal Manoharan (2026 Batch)</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Column: Telegram Ingest -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>📩 Telegram Referral Ingestion</span>
+                </div>
+                <div class="mode-selector">
+                    <button class="mode-btn active" id="btn-mode-manual" onclick="setMode('MANUAL_REVIEW')">Manual Review</button>
+                    <button class="mode-btn" id="btn-mode-superfast" onclick="setMode('SUPERFAST_AUTO')">⚡ Superfast Auto</button>
+                </div>
+            </div>
+
+            <textarea id="telegram-input" placeholder="Paste message from Telegram referral group (e.g. SDE Premium Referrals 2.0)..."></textarea>
+
+            <div class="sample-btns">
+                <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Try Samples:</span>
+                <button class="btn-sample" onclick="loadSample(1)">Sample 1: Resilience AI (HR Email)</button>
+                <button class="btn-sample" onclick="loadSample(2)">Sample 2: Open Futures (HR Email)</button>
+                <button class="btn-sample" onclick="loadSample(3)">Sample 3: UnifyApps (Google Form)</button>
+            </div>
+
+            <button class="btn-primary" onclick="processPost()">
+                <span id="btn-text">Run ApplyBot Pipeline</span>
+            </button>
+        </div>
+
+        <!-- Right Column: Results & Actions -->
+        <div class="card" id="output-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>📊 Application & Resume Optimization Report</span>
+                </div>
+                <div id="eligibility-badge"></div>
+            </div>
+
+            <div id="output-content">
+                <div class="empty-state">
+                    Paste a Telegram post on the left and click <b>Run ApplyBot Pipeline</b> to generate tailored ATS resumes, HR emails, and auto-fill scripts.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'MANUAL_REVIEW';
+        let currentPayload = null;
+
+        const sample1 = `🚨 Referral Alert 🚨Company - Resilience AIRole - AI/ML InternBatch - 2025/2026/2027Stipend - ₹30,000/monthLocation - Remote (India)How to Apply:Email: builders@resilience360.aiSubject: AIML Intern-<Full Name> - <Project No> - <Your Fav Animal>`;
+
+        const sample2 = `🚨 Referral Alert 🚨
+Company - Open Futures Group
+Role - Quantitative Researcher
+Batch - 2023, 2024, and 2025
+CTC - 40-70 LPA
+Location - Gurgaon
+How to Apply:
+hiring@openfutures.co.in`;
+
+        const sample3 = `🚨 Referral Alert 🚨
+Company - UnifyApps
+Role - Full-Stack Development Software Engineer (FDSE)
+Batch - 2024/2025
+CTC - 20-35 LPA
+Location - Gurgaon
+How to Apply:
+https://docs.google.com/forms/d/e/1FAIpQLSe4NB9S6OaQLNuQz5TPSezS8YcoUE_7P4KwYadPZ9S0zljgOA/viewform`;
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-mode-manual').classList.toggle('active', mode === 'MANUAL_REVIEW');
+            document.getElementById('btn-mode-superfast').classList.toggle('active', mode === 'SUPERFAST_AUTO');
+        }
+
+        function loadSample(num) {
+            if (num === 1) document.getElementById('telegram-input').value = sample1;
+            if (num === 2) document.getElementById('telegram-input').value = sample2;
+            if (num === 3) document.getElementById('telegram-input').value = sample3;
+        }
+
+        async function processPost() {
+            const rawText = document.getElementById('telegram-input').value.trim();
+            if (!rawText) {
+                alert('Please paste a Telegram referral message.');
+                return;
+            }
+
+            const btnText = document.getElementById('btn-text');
+            btnText.innerHTML = '<div class="spinner"></div> Running Groq LLM & ATS Engine...';
+
+            try {
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        raw_text: rawText,
+                        superfast_mode: currentMode === 'SUPERFAST_AUTO'
+                    })
+                });
+
+                const data = await response.json();
+                renderReport(data);
+            } catch (err) {
+                alert('Error processing request: ' + err);
+            } finally {
+                btnText.innerText = 'Run ApplyBot Pipeline';
+            }
+        }
+
+        async function triggerSendEmail() {
+            if (!currentPayload) return;
+            const btn = document.getElementById('btn-send-email');
+            btn.innerHTML = '<div class="spinner"></div> Sending Email...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/send_email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentPayload)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('✅ SUCCESS: ' + result.message);
+                    btn.innerHTML = '✅ Email Sent!';
+                    btn.style.background = 'var(--accent-emerald)';
+                } else {
+                    alert('❌ FAILED: ' + result.message);
+                    btn.innerHTML = 'Send Email Now';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('Error sending email: ' + err);
+                btn.innerHTML = 'Send Email Now';
+                btn.disabled = false;
+            }
+        }
+
+        async function triggerAutoFill() {
+            if (!currentPayload) return;
+            const btn = document.getElementById('btn-autofill');
+            btn.innerHTML = '<div class="spinner"></div> Inspecting DOM & Launching Playwright...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/autofill_form', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentPayload)
+                });
+
+                const result = await response.json();
+                alert('⚡ ' + result.message);
+                btn.innerHTML = '⚡ Form Auto-Filled (Browser Opened)';
+                btn.style.background = 'var(--accent-emerald)';
+            } catch (err) {
+                alert('Error launching auto-filler: ' + err);
+                btn.innerHTML = '⚡ Launch Playwright & Auto-Fill Form';
+                btn.disabled = false;
+            }
+        }
+
+        function renderReport(data) {
+            const container = document.getElementById('output-content');
+
+            if (data.error) {
+                document.getElementById('eligibility-badge').innerHTML = '';
+                container.innerHTML = `
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; padding: 1.25rem; color: #f8fafc;">
+                        <strong style="color: #ef4444; font-size: 1rem;">⚠️ Unable to Process Telegram Message</strong>
+                        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #94a3b8;">${data.error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const job = data.job;
+            const action = data.action_result;
+            const pdfFilename = data.pdf_path.split('/').pop();
+            const pdfDownloadUrl = `/outputs/${pdfFilename}`;
+
+            const isEligible = job.is_eligible;
+            const badgeHtml = isEligible 
+                ? `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 4px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 700;">✅ ELIGIBLE (${job.batch})</span>`
+                : `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; border-radius: 99px; font-size: 0.78rem; font-weight: 700;">⚠️ BATCH CHECK (${job.batch})</span>`;
+
+            document.getElementById('eligibility-badge').innerHTML = badgeHtml;
+
+            let actionContentHtml = '';
+
+            if (action.type === 'EMAIL') {
+                currentPayload = action.payload;
+                actionContentHtml = `
+                    <div class="action-box email-mode">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: var(--accent-blue); font-size: 0.95rem;">📧 HR Cold Email (From: 2004.vimal@gmail.com)</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">To: ${currentPayload.to_email}</span>
+                        </div>
+                        <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Subject: ${currentPayload.subject}</div>
+                        <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 8px; font-size: 0.82rem; white-space: pre-line; border: 1px solid var(--border-color); max-height: 180px; overflow-y: auto;">
+                            ${currentPayload.body}
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: var(--accent-blue); color: var(--accent-blue);">
+                                📄 Download ATS Resume PDF
+                            </a>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="${payload.gmail_compose_url}" target="_blank" class="btn-sample" style="background: rgba(255,255,255,0.08); border-color: var(--border-color); color: #fff;">
+                                    📩 Open & Preview in Gmail
+                                </a>
+                                <button id="btn-send-email" class="btn-sample" style="background: var(--accent-blue); color: #fff; font-weight: 600; padding: 0.5rem 1rem;" onclick="triggerSendEmail()">
+                                    🚀 Send Email Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                currentPayload = action.payload;
+                const p = currentPayload.profile;
+
+                actionContentHtml = `
+                    <div class="action-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: var(--accent-emerald); font-size: 0.95rem;">🌐 Web Portal Form Auto-Fill Mapping</strong>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${currentPayload.apply_url}</span>
+                        </div>
+                        
+                        <table class="profile-table">
+                            <tr><td>Full Name:</td><td>${p.full_name}</td></tr>
+                            <tr><td>Email Address:</td><td>${p.email}</td></tr>
+                            <tr><td>Phone Number:</td><td>${p.phone}</td></tr>
+                            <tr><td>University / CGPA:</td><td>${p.university} (${p.cgpa})</td></tr>
+                            <tr><td>Graduation Year:</td><td>${p.graduation_year}</td></tr>
+                            <tr><td>LinkedIn / GitHub:</td><td>${p.linkedin}</td></tr>
+                        </table>
+
+                        <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">
+                                📄 Download ATS Resume PDF
+                            </a>
+                            <button id="btn-autofill" class="btn-sample" style="background: var(--accent-emerald); color: #fff; font-weight: 600; padding: 0.5rem 1rem;" onclick="triggerAutoFill()">
+                                ⚡ Launch Playwright & Auto-Fill Form
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="job-details-grid">
+                    <div class="info-pill">
+                        <div class="info-label">Company</div>
+                        <div class="info-value">${job.company}</div>
+                    </div>
+                    <div class="info-pill">
+                        <div class="info-label">Role</div>
+                        <div class="info-value">${job.role}</div>
+                    </div>
+                    <div class="info-pill">
+                        <div class="info-label">Salary / Stipend</div>
+                        <div class="info-value">${job.salary}</div>
+                    </div>
+                    <div class="info-pill">
+                        <div class="info-label">Location</div>
+                        <div class="info-value">${job.location}</div>
+                    </div>
+                </div>
+
+                <div class="ats-meter" style="--score-pct: ${data.ats_score}%">
+                    <div class="ats-score-circle">
+                        <span class="ats-score-text">${data.ats_score}%</span>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">ATS Resume Optimization Score</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                            Optimized bullet points for target keywords: <span style="color: var(--accent-emerald);">${data.found_keywords.join(', ')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${actionContentHtml}
+            `;
+        }
+    </script>
+</body>
+</html>
