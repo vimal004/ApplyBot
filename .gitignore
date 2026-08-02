@@ -1,0 +1,45 @@
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Python virtual environment & cache
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Browser Profiles & Session Cookies
+browser_profile/
+ms-playwright/
+
+# Generated Outputs & LaTeX temporary files
+outputs/*.pdf
+outputs/*.tex
+outputs/*.aux
+outputs/*.log
+outputs/*.out
+outputs/*.toc
+outputs/*.fls
+outputs/*.fdb_latexmk
+outputs/*.synctex.gz
+*.log
+*.aux
+*.out
+*.toc
+
+# OS & IDE generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
