@@ -13,6 +13,16 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         print(f"[ApplyBot HTTP] {self.address_string()} - {args[0]}")
 
+    def send_cors_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_cors_headers()
+        self.end_headers()
+
     def do_GET(self):
         parsed_path = urllib.parse.urlparse(self.path)
         path = parsed_path.path
@@ -25,11 +35,40 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(content)
             else:
                 self.send_error(404, "Template File Not Found")
                 
+        elif path == "/api/profile":
+            profile_dict = {
+                "full_name": config.profile.full_name,
+                "first_name": config.profile.first_name,
+                "last_name": config.profile.last_name,
+                "email": config.profile.email,
+                "phone": config.profile.phone,
+                "university": config.profile.university,
+                "degree": config.profile.degree,
+                "gpa": config.profile.gpa,
+                "graduation_year": str(config.profile.graduation_year),
+                "linkedin": config.profile.linkedin_url,
+                "github": config.profile.github_url,
+                "portfolio": config.profile.portfolio_url,
+                "resume_gdrive_url": config.profile.resume_gdrive_url,
+                "location": config.profile.location,
+                "experience_years": config.profile.experience_years,
+                "notice_period": config.profile.notice_period,
+                "expected_salary": config.profile.expected_salary
+            }
+            res_payload = json.dumps(profile_dict).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+            
         elif path.startswith("/outputs/"):
             file_name = os.path.basename(path)
             file_path = os.path.join(config.output_dir, file_name)
@@ -43,6 +82,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 else:
                     self.send_header("Content-Type", "text/plain; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(content)
             else:
@@ -69,6 +109,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(response_json)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(response_json)
             except Exception as e:
@@ -76,6 +117,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(err_msg)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(err_msg)
 
@@ -91,6 +133,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(res_payload)
             except Exception as e:
@@ -98,6 +141,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(err_msg)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(err_msg)
         elif path == "/api/answer_question":
@@ -117,6 +161,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(res_payload)
             except Exception as e:
@@ -124,6 +169,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(err_msg)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(err_msg)
         elif path == "/api/autofill_form":
@@ -139,6 +185,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(res_payload)
             except Exception as e:
@@ -146,6 +193,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(err_msg)))
+                self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(err_msg)
         else:

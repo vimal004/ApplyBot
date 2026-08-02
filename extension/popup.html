@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApplyBot Extension</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      width: 360px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 13px;
+      padding: 14px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #f8fafc;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-offline {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .badge-online .dot { background: #34d399; box-shadow: 0 0 6px #34d399; }
+    .badge-offline .dot { background: #fb7185; }
+
+    /* Primary Action Button */
+    .btn-main {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+    }
+
+    .btn-main:active {
+      transform: translateY(1px);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: #1e293b;
+      padding: 3px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 6px 4px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: #0f172a;
+      color: #38bdf8;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Form & Fields */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 8px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 7px 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #3b82f6;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 8px 12px;
+      background: #334155;
+      color: #f8fafc;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    .status-box {
+      font-size: 11px;
+      color: #94a3b8;
+      background: #0f172a;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 50px;
+    }
+
+    .ai-result {
+      margin-top: 10px;
+      padding: 8px;
+      background: #0f172a;
+      border: 1px dashed #3b82f6;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #e2e8f0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-title">ApplyBot</div>
+    </div>
+    <div id="backend-status" class="badge badge-offline">
+      <span class="dot"></span>
+      <span id="backend-status-text">Checking...</span>
+    </div>
+  </div>
+
+  <!-- Main Auto-Fill CTA -->
+  <button id="btn-fill-now" class="btn-main">
+    <span>⚡</span> 1-Tap Auto-Fill Form
+  </button>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-quick">⚡ Dashboard</button>
+    <button class="tab-btn" data-tab="tab-profile">👤 Profile</button>
+    <button class="tab-btn" data-tab="tab-ai">🤖 AI Answers</button>
+  </div>
+
+  <!-- Tab 1: Quick Dashboard -->
+  <div id="tab-quick" class="tab-content active">
+    <div class="card">
+      <div class="toggle-row">
+        <span class="toggle-label">Floating 1-Tap Widget</span>
+        <input type="checkbox" id="chk-floating-widget" checked>
+      </div>
+    </div>
+
+    <div class="card">
+      <button id="btn-sync-backend" class="btn-secondary">
+        🔄 Sync Profile from Local Backend
+      </button>
+      <div id="quick-status" class="status-box">Ready to fill forms on this page.</div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Profile Editor -->
+  <div id="tab-profile" class="tab-content">
+    <div class="card" style="max-height: 280px; overflow-y: auto;">
+      <div class="row">
+        <div class="col form-group">
+          <label>First Name</label>
+          <input type="text" id="prof-first-name" class="form-control">
+        </div>
+        <div class="col form-group">
+          <label>Last Name</label>
+          <input type="text" id="prof-last-name" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="prof-full-name" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="prof-email" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="prof-phone" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>University</label>
+        <input type="text" id="prof-university" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Degree</label>
+        <input type="text" id="prof-degree" class="form-control">
+      </div>
+      <div class="row">
+        <div class="col form-group">
+          <label>CGPA</label>
+          <input type="text" id="prof-gpa" class="form-control">
+        </div>
+        <div class="col form-group">
+          <label>Grad Year</label>
+          <input type="text" id="prof-grad-year" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>LinkedIn URL</label>
+        <input type="text" id="prof-linkedin" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>GitHub URL</label>
+        <input type="text" id="prof-github" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Resume Drive URL</label>
+        <input type="text" id="prof-resume-url" class="form-control">
+      </div>
+    </div>
+    <button id="btn-save-profile" class="btn-secondary" style="background: #10b981; color: white;">
+      💾 Save Profile
+    </button>
+  </div>
+
+  <!-- Tab 3: AI Answers -->
+  <div id="tab-ai" class="tab-content">
+    <div class="card">
+      <div class="form-group">
+        <label>Job Question / Prompt</label>
+        <textarea id="ai-question-input" class="form-control" placeholder="e.g. Why are you interested in this position?"></textarea>
+      </div>
+      <button id="btn-ask-ai" class="btn-secondary" style="background: #3b82f6;">
+        ✨ Generate AI Answer
+      </button>
+      <div id="ai-result" class="ai-result">
+        <div id="ai-answer-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

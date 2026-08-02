@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "ApplyBot - 1-Tap Form Auto-Filler",
+  "version": "1.0.0",
+  "description": "Instant 1-tap auto-filler for job application forms, portals, and multi-step registration pages.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "http://localhost:5050/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ApplyBot Auto-Filler"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
