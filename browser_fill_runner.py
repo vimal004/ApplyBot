@@ -93,7 +93,13 @@ with sync_playwright() as p:
                     except Exception:
                         pass
                         
-                val_curr = el.input_value() if el.tag_name.lower() == "input" else ""
+                val_curr = ""
+                try:
+                    tag_name = el.evaluate("el => el.tagName").lower()
+                    if tag_name == "input":
+                        val_curr = el.input_value()
+                except Exception:
+                    pass
                 if not val_curr:
                     if "email" in label:
                         el.fill(profile["email"])

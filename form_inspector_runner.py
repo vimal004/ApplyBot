@@ -20,7 +20,7 @@ with sync_playwright() as p:
         fields = []
         elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
         for idx, el in enumerate(elements):
-            t = el.get_attribute("type") or el.tag_name
+            t = el.get_attribute("type") or el.evaluate("el => el.tagName")
             name = el.get_attribute("name") or ""
             label = el.get_attribute("aria-label") or el.get_attribute("placeholder") or el.get_attribute("id") or ""
             
