@@ -1,10 +1,10 @@
-/* ApplyBot Content Script - Smart Form Auto-Filler Engine */
+/* ApplyBot Content Script v1.1 - Smart Form Auto-Filler + Page Context Engine */
 
 (function () {
   if (window.__ApplyBotLoaded) return;
   window.__ApplyBotLoaded = true;
 
-  // Default candidate profile (can be overridden by chrome.storage or backend API)
+  // Default candidate profile (Vimal Manoharan - personalised)
   const defaultProfile = {
     full_name: "Vimal Manoharan",
     first_name: "Vimal",
@@ -25,7 +25,77 @@
     expected_salary: "As per industry standards"
   };
 
-  // Helper to retrieve current stored profile or default
+  // Helper to get full page text context (first N chars)
+  function getPageContext(maxChars) {
+    maxChars = maxChars || 4000;
+    // Scrape visible body text, stripping scripts/styles
+    let text = "";
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          const p = node.parentElement;
+          if (!p) return NodeFilter.FILTER_REJECT;
+          const tag = p.tagName && p.tagName.toLowerCase();
+          if (tag === 'script' || tag === 'style' || tag === 'noscript') return NodeFilter.FILTER_REJECT;
+          const cs = window.getComputedStyle(p);
+          if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+    let node;
+    while ((node = walker.nextNode()) && text.length < maxChars) {
+      const t = node.textContent.trim();
+      if (t.length > 2) text += t + " ";
+    }
+    return text.trim().substring(0, maxChars);
+  }
+
+  // Detect company name from page
+  function detectCompany() {
+    // Try og:site_name, og:title, twitter:site meta tags
+    const og = document.querySelector('meta[property="og:site_name"]');
+    if (og && og.content) return og.content;
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle && ogTitle.content) return ogTitle.content.split('|').pop().trim();
+    // Try known selectors for ATS portals
+    const selectors = [
+      '[class*="company"]',
+      '[class*="employer"]',
+      '[class*="org-name"]',
+      'h1',
+    ];
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el && el.innerText && el.innerText.trim().length < 80) return el.innerText.trim();
+    }
+    return window.location.hostname.replace('www.', '').split('.')[0];
+  }
+
+  // Detect job title from page
+  function detectJobTitle() {
+    const metas = [
+      document.querySelector('meta[name="title"]'),
+      document.querySelector('meta[property="og:title"]'),
+    ];
+    for (const m of metas) {
+      if (m && m.content && m.content.length < 120) return m.content.split('|')[0].trim();
+    }
+    const h1 = document.querySelector('h1');
+    if (h1 && h1.innerText.trim()) return h1.innerText.trim();
+    return document.title ? document.title.split('|')[0].trim() : "";
+  }
+
+  // Count fillable form fields
+  function countFormFields() {
+    return document.querySelectorAll(
+      'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="file"]), textarea, select'
+    ).length;
+  }
+
+  // Helper to retrieve stored profile or default
   function getProfile(callback) {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(['profile'], function (result) {
@@ -40,12 +110,24 @@
     }
   }
 
+  // Get stored JD text
+  function getStoredJD(callback) {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['jd_text'], function (result) {
+        callback(result && result.jd_text ? result.jd_text : "");
+      });
+    } else {
+      callback("");
+    }
+  }
+
   // Safely set input value and dispatch reactivity events (React/Vue/Angular compliant)
   function setNativeValue(element, value) {
     if (!element || value === undefined || value === null) return;
 
     try {
-      const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set ||
+      const valueSetter =
+        Object.getOwnPropertyDescriptor(element, 'value')?.set ||
         Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value')?.set;
 
       if (valueSetter) {
@@ -62,11 +144,10 @@
     element.dispatchEvent(new Event('blur', { bubbles: true }));
   }
 
-  // Helper to extract text describing an element
+  // Helper to extract descriptive text for a form element
   function getElementLabel(el) {
     let labels = [];
 
-    // 1. Explicit <label for="..."> or wrapping <label>
     if (el.id) {
       const lbl = document.querySelector(`label[for="${el.id}"]`);
       if (lbl) labels.push(lbl.innerText);
@@ -74,14 +155,12 @@
     const closestLbl = el.closest('label');
     if (closestLbl) labels.push(closestLbl.innerText);
 
-    // 2. Attributes
     if (el.getAttribute('aria-label')) labels.push(el.getAttribute('aria-label'));
     if (el.placeholder) labels.push(el.placeholder);
     if (el.name) labels.push(el.name);
     if (el.id) labels.push(el.id);
     if (el.getAttribute('autocomplete')) labels.push(el.getAttribute('autocomplete'));
 
-    // 3. Preceding sibling text or parent container text snippet
     const parent = el.parentElement;
     if (parent) {
       const parentText = parent.innerText || '';
@@ -97,10 +176,11 @@
       const data = customProfile || profile;
       let filledCount = 0;
 
-      const elements = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select');
+      const elements = document.querySelectorAll(
+        'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select'
+      );
 
       elements.forEach(el => {
-        // Skip disabled or hidden inputs
         if (el.disabled || el.type === 'file' || el.style.display === 'none' || el.style.visibility === 'hidden') {
           return;
         }
@@ -112,88 +192,71 @@
 
         // Email
         if (!filled && (type === 'email' || descriptor.includes('email') || descriptor.includes('e-mail'))) {
-          setNativeValue(el, data.email);
-          filled = true;
+          setNativeValue(el, data.email); filled = true;
         }
         // Phone
         else if (!filled && (type === 'tel' || descriptor.includes('phone') || descriptor.includes('mobile') || descriptor.includes('contact') || descriptor.includes('cell'))) {
-          setNativeValue(el, data.phone);
-          filled = true;
+          setNativeValue(el, data.phone); filled = true;
         }
         // First Name
         else if (!filled && (descriptor.includes('first name') || descriptor.includes('given name') || descriptor.includes('fname'))) {
-          setNativeValue(el, data.first_name);
-          filled = true;
+          setNativeValue(el, data.first_name); filled = true;
         }
         // Last Name
         else if (!filled && (descriptor.includes('last name') || descriptor.includes('surname') || descriptor.includes('family name') || descriptor.includes('lname'))) {
-          setNativeValue(el, data.last_name);
-          filled = true;
+          setNativeValue(el, data.last_name); filled = true;
         }
         // Full Name
         else if (!filled && (descriptor.includes('full name') || (descriptor.includes('name') && !descriptor.includes('company') && !descriptor.includes('user') && !descriptor.includes('file')))) {
-          setNativeValue(el, data.full_name);
-          filled = true;
+          setNativeValue(el, data.full_name); filled = true;
         }
         // LinkedIn
         else if (!filled && descriptor.includes('linkedin')) {
-          setNativeValue(el, data.linkedin);
-          filled = true;
+          setNativeValue(el, data.linkedin); filled = true;
         }
         // GitHub
         else if (!filled && descriptor.includes('github')) {
-          setNativeValue(el, data.github);
-          filled = true;
+          setNativeValue(el, data.github); filled = true;
         }
-        // Portfolio / Website / Link
+        // Portfolio / Website
         else if (!filled && (descriptor.includes('portfolio') || descriptor.includes('website') || descriptor.includes('personal site'))) {
-          setNativeValue(el, data.portfolio || data.github);
-          filled = true;
+          setNativeValue(el, data.portfolio || data.github); filled = true;
         }
         // College / University
         else if (!filled && (descriptor.includes('college') || descriptor.includes('university') || descriptor.includes('institute') || descriptor.includes('school'))) {
-          setNativeValue(el, data.university);
-          filled = true;
+          setNativeValue(el, data.university); filled = true;
         }
         // Degree / Branch
         else if (!filled && (descriptor.includes('degree') || descriptor.includes('branch') || descriptor.includes('major') || descriptor.includes('field of study'))) {
-          setNativeValue(el, data.degree);
-          filled = true;
+          setNativeValue(el, data.degree); filled = true;
         }
         // GPA / CGPA / Marks
         else if (!filled && (descriptor.includes('cgpa') || descriptor.includes('gpa') || descriptor.includes('percentage') || descriptor.includes('marks'))) {
-          setNativeValue(el, data.gpa);
-          filled = true;
+          setNativeValue(el, data.gpa); filled = true;
         }
-        // Graduation Year / Passing Year / Batch
+        // Graduation Year
         else if (!filled && (descriptor.includes('graduat') || descriptor.includes('passing year') || descriptor.includes('grad year') || descriptor.includes('batch'))) {
-          setNativeValue(el, data.graduation_year);
-          filled = true;
+          setNativeValue(el, data.graduation_year); filled = true;
         }
         // Resume Drive Link
         else if (!filled && (descriptor.includes('resume link') || descriptor.includes('cv link') || descriptor.includes('drive link') || descriptor.includes('gdrive'))) {
-          setNativeValue(el, data.resume_gdrive_url);
-          filled = true;
+          setNativeValue(el, data.resume_gdrive_url); filled = true;
         }
-        // Location / City / Address
+        // Location / City
         else if (!filled && (descriptor.includes('location') || descriptor.includes('city') || descriptor.includes('address'))) {
-          setNativeValue(el, data.location);
-          filled = true;
+          setNativeValue(el, data.location); filled = true;
         }
         // Experience Years
         else if (!filled && (descriptor.includes('years of experience') || descriptor.includes('total experience') || descriptor.includes('work experience'))) {
-          setNativeValue(el, data.experience_years);
-          filled = true;
+          setNativeValue(el, data.experience_years); filled = true;
         }
-        // Notice Period / Availability
+        // Notice Period
         else if (!filled && (descriptor.includes('notice period') || descriptor.includes('availability') || descriptor.includes('how soon'))) {
-          setNativeValue(el, data.notice_period);
-          filled = true;
+          setNativeValue(el, data.notice_period); filled = true;
         }
         // Expected Salary
         else if (!filled && (descriptor.includes('salary') || descriptor.includes('ctc') || descriptor.includes('expected compensation'))) {
-          setNativeValue(el, data.expected_salary);
-          filled = true;
+          setNativeValue(el, data.expected_salary); filled = true;
         }
 
         // Handle SELECT Dropdowns
@@ -205,7 +268,7 @@
         if (filled) filledCount++;
       });
 
-      showToast(`⚡ ApplyBot: Populated ${filledCount} field${filledCount === 1 ? '' : 's'} on this page!`);
+      showToast(`⚡ Filled ${filledCount} field${filledCount === 1 ? '' : 's'} on this page!`);
     });
   }
 
@@ -219,7 +282,7 @@
     if (descriptor.includes('gender')) {
       targetIdx = options.findIndex(o => o.text.toLowerCase().includes('male') && !o.text.toLowerCase().includes('female'));
     } else if (descriptor.includes('disability')) {
-      targetIdx = options.findIndex(o => o.text.toLowerCase().includes('no') || o.text.toLowerCase().includes('don\'t have') || o.text.toLowerCase().includes('do not have'));
+      targetIdx = options.findIndex(o => o.text.toLowerCase().includes('no') || o.text.toLowerCase().includes("don't have") || o.text.toLowerCase().includes('do not have'));
     } else if (descriptor.includes('veteran')) {
       targetIdx = options.findIndex(o => o.text.toLowerCase().includes('not a veteran') || o.text.toLowerCase().includes('no') || o.text.toLowerCase().includes('am not'));
     } else if (descriptor.includes('authorize') || descriptor.includes('sponsorship') || descriptor.includes('legally')) {
@@ -244,20 +307,16 @@
     toast.innerHTML = `<span>⚡</span><span>${msg}</span>`;
     document.body.appendChild(toast);
 
-    setTimeout(() => {
-      if (toast) toast.remove();
-    }, 4000);
+    setTimeout(() => { if (toast) toast.remove(); }, 4000);
   }
 
   // Floating Action Button Injection
   function injectFloatingWidget() {
     if (document.getElementById('applybot-floating-widget')) return;
 
-    // Only inject if inputs exist on page
     const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
     if (inputs.length < 2) return;
 
-    // Check setting for floating button
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(['showFloatingButton'], function (res) {
         if (res.showFloatingButton === false) return;
@@ -293,12 +352,39 @@
   // Message listener from extension popup or background worker
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
       if (request.action === 'FILL_FORM') {
         autoFillForm(request.profile);
         sendResponse({ status: 'SUCCESS' });
-      } else if (request.action === 'PING') {
-        sendResponse({ status: 'PONG', inputsFound: document.querySelectorAll('input:not([type="hidden"]), textarea, select').length });
       }
+
+      else if (request.action === 'PING') {
+        const fieldCount = countFormFields();
+        const pageContext = getPageContext(4000);
+        const company = detectCompany();
+        const jobTitle = detectJobTitle();
+        sendResponse({
+          status: 'PONG',
+          inputsFound: fieldCount,
+          pageTitle: document.title,
+          pageUrl: window.location.href,
+          company: company,
+          jobTitle: jobTitle,
+          bodyText: pageContext
+        });
+      }
+
+      else if (request.action === 'GET_PAGE_CONTEXT') {
+        sendResponse({
+          pageTitle: document.title,
+          pageUrl: window.location.href,
+          company: detectCompany(),
+          jobTitle: detectJobTitle(),
+          bodyText: getPageContext(4000),
+          inputsFound: countFormFields()
+        });
+      }
+
       return true;
     });
   }

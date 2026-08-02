@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "ApplyBot - 1-Tap Form Auto-Filler",
-  "version": "1.0.0",
-  "description": "Instant 1-tap auto-filler for job application forms, portals, and multi-step registration pages.",
+  "name": "ApplyBot — AI Job Application Assistant",
+  "version": "1.1.0",
+  "description": "Vimal's personalised 1-tap auto-filler for job forms. Features: page context scraping, JD-aware AI answers, cold email sender, and smart profile autofill.",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "http://*/*",
@@ -16,7 +17,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ApplyBot Auto-Filler"
+    "default_title": "ApplyBot — AI Auto-Filler"
   },
   "background": {
     "service_worker": "background.js"

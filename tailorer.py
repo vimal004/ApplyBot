@@ -224,14 +224,39 @@ class ResumeTailorer:
         return cleaned
 
     @staticmethod
-    def answer_custom_question(question: str, company: str, role: str) -> str:
+    def answer_custom_question(question: str, company: str, role: str,
+                               jd_text: str = "", page_context: str = "") -> str:
+        """
+        Generate a personalised, human-sounding answer to a job application question.
+        Optionally uses the Job Description (jd_text) and page context (page_context)
+        for ultra-tailored responses.
+        """
+        context_blocks = []
+        if jd_text:
+            context_blocks.append(f"[JOB DESCRIPTION]\n{jd_text[:2000]}")
+        if page_context:
+            context_blocks.append(f"[PAGE CONTEXT from application portal]\n{page_context[:1500]}")
+
+        context_section = "\n\n".join(context_blocks)
+        context_note = (
+            "Use the provided Job Description and page context to tailor your answer specifically "
+            "to this role and company."
+        ) if context_section else ""
+
         system_prompt = (
-            "You are Vimal Manoharan, a Computer Science student (Graduating 2026 at SRM IST) with experience in "
-            "React Native, GenAI/LLM pipelines, Full-Stack development, and AI Agents. Answer the application question "
-            "in 2-3 genuine, highly natural human sentences. Avoid robotic corporate jargon."
+            "You are Vimal Manoharan, a Computer Science student graduating in 2026 from SRM Institute of Science "
+            "and Technology (CGPA: 8.91/10). You have hands-on experience in React Native, Node.js, FastAPI, "
+            "GenAI/LLM pipelines (LangChain, RAG, AI Agents), and full-stack web development. "
+            "Answer job application questions in 2-4 genuine, human-sounding sentences. Be specific, confident, "
+            "and natural. Avoid robotic corporate jargon or generic filler. "
+            f"{context_note}"
         )
-        prompt = f"Question: '{question}' for the position of '{role}' at '{company}'."
-        return ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=400)
+
+        prompt = f"Question: '{question}'\nApplying for: '{role}' at '{company}'."
+        if context_section:
+            prompt += f"\n\n{context_section}"
+
+        return ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=450)
 
     @staticmethod
     def _fallback_human_answer(prompt: str) -> str:
