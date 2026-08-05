@@ -22,24 +22,41 @@ with sync_playwright() as p:
         for idx, el in enumerate(elements):
             t = el.get_attribute("type") or el.evaluate("el => el.tagName")
             name = el.get_attribute("name") or ""
-            label = el.get_attribute("aria-label") or el.get_attribute("placeholder") or el.get_attribute("id") or ""
+            aria_label = (el.get_attribute("aria-label") or "").strip()
+            placeholder = (el.get_attribute("placeholder") or "").strip()
+            id_attr = (el.get_attribute("id") or "").strip()
             
+            label = ""
+            if aria_label and aria_label.lower() not in ["your answer", "option 1", "short answer text", "long answer text"]:
+                label = aria_label
+            elif placeholder and placeholder.lower() not in ["your answer", "option 1"]:
+                label = placeholder
+                
             if not label:
                 try:
-                    parent = el.evaluate_handle("el => el.closest('div[role=\"listitem\"], label')")
-                    if parent:
-                        label_text = parent.evaluate("el => el.innerText")
-                        if label_text:
-                            label = label_text.split('\n')[0][:80]
+                    container = el.evaluate_handle("el => el.closest('div[role=\"listitem\"], div[jsmodel], fieldset, label')")
+                    if container:
+                        heading = container.evaluate("""c => {
+                            const h = c.querySelector('div[role="heading"], legend, .M7eF9, .hoP2b, h1, h2, h3, h4');
+                            if (h && h.innerText) return h.innerText;
+                            return c.innerText;
+                        }""")
+                        if heading:
+                            lines = [line.strip() for line in heading.split('\n') if line.strip() and line.strip() != '*']
+                            if lines:
+                                label = lines[0]
                 except Exception:
                     pass
-                        
+                    
+            if not label:
+                label = aria_label or placeholder or name or id_attr or f"Field_{idx}"
+
             fields.append({
                 "index": idx,
                 "type": t,
                 "name": name,
                 "label": label.strip(),
-                "id": el.get_attribute("id") or ""
+                "id": id_attr
             })
             
         radio_questions = []

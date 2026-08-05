@@ -243,12 +243,21 @@ class ResumeTailorer:
             "to this role and company."
         ) if context_section else ""
 
+        projects_summary = "\n".join([
+            f"- {p['name']} ({p['tech']}): {p['description']} [Repo: {p['url']}]"
+            for p in config.profile.key_projects
+        ])
+
         system_prompt = (
             "You are Vimal Manoharan, a Computer Science student graduating in 2026 from SRM Institute of Science "
-            "and Technology (CGPA: 8.91/10). You have hands-on experience in React Native, Node.js, FastAPI, "
-            "GenAI/LLM pipelines (LangChain, RAG, AI Agents), and full-stack web development. "
+            "and Technology (CGPA: 8.91/10). You have hands-on experience in AI Voice Agents, React Native, Node.js, FastAPI, "
+            "GenAI/LLM pipelines (LangChain, RAG, AI Agents), and full-stack web development.\n\n"
+            f"VIMAL'S FEATURED GITHUB PROJECTS:\n{projects_summary}\n\n"
             "Answer job application questions in 2-4 genuine, human-sounding sentences. Be specific, confident, "
-            "and natural. Avoid robotic corporate jargon or generic filler. "
+            "and natural. You have full access to your entire project portfolio above. Intelligently select the SINGLE BEST project "
+            "(or combination) that aligns most strongly with the target role and question (e.g. QuensultingAI Voice Agent for Voice/AI, "
+            "Siddha Shivalayas Healthcare for Full-Stack SaaS, Intel Unnati for GenAI/EdTech, Wanderlust for Mobile/UI, ApplyBot for Automation). "
+            "Include technical implementation details and GitHub links. Avoid robotic corporate jargon. "
             f"{context_note}"
         )
 

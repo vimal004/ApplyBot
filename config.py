@@ -45,6 +45,102 @@ class CandidateProfile:
         "LangGraph", "RAG Pipelines", "AI Agents", "Docker", "AWS EC2", "Nginx", 
         "Chroma DB", "Tailwind CSS", "Scikit-learn", "Selenium"
     ])
+    
+    key_projects: List[Dict[str, str]] = field(default_factory=lambda: [
+        {
+            "name": "QuensultingAI Voice Agent Receptionist",
+            "url": "https://github.com/vimal004/QuensultingAI-Voice-Agent",
+            "live_demo": "https://quensultingai-voice-agent.onrender.com",
+            "tech": "RetellAI Conversational Flow, FastAPI (Python 3.12+), Google Sheets API, SMTP Email, Render, Pytest",
+            "description": "Production-grade AI voice agent handling inbound clinic calls. Features real-time slot availability checking via RetellAI tools, progressive detail collection, emergency detection, human escalation, Google Sheets storage, and automated confirmation emails."
+        },
+        {
+            "name": "Siddha Shivalayas Healthcare Management System",
+            "url": "https://github.com/vimal004/Siddha-Shivalayas-Freelance",
+            "live_demo": "https://siddhashivalayas.vercel.app",
+            "tech": "React 18, Node.js, Express.js, MongoDB Atlas (Mongoose), Material-UI 5, Vite, JWT Auth, Docker, jsPDF, docxtemplater",
+            "description": "Production full-stack healthcare web application built for a traditional Siddha medicine clinic. Manages patient records, HSN/GST-compliant inventory, billing with PDF/DOCX generation, purchase tracking, and role-based access control (Admin/Staff)."
+        },
+        {
+            "name": "Intel Unnati AI Adaptive Quiz Game",
+            "url": "https://github.com/vimal004/Intel-Unnati-Gen-AI-Project",
+            "live_demo": "https://intel-unnati-game-frontend.vercel.app/",
+            "tech": "Next.js, TypeScript, TailwindCSS, Python, Flask, Streamlit, T5 Transformer, XGBoost, SVD, MongoDB",
+            "description": "Full-stack GenAI learning platform developed under Intel Unnati. Uses T5 LLM for dynamic quiz generation, XGBoost for real-time difficulty adjustment based on student performance, and SVD collaborative filtering for personalized topic recommendations."
+        },
+        {
+            "name": "Wanderlust Travel Experience App",
+            "url": "https://github.com/vimal004/Travel-App",
+            "tech": "React Native, Expo SDK 55, React Navigation v7, Material 3 Design, Reanimated (60FPS), Async Storage",
+            "description": "High-performance cross-platform mobile travel companion adhering to Material 3 design guidelines. Built with modular feature architecture, 60FPS fluid animations, dynamic dark mode, and persistent bookmarking."
+        },
+        {
+            "name": "ApplyBot Stealth Form & Resume Automation Engine",
+            "url": "https://github.com/vimal004/ApplyBot",
+            "tech": "Python, Playwright, Groq LLM API, Chrome Extension (Manifest v3), LaTeX Compiler",
+            "description": "Autonomous end-to-end recruitment assistant. Tailors LaTeX resumes dynamically to job descriptions and automates 1-click browser form filling using live Playwright DOM inspection and LLM reasoning."
+        },
+        {
+            "name": "Multithreaded AI Product Comparator (Intel Programme)",
+            "url": "https://github.com/vimal004/Multithreaded-AI-Product-Comparator-Intel-Programme-Final-Project-",
+            "tech": "Python, Multithreading, BeautifulSoup, Node.js, Express.js, MongoDB",
+            "description": "Final project for Intel Programme. Multithreaded web scraper and AI analysis pipeline aggregating price metrics and product specifications across major e-commerce platforms in parallel."
+        },
+        {
+            "name": "Proactively Speaker Session Booking Backend",
+            "url": "https://github.com/vimal004/Proactively-Backend-Freelance",
+            "tech": "Node.js, Express.js, MongoDB, JWT Authentication, REST APIs",
+            "description": "Freelance backend REST API service managing speaker bookings, slot scheduling, session validation, and client notifications."
+        },
+        {
+            "name": "Product Comparator Backend Server",
+            "url": "https://github.com/vimal004/Product-Comparator-Backend-Server",
+            "tech": "Node.js, Express.js, REST APIs, Web Scraping, MongoDB",
+            "description": "Scalable e-commerce backend service for aggregating product data across retailers, extracting pricing metrics, and computing real-time comparison analytics."
+        },
+        {
+            "name": "AQI Prediction & Analytics Regression Model",
+            "url": "https://github.com/vimal004/AQI-Prediction-Regression-Model",
+            "tech": "Python, Scikit-learn, Pandas, NumPy, Matplotlib, Seaborn",
+            "description": "Machine learning environmental data analysis and regression modeling predicting Air Quality Index (AQI) levels based on atmospheric pollutants."
+        },
+        {
+            "name": "Student Performance Analytics & Visualization System",
+            "url": "https://github.com/vimal004/Student-Performance-Analysis-Visualization-Comparison-System-Using-Python-Matplotlib-and-MySQL",
+            "tech": "Python, Matplotlib, MySQL, Data Visualization",
+            "description": "Academic analytics system querying student evaluation metrics from MySQL and generating comparative performance charts."
+        },
+        {
+            "name": "E-Shop Full-Stack E-Commerce Platform",
+            "url": "https://github.com/vimal004/E-Shop-Frontend",
+            "tech": "React.js, Node.js, Express.js, MongoDB, Redux Toolkit, TailwindCSS",
+            "description": "Modern full-stack e-commerce web application featuring user authentication, shopping cart management, product catalog filtering, and admin dashboard."
+        },
+        {
+            "name": "TaskFlow Hintro Workspace Manager",
+            "url": "https://github.com/vimal004/TaskFlow-Hintro",
+            "tech": "React.js, JavaScript, TailwindCSS, REST APIs",
+            "description": "Interactive kanban task management and workflow organization app built for productivity tracking."
+        },
+        {
+            "name": "Clootrack Technical Assignment",
+            "url": "https://github.com/vimal004/Clootrack-Assignment",
+            "tech": "Node.js, Express.js, React.js, REST APIs",
+            "description": "Full-stack web application assignment implementing data fetching, caching, and state management."
+        },
+        {
+            "name": "Alcovia Technical Assignment",
+            "url": "https://github.com/vimal004/Alcovia-Assignment",
+            "tech": "React.js, JavaScript, Modern CSS UI",
+            "description": "Responsive web dashboard implementation featuring clean UI components and dynamic state handling."
+        },
+        {
+            "name": "Personal Portfolio Web Application",
+            "url": "https://github.com/vimal004/Portfolio_Website",
+            "tech": "React.js, HTML5/CSS3, JavaScript, Vercel",
+            "description": "Personal developer portfolio highlighting skills, experience, project demos, and direct contact forms."
+        }
+    ])
 
 @dataclass
 class EmailConfig:

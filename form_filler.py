@@ -26,6 +26,7 @@ class JobFormAutoFiller:
             "email": config.profile.email,
             "phone": config.profile.phone,
             "raw_phone": config.profile.raw_phone,
+            "location": config.profile.location,
             "university": config.profile.university,
             "degree": config.profile.degree,
             "cgpa": config.profile.gpa,
@@ -53,6 +54,9 @@ class JobFormAutoFiller:
                 el.dispatchEvent(new Event('input', {{ bubbles: true }}));
             }} else if (type === 'tel' || label.includes('phone') || label.includes('mobile') || label.includes('contact')) {{
                 el.value = data.phone;
+                el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            }} else if (label.includes('location') || label.includes('city') || label.includes('address')) {{
+                el.value = data.location;
                 el.dispatchEvent(new Event('input', {{ bubbles: true }}));
             }} else if (label.includes('full name') || (label.includes('name') && !label.includes('company') && !label.includes('first') && !label.includes('last'))) {{
                 el.value = data.full_name;
@@ -93,6 +97,8 @@ class JobFormAutoFiller:
             "apply_url": apply_url,
             "company": company,
             "role": role,
+            "raw_text": job_data.get("raw_text", ""),
+            "requirements": job_data.get("requirements", []),
             "profile": profile_data,
             "autofill_js": autofill_js.strip(),
             "mode": config.auto_fill_mode
