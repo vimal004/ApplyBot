@@ -252,7 +252,7 @@ class ResumeTailorer:
             "MANDATORY RULES:\n"
             "1. Start directly with the provided salutation line.\n"
             "2. Structure the body into 3 clear, professional paragraphs:\n"
-            "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Senior at SRM IST (CGPA 8.91/10.0, 2026 Batch).\n"
+            "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Graduate from SRM IST (CGPA 8.91/10.0, Class of 2026).\n"
             "   - Paragraph 2: Highlight key technical experience directly relevant to the target role requirements (e.g. GenAI/LLM pipelines, AI Agents, React Native, Node.js, FastAPI, Docker, and AWS).\n"
             "   - Paragraph 3: Note that my resume is attached for their review and request a brief chat.\n"
             "3. Never use placeholder brackets like [Recruiter Name] or [Job Board].\n"
@@ -308,7 +308,7 @@ class ResumeTailorer:
         ])
 
         system_prompt = (
-            "You are Vimal Manoharan, a Computer Science student graduating in 2026 from SRM Institute of Science "
+            "You are Vimal Manoharan, a Computer Science graduate (Class of 2026) from SRM Institute of Science "
             "and Technology (CGPA: 8.91/10). You have hands-on experience in AI Voice Agents, React Native, Node.js, FastAPI, "
             "GenAI/LLM pipelines (LangChain, RAG, AI Agents), and full-stack web development.\n\n"
             f"VIMAL'S FEATURED GITHUB PROJECTS:\n{projects_summary}\n\n"
@@ -331,7 +331,7 @@ class ResumeTailorer:
         if "salutation:" in prompt.lower() or "applying for:" in prompt.lower() or "candidate:" in prompt.lower():
             return (
                 "I am writing to express my strong interest in the software engineering position at your company. "
-                "As a Computer Science Engineering student at SRM Institute of Science and Technology (graduating in 2026 with an 8.91/10.0 CGPA), "
+                "As a Computer Science Graduate from SRM Institute of Science and Technology (Class of 2026 with an 8.91/10.0 CGPA), "
                 "I have cultivated a strong technical foundation in full-stack development, cloud architecture, and modern AI engineering.\n\n"
                 "My hands-on background includes engineering cross-platform mobile apps with React Native and Expo, building resilient backend REST APIs "
                 "with Node.js and FastAPI, and architecting GenAI workflows, AI Agents, and Retrieval-Augmented Generation (RAG) pipelines using LangChain and Chroma DB. "

@@ -36,7 +36,7 @@ class CandidateProfile:
     batch_status: str = "2026 Batch"
     
     experience_years: str = "1+ years (Internships & Freelance)"
-    notice_period: str = "Immediate / Student (Graduating 2026)"
+    notice_period: str = "Immediate"
     expected_salary: str = "As per industry standards / Negotiable"
     
     core_skills: List[str] = field(default_factory=lambda: [
@@ -52,93 +52,93 @@ class CandidateProfile:
             "url": "https://github.com/vimal004/QuensultingAI-Voice-Agent",
             "live_demo": "https://quensultingai-voice-agent.onrender.com",
             "tech": "RetellAI Conversational Flow, FastAPI (Python 3.12+), Google Sheets API, SMTP Email, Render, Pytest",
-            "description": "Production-grade AI voice agent handling inbound clinic calls. Features real-time slot availability checking via RetellAI tools, progressive detail collection, emergency detection, human escalation, Google Sheets storage, and automated confirmation emails."
+            "description": "Production-grade AI voice receptionist agent designed to manage dental clinic phone operations. Solves high-concurrency booking bottlenecks and mid-call latency. Implements a Dual-Mode Scheduling Architecture: (1) Synchronous Live Check querying Google Sheets in real-time to compute and offer same-day alternative slots during active calls, and (2) Asynchronous Post-Call webhook tasks to offload heavy Google Sheets storage and SMTP operations to prevent webhook timeouts. Features structured dialog state transitions, interruption/correction handling, global emergency escalation nodes, webhook signature verification, and a retry-once fault tolerance policy."
         },
         {
             "name": "Siddha Shivalayas Healthcare Management System",
             "url": "https://github.com/vimal004/Siddha-Shivalayas-Freelance",
             "live_demo": "https://siddhashivalayas.vercel.app",
             "tech": "React 18, Node.js, Express.js, MongoDB Atlas (Mongoose), Material-UI 5, Vite, JWT Auth, Docker, jsPDF, docxtemplater",
-            "description": "Production full-stack healthcare web application built for a traditional Siddha medicine clinic. Manages patient records, HSN/GST-compliant inventory, billing with PDF/DOCX generation, purchase tracking, and role-based access control (Admin/Staff)."
+            "description": "Full-stack ERP system built for a traditional Siddha medicine clinic to automate patient registry, inventory tracking, and billing. Implements a multi-tenant database switcher middleware to cleanly isolate demo sandbox databases from production clinic data. Features HSN/GST-compliant invoice generation (PDF/DOCX exports), SOLID-compliant real-time inventory auto-deduction logic preventing race conditions during concurrent checkouts, role-based access control (RBAC), and JWT auth with secure HTTP-only cookies. Deployed in Docker containers managed behind Nginx."
         },
         {
             "name": "Intel Unnati AI Adaptive Quiz Game",
             "url": "https://github.com/vimal004/Intel-Unnati-Gen-AI-Project",
             "live_demo": "https://intel-unnati-game-frontend.vercel.app/",
             "tech": "Next.js, TypeScript, TailwindCSS, Python, Flask, Streamlit, T5 Transformer, XGBoost, SVD, MongoDB",
-            "description": "Full-stack GenAI learning platform developed under Intel Unnati. Uses T5 LLM for dynamic quiz generation, XGBoost for real-time difficulty adjustment based on student performance, and SVD collaborative filtering for personalized topic recommendations."
+            "description": "GenAI personalized learning platform developed under the Intel Unnati program. Addresses learning engagement gaps using three distinct AI/ML models: (1) Fine-tuned T5 LLM Transformer for on-demand dynamic question/distractor generation, (2) XGBoost regressor adjusting quiz difficulty dynamically based on user history, and (3) SVD collaborative filtering engine generating personalized topic recommendations. Implements Next.js App Router, global React state context, Streamlit analytical model testing playground, and a responsive Material 3 UI design."
         },
         {
             "name": "Wanderlust Travel Experience App",
             "url": "https://github.com/vimal004/Travel-App",
             "tech": "React Native, Expo SDK 55, React Navigation v7, Material 3 Design, Reanimated (60FPS), Async Storage",
-            "description": "High-performance cross-platform mobile travel companion adhering to Material 3 design guidelines. Built with modular feature architecture, 60FPS fluid animations, dynamic dark mode, and persistent bookmarking."
+            "description": "High-performance cross-platform mobile travel app. Built with feature-based modular architecture to decouple Auth, Destinations, and Bookmarks. Implements Material 3 design tokens, Google Sans typography, custom context theme providers (dark/light system overrides), and liquid 60FPS UI interactions powered by React Native Reanimated. Features layout transitions, persistent favorites caching, and shimmer loading states to reduce perceived layout load latency."
         },
         {
             "name": "ApplyBot Stealth Form & Resume Automation Engine",
             "url": "https://github.com/vimal004/ApplyBot",
             "tech": "Python, Playwright, Groq LLM API, Chrome Extension (Manifest v3), LaTeX Compiler",
-            "description": "Autonomous end-to-end recruitment assistant. Tailors LaTeX resumes dynamically to job descriptions and automates 1-click browser form filling using live Playwright DOM inspection and LLM reasoning."
+            "description": " recruiting assistant automates browser job portal filling and resume optimization. Features Playwright DOM crawler that dynamically inspects application pages, parses job descriptions, and matches them to a master resume. Uses Groq LLM to rewrite LaTeX bullet points and reorder skills to optimize ATS scores, compiles them via a Tectonic LaTeX compiler engine on-the-fly, and autofills forms via a Manifest v3 Chrome Extension."
         },
         {
             "name": "Multithreaded AI Product Comparator (Intel Programme)",
             "url": "https://github.com/vimal004/Multithreaded-AI-Product-Comparator-Intel-Programme-Final-Project-",
             "tech": "Python, Multithreading, BeautifulSoup, Node.js, Express.js, MongoDB",
-            "description": "Final project for Intel Programme. Multithreaded web scraper and AI analysis pipeline aggregating price metrics and product specifications across major e-commerce platforms in parallel."
+            "description": "E-commerce data analytics platform. Uses Python's ThreadPoolExecutor to run concurrent web scraping tasks across multiple retail domains, parsing pricing, specs, and reviews. Feeds aggregated data into an AI classification pipeline. Backend API built on Node.js/Express with MongoDB serving deduplicated results."
         },
         {
             "name": "Proactively Speaker Session Booking Backend",
             "url": "https://github.com/vimal004/Proactively-Backend-Freelance",
             "tech": "Node.js, Express.js, MongoDB, JWT Authentication, REST APIs",
-            "description": "Freelance backend REST API service managing speaker bookings, slot scheduling, session validation, and client notifications."
+            "description": "Freelance REST backend managing booking slots, scheduling conflicts, and client notifications for speaker events. Features custom validation middleware preventing double-booking, token authorization, and automated email notifications."
         },
         {
             "name": "Product Comparator Backend Server",
             "url": "https://github.com/vimal004/Product-Comparator-Backend-Server",
             "tech": "Node.js, Express.js, REST APIs, Web Scraping, MongoDB",
-            "description": "Scalable e-commerce backend service for aggregating product data across retailers, extracting pricing metrics, and computing real-time comparison analytics."
+            "description": "Robust e-commerce catalog API server. Features scheduled cron jobs to scrape and sync product catalogs, compute price drops, and manage user alerts. Structured around repository design patterns and MongoDB aggregation pipelines."
         },
         {
             "name": "AQI Prediction & Analytics Regression Model",
             "url": "https://github.com/vimal004/AQI-Prediction-Regression-Model",
             "tech": "Python, Scikit-learn, Pandas, NumPy, Matplotlib, Seaborn",
-            "description": "Machine learning environmental data analysis and regression modeling predicting Air Quality Index (AQI) levels based on atmospheric pollutants."
+            "description": "Predictive air quality index analysis pipeline. Performs exploratory data analysis, cleans feature outliers, handles multicollinearity, and trains multiple regression models (Linear, Random Forest) to forecast AQI based on particulate concentrations."
         },
         {
             "name": "Student Performance Analytics & Visualization System",
             "url": "https://github.com/vimal004/Student-Performance-Analysis-Visualization-Comparison-System-Using-Python-Matplotlib-and-MySQL",
             "tech": "Python, Matplotlib, MySQL, Data Visualization",
-            "description": "Academic analytics system querying student evaluation metrics from MySQL and generating comparative performance charts."
+            "description": "Data comparison tool querying academic performance records from MySQL databases. Generates descriptive analytics charts, student ranking metrics, and distribution plots using Matplotlib."
         },
         {
             "name": "E-Shop Full-Stack E-Commerce Platform",
             "url": "https://github.com/vimal004/E-Shop-Frontend",
             "tech": "React.js, Node.js, Express.js, MongoDB, Redux Toolkit, TailwindCSS",
-            "description": "Modern full-stack e-commerce web application featuring user authentication, shopping cart management, product catalog filtering, and admin dashboard."
+            "description": "MERN-stack e-commerce project with secure client-side state management using Redux Toolkit. Features product category browsing, checkout state routing, cart persistence, and admin inventory dashboards."
         },
         {
             "name": "TaskFlow Hintro Workspace Manager",
             "url": "https://github.com/vimal004/TaskFlow-Hintro",
             "tech": "React.js, JavaScript, TailwindCSS, REST APIs",
-            "description": "Interactive kanban task management and workflow organization app built for productivity tracking."
+            "description": "Interactive kanban desk manager. Implements drag-and-drop task state transitions, categories filtering, and local storage persistence for agile workspace organization."
         },
         {
             "name": "Clootrack Technical Assignment",
             "url": "https://github.com/vimal004/Clootrack-Assignment",
             "tech": "Node.js, Express.js, React.js, REST APIs",
-            "description": "Full-stack web application assignment implementing data fetching, caching, and state management."
+            "description": "Full-stack caching demo platform. Demonstrates API route caching on Express to reduce database lookup overhead, client state synchronization, and mock analytics reporting."
         },
         {
             "name": "Alcovia Technical Assignment",
             "url": "https://github.com/vimal004/Alcovia-Assignment",
             "tech": "React.js, JavaScript, Modern CSS UI",
-            "description": "Responsive web dashboard implementation featuring clean UI components and dynamic state handling."
+            "description": "Responsive dashboard mockup implementing pixel-perfect design specifications, dynamic grids, and interactive data visualization charts."
         },
         {
             "name": "Personal Portfolio Web Application",
             "url": "https://github.com/vimal004/Portfolio_Website",
             "tech": "React.js, HTML5/CSS3, JavaScript, Vercel",
-            "description": "Personal developer portfolio highlighting skills, experience, project demos, and direct contact forms."
+            "description": "Interactive developer portfolio displaying projects, technical skills, and resume details. Built with responsive layout frameworks and client contact integration."
         }
     ])
 
