@@ -195,7 +195,7 @@ class ResumeTailorer:
             "2. Structure the body into 3 clear, professional paragraphs:\n"
             "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Senior at SRM IST (CGPA 8.91/10.0, 2026 Batch).\n"
             "   - Paragraph 2: Highlight key technical experience directly relevant to the target role requirements (e.g. GenAI/LLM pipelines, AI Agents, React Native, Node.js, FastAPI, Docker, and AWS).\n"
-            "   - Paragraph 3: Note that the tailored ATS-curated resume is attached for their review and request a brief chat.\n"
+            "   - Paragraph 3: Note that my resume is attached for their review and request a brief chat.\n"
             "3. Never use placeholder brackets like [Recruiter Name] or [Job Board].\n"
             "4. Do NOT include a Subject line.\n"
             "5. Do NOT include any sign-off or signature at the end (no 'Best regards', no candidate name).\n"
@@ -277,7 +277,7 @@ class ResumeTailorer:
                 "My hands-on background includes engineering cross-platform mobile apps with React Native and Expo, building resilient backend REST APIs "
                 "with Node.js and FastAPI, and architecting GenAI workflows, AI Agents, and Retrieval-Augmented Generation (RAG) pipelines using LangChain and Chroma DB. "
                 "I thrive in agile, fast-paced product teams where clean code architecture and rapid iteration are prioritized.\n\n"
-                "I have attached my tailored ATS-curated resume for your review. I would welcome the opportunity to discuss how my technical skills "
+                "I have attached my resume for your review. I would welcome the opportunity to discuss how my technical skills "
                 "and problem-solving drive can contribute to your engineering goals."
             )
         elif "motivated" in prompt.lower() or "why" in prompt.lower() or "apply" in prompt.lower():

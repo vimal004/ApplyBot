@@ -3,9 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ApplyBot</title>
+  <title>ApplyBot - Premium Enterprise Extension</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    :root {
+      /* Premium Monochromatic Theme */
+      --bg-base: #070708;
+      --bg-surface: rgba(18, 18, 22, 0.7);
+      --bg-surface-lowest: #0a0a0c;
+      --bg-surface-low: #111114;
+      --bg-surface-high: #1a1a22;
+      --bg-surface-highest: #22222b;
+      
+      --color-primary: #ffffff;
+      --color-on-primary: #070708;
+      --color-primary-container: rgba(255, 255, 255, 0.08);
+      --color-on-primary-container: #f4f4f5;
+      
+      --color-text-primary: #f4f4f5;
+      --color-text-secondary: #8e8e9f;
+      --color-text-muted: #5c5c6d;
+      
+      --color-border: rgba(255, 255, 255, 0.06);
+      --color-border-hover: rgba(255, 255, 255, 0.12);
+      --color-error: #ff453a;
+      --color-error-container: rgba(255, 69, 58, 0.1);
+
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-short: 150ms;
+      --duration-medium: 300ms;
+    }
 
     * {
       box-sizing: border-box;
@@ -14,41 +49,48 @@
     }
 
     body {
-      width: 420px;
-      min-height: 540px;
-      background: #080f1e;
-      color: #f0f4ff;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 12.5px;
+      width: 380px;
+      min-height: 560px;
+      background: var(--bg-base);
+      color: var(--color-text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ─── HEADER ─── */
     .header {
-      background: linear-gradient(135deg, #0d1a2e 0%, #0f2040 100%);
-      border-bottom: 1px solid rgba(59,130,246,0.2);
+      background: rgba(7, 7, 8, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border);
       padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      border-radius: 10px;
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      box-shadow: 0 0 16px rgba(99,102,241,0.5);
+      font-size: 13px;
+      color: var(--color-on-primary);
+      font-weight: 800;
       flex-shrink: 0;
     }
 
@@ -58,63 +100,59 @@
     }
 
     .brand-title {
-      font-weight: 800;
-      font-size: 15px;
-      background: linear-gradient(90deg, #60a5fa, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-weight: 700;
+      font-size: 13.5px;
+      letter-spacing: -0.02em;
+      color: #ffffff;
       line-height: 1.2;
     }
 
     .brand-sub {
-      font-size: 10px;
-      color: #64748b;
-      font-weight: 500;
+      font-size: 9px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .header-right {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
+      align-items: center;
     }
 
     .badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 20px;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: var(--radius-full);
       display: flex;
       align-items: center;
       gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .badge-online {
-      background: rgba(16,185,129,0.12);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.3);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
     }
 
     .badge-offline {
-      background: rgba(244,63,94,0.12);
-      color: #fb7185;
-      border: 1px solid rgba(244,63,94,0.3);
+      background: var(--color-error-container);
+      color: #fca5a5;
+      border: 1px solid rgba(255, 69, 58, 0.2);
     }
 
     .dot {
-      width: 6px; height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       display: inline-block;
       flex-shrink: 0;
     }
-    .badge-online .dot { background: #34d399; box-shadow: 0 0 6px #34d399; animation: pulse-dot 2s infinite; }
-    .badge-offline .dot { background: #fb7185; }
-
-    @keyframes pulse-dot {
-      0%, 100% { box-shadow: 0 0 4px #34d399; }
-      50% { box-shadow: 0 0 10px #34d399; }
-    }
+    .badge-online .dot { background: #ffffff; box-shadow: 0 0 4px #ffffff; }
+    .badge-offline .dot { background: var(--color-error); }
 
     /* ─── MAIN CTA ─── */
     .cta-area {
@@ -123,52 +161,40 @@
 
     .btn-main {
       width: 100%;
-      padding: 13px 16px;
-      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-      color: white;
+      padding: 12px 16px;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-full);
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(99,102,241,0.4), 0 0 0 1px rgba(99,102,241,0.2);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-main::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-      border-radius: inherit;
+      gap: 6px;
+      transition: all var(--duration-short) var(--easing-standard);
     }
 
     .btn-main:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(99,102,241,0.5);
+      opacity: 0.9;
     }
 
     .btn-main:active { transform: translateY(0); }
 
     .btn-main .btn-fill-count {
-      font-size: 11px;
-      font-weight: 500;
-      opacity: 0.8;
-      margin-left: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      opacity: 0.85;
+      margin-left: 2px;
     }
 
     /* ─── PAGE CONTEXT STRIP ─── */
     .page-context-strip {
       margin: 10px 14px 0;
-      background: rgba(30,41,59,0.7);
-      border: 1px solid rgba(99,102,241,0.15);
-      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       padding: 8px 12px;
       display: flex;
       align-items: center;
@@ -176,7 +202,7 @@
     }
 
     .page-context-strip .site-icon {
-      font-size: 16px;
+      font-size: 14px;
       flex-shrink: 0;
     }
 
@@ -187,29 +213,29 @@
 
     .page-context-title {
       font-size: 11px;
-      font-weight: 600;
-      color: #e2e8f0;
+      font-weight: 700;
+      color: #ffffff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .page-context-url {
-      font-size: 10px;
-      color: #64748b;
+      font-size: 9.5px;
+      color: var(--color-text-secondary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .page-fields-pill {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      background: rgba(59,130,246,0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59,130,246,0.25);
-      border-radius: 20px;
-      padding: 2px 8px;
+      background: var(--color-primary-container);
+      color: var(--color-on-primary-container);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      padding: 2.5px 8px;
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -221,32 +247,30 @@
 
     .tabs {
       display: flex;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(51,65,85,0.5);
-      padding: 3px;
-      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-border);
+      padding: 2.5px;
+      border-radius: var(--radius-full);
     }
 
     .tab-btn {
       flex: 1;
-      padding: 6px 4px;
+      padding: 6px 2px;
       background: transparent;
       border: none;
-      color: #475569;
-      font-size: 10.5px;
-      font-weight: 600;
-      border-radius: 7px;
+      color: var(--color-text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
       cursor: pointer;
       text-align: center;
-      transition: all 0.2s ease;
+      transition: all var(--duration-short) var(--easing-standard);
       white-space: nowrap;
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(99,102,241,0.2));
-      color: #60a5fa;
-      border: 1px solid rgba(99,102,241,0.3);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
     }
 
     .tab-content { display: none; }
@@ -254,34 +278,34 @@
 
     /* ─── SCROLLABLE CONTENT AREA ─── */
     .tab-scroll {
-      max-height: 320px;
+      max-height: 330px;
       overflow-y: auto;
       padding: 10px 14px 14px;
     }
 
-    .tab-scroll::-webkit-scrollbar { width: 4px; }
+    .tab-scroll::-webkit-scrollbar { width: 3px; }
     .tab-scroll::-webkit-scrollbar-track { background: transparent; }
-    .tab-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .tab-scroll::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 
     /* ─── CARDS ─── */
     .card {
-      background: rgba(30,41,59,0.6);
-      border: 1px solid rgba(51,65,85,0.6);
-      border-radius: 10px;
-      padding: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
       margin-bottom: 10px;
     }
 
     .card-title {
-      font-size: 10px;
-      font-weight: 700;
-      color: #475569;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--color-text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.08em;
       margin-bottom: 10px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: space-between;
     }
 
     /* ─── FORM ELEMENTS ─── */
@@ -291,33 +315,32 @@
 
     .form-group label {
       display: block;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      color: #64748b;
+      color: var(--color-text-secondary);
       text-transform: uppercase;
       margin-bottom: 4px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.05em;
     }
 
     .form-control {
       width: 100%;
-      padding: 7px 10px;
-      background: rgba(8,15,30,0.8);
-      border: 1px solid rgba(51,65,85,0.7);
-      border-radius: 7px;
-      color: #e2e8f0;
-      font-size: 12px;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-primary);
+      font-size: 11.5px;
       font-family: inherit;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color var(--duration-short) var(--easing-standard);
     }
 
     .form-control:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+      border-color: var(--color-border-hover);
     }
 
-    .form-control::placeholder { color: #334155; }
+    .form-control::placeholder { color: var(--color-text-muted); }
 
     textarea.form-control {
       resize: vertical;
@@ -332,15 +355,15 @@
     .btn-secondary {
       width: 100%;
       padding: 8px 12px;
-      background: rgba(51,65,85,0.6);
-      color: #e2e8f0;
-      border: 1px solid rgba(51,65,85,0.8);
-      border-radius: 7px;
-      font-weight: 600;
-      font-size: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-size: 11px;
       font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all var(--duration-short) var(--easing-standard);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -348,30 +371,30 @@
     }
 
     .btn-secondary:hover {
-      background: rgba(71,85,105,0.8);
-      border-color: rgba(100,116,139,0.8);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--color-border-hover);
     }
 
     .btn-blue {
-      background: rgba(59,130,246,0.15);
-      color: #60a5fa;
-      border-color: rgba(59,130,246,0.3);
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      border-color: var(--color-border);
     }
-    .btn-blue:hover { background: rgba(59,130,246,0.25); }
+    .btn-blue:hover { background: rgba(255, 255, 255, 0.09); }
 
     .btn-green {
-      background: rgba(16,185,129,0.15);
-      color: #34d399;
-      border-color: rgba(16,185,129,0.3);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border-color: var(--color-primary);
     }
-    .btn-green:hover { background: rgba(16,185,129,0.25); }
+    .btn-green:hover { opacity: 0.9; }
 
     .btn-purple {
-      background: rgba(139,92,246,0.15);
-      color: #a78bfa;
-      border-color: rgba(139,92,246,0.3);
+      background: rgba(255, 255, 255, 0.02);
+      color: #ffffff;
+      border-color: var(--color-border);
     }
-    .btn-purple:hover { background: rgba(139,92,246,0.25); }
+    .btn-purple:hover { background: rgba(255, 255, 255, 0.05); }
 
     .btn-row {
       display: flex;
@@ -389,43 +412,42 @@
     }
 
     .toggle-label {
-      font-size: 12px;
-      color: #94a3b8;
-      font-weight: 500;
+      font-size: 11.5px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
     }
 
     input[type="checkbox"] {
-      accent-color: #3b82f6;
-      width: 16px;
-      height: 16px;
+      accent-color: var(--color-primary);
+      width: 14px;
+      height: 14px;
       cursor: pointer;
     }
 
     /* ─── STATUS ─── */
     .status-box {
       font-size: 11px;
-      color: #64748b;
-      background: rgba(8,15,30,0.6);
-      border: 1px solid rgba(51,65,85,0.4);
+      color: var(--color-text-secondary);
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-border);
       padding: 8px 10px;
-      border-radius: 7px;
+      border-radius: var(--radius-sm);
       margin-top: 8px;
       text-align: center;
-      transition: all 0.3s;
     }
 
-    .status-box.success { color: #34d399; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.06); }
-    .status-box.error { color: #fb7185; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.06); }
-    .status-box.loading { color: #60a5fa; border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.06); }
+    .status-box.success { color: #ffffff; border-color: var(--color-primary); background: rgba(255, 255, 255, 0.03); }
+    .status-box.error { color: var(--color-error); border-color: rgba(255, 69, 58, 0.2); background: var(--color-error-container); }
+    .status-box.loading { color: var(--color-text-secondary); border-color: var(--color-border); }
 
     /* ─── AI ANSWER RESULT ─── */
     .ai-result {
       margin-top: 10px;
       padding: 10px;
-      background: rgba(8,15,30,0.8);
-      border: 1px solid rgba(99,102,241,0.25);
-      border-radius: 8px;
-      font-size: 11.5px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
       color: #cbd5e1;
       line-height: 1.6;
       display: none;
@@ -434,8 +456,8 @@
       position: relative;
     }
 
-    .ai-result::-webkit-scrollbar { width: 3px; }
-    .ai-result::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    .ai-result::-webkit-scrollbar { width: 2px; }
+    .ai-result::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
 
     .ai-result-actions {
       display: flex;
@@ -453,50 +475,48 @@
     .jd-source-btn {
       flex: 1;
       padding: 6px;
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(51,65,85,0.5);
-      border-radius: 6px;
-      color: #475569;
-      font-size: 11px;
-      font-weight: 600;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      color: var(--color-text-secondary);
+      font-size: 10px;
+      font-weight: 700;
       font-family: inherit;
       cursor: pointer;
       text-align: center;
-      transition: all 0.2s;
+      transition: all var(--duration-short) var(--easing-standard);
     }
 
     .jd-source-btn.active {
-      background: rgba(99,102,241,0.15);
-      color: #a78bfa;
-      border-color: rgba(99,102,241,0.35);
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      border-color: var(--color-border-hover);
     }
 
     .jd-panel { display: none; }
     .jd-panel.active { display: block; }
 
     .upload-zone {
-      border: 2px dashed rgba(99,102,241,0.3);
-      border-radius: 8px;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
       padding: 20px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s;
-      background: rgba(99,102,241,0.04);
+      background: rgba(0, 0, 0, 0.15);
     }
 
     .upload-zone:hover {
-      border-color: rgba(99,102,241,0.6);
-      background: rgba(99,102,241,0.08);
+      border-color: var(--color-border-hover);
     }
 
-    .upload-zone-icon { font-size: 24px; margin-bottom: 6px; }
-    .upload-zone-text { font-size: 11.5px; color: #64748b; }
-    .upload-zone-text strong { color: #a78bfa; }
+    .upload-zone-icon { font-size: 20px; margin-bottom: 6px; }
+    .upload-zone-text { font-size: 11px; color: var(--color-text-secondary); }
+    .upload-zone-text strong { color: #ffffff; }
 
     .upload-filename {
       margin-top: 8px;
       font-size: 11px;
-      color: #34d399;
+      color: #ffffff;
       font-weight: 600;
       display: none;
     }
@@ -506,24 +526,20 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9.5px;
+      font-weight: 700;
       padding: 2px 8px;
-      background: rgba(16,185,129,0.1);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.25);
-      border-radius: 20px;
+      background: var(--color-primary-container);
+      color: var(--color-on-primary-container);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
       margin-left: auto;
     }
 
     /* ─── EMAIL COMPOSER ─── */
-    .email-template-select {
-      margin-bottom: 10px;
-    }
-
     .char-counter {
-      font-size: 10px;
-      color: #475569;
+      font-size: 9.5px;
+      color: var(--color-text-muted);
       text-align: right;
       margin-top: 2px;
     }
@@ -531,7 +547,7 @@
     /* ─── DIVIDER ─── */
     .divider {
       height: 1px;
-      background: rgba(51,65,85,0.5);
+      background: var(--color-border);
       margin: 10px 0;
     }
 
@@ -540,29 +556,30 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px;
-      background: rgba(8,15,30,0.5);
-      border-radius: 8px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       margin-bottom: 10px;
     }
 
     .avatar-circle {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 15px;
-      color: white;
+      font-size: 13px;
+      color: var(--color-on-primary);
       flex-shrink: 0;
     }
 
     .avatar-info { flex: 1; min-width: 0; }
-    .avatar-name { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-    .avatar-email { font-size: 10.5px; color: #64748b; }
+    .avatar-name { font-size: 12.5px; font-weight: 700; color: #ffffff; }
+    .avatar-email { font-size: 10px; color: var(--color-text-secondary); }
   </style>
 </head>
 <body>
@@ -573,7 +590,7 @@
       <div class="brand-icon">⚡</div>
       <div class="brand-info">
         <div class="brand-title">ApplyBot</div>
-        <div class="brand-sub">by Vimal Manoharan</div>
+        <div class="brand-sub">Enterprise Module</div>
       </div>
     </div>
     <div class="header-right">
@@ -606,11 +623,11 @@
   <!-- ─── NAVIGATION TABS ─── -->
   <div class="tabs-wrapper">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="tab-dashboard">⚡ Dashboard</button>
-      <button class="tab-btn" data-tab="tab-jd">📄 JD</button>
-      <button class="tab-btn" data-tab="tab-ai">🤖 AI</button>
-      <button class="tab-btn" data-tab="tab-email">📧 Email</button>
-      <button class="tab-btn" data-tab="tab-profile">👤 Profile</button>
+      <button class="tab-btn active" data-tab="tab-dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="tab-jd">JD</button>
+      <button class="tab-btn" data-tab="tab-ai">AI</button>
+      <button class="tab-btn" data-tab="tab-email">Email</button>
+      <button class="tab-btn" data-tab="tab-profile">Profile</button>
     </div>
   </div>
 
@@ -628,19 +645,19 @@
         </div>
         <div class="divider"></div>
         <div class="btn-row">
-          <button id="btn-sync-backend" class="btn-secondary btn-blue">🔄 Sync from Backend</button>
-          <button id="btn-refresh-context" class="btn-secondary">🔍 Re-scan Page</button>
+          <button id="btn-sync-backend" class="btn-secondary btn-blue">Sync from Backend</button>
+          <button id="btn-refresh-context" class="btn-secondary">Re-scan Page</button>
         </div>
         <div id="quick-status" class="status-box">Ready to auto-fill forms.</div>
       </div>
 
       <div class="card">
         <div class="card-title">📊 Page Analysis</div>
-        <div id="page-analysis-content" style="font-size:11.5px; color:#94a3b8; line-height:1.7;">
+        <div id="page-analysis-content" style="font-size:11px; color:var(--color-text-secondary); line-height:1.7;">
           <div>🏢 <strong id="pa-company">—</strong></div>
           <div>💼 <strong id="pa-jobtitle">—</strong></div>
           <div>📝 <strong id="pa-fields">—</strong> fillable fields detected</div>
-          <div>📍 <strong id="pa-url" style="color:#60a5fa; font-size:10px;">—</strong></div>
+          <div>📍 <strong id="pa-url" style="color:var(--color-text-secondary); font-size:9.5px;">—</strong></div>
         </div>
       </div>
 
@@ -655,14 +672,14 @@
 
       <div class="card">
         <div class="card-title">
-          📄 Job Description
-          <span class="jd-active-pill" id="jd-active-pill" style="display:none;">✅ JD Loaded</span>
+          <span>📄 Job Description</span>
+          <span class="jd-active-pill" id="jd-active-pill" style="display:none;">JD Loaded</span>
         </div>
 
         <div class="jd-source-tabs">
-          <button class="jd-source-btn active" data-jdtab="jd-paste">✏️ Paste JD</button>
-          <button class="jd-source-btn" data-jdtab="jd-upload">📁 Upload File</button>
-          <button class="jd-source-btn" data-jdtab="jd-page">🌐 From Page</button>
+          <button class="jd-source-btn active" data-jdtab="jd-paste">Paste JD</button>
+          <button class="jd-source-btn" data-jdtab="jd-upload">Upload File</button>
+          <button class="jd-source-btn" data-jdtab="jd-page">From Page</button>
         </div>
 
         <!-- Paste Panel -->
@@ -678,7 +695,7 @@
           <div class="upload-zone" id="upload-zone">
             <div class="upload-zone-icon">📄</div>
             <div class="upload-zone-text"><strong>Click to upload</strong> or drag a .txt file</div>
-            <div class="upload-zone-text" style="margin-top:4px; font-size:10px;">.txt files supported</div>
+            <div class="upload-zone-text" style="margin-top:4px; font-size:9.5px;">.txt files supported</div>
             <input type="file" id="jd-file-input" accept=".txt" style="display:none">
           </div>
           <div class="upload-filename" id="upload-filename">📄 <span id="upload-file-name"></span></div>
@@ -686,17 +703,17 @@
 
         <!-- From Page Panel -->
         <div class="jd-panel" id="jd-page">
-          <div id="jd-page-preview" class="form-control" style="min-height:90px; font-size:11px; color:#94a3b8; overflow-y:auto; white-space:pre-wrap; line-height:1.5;">
+          <div id="jd-page-preview" class="form-control" style="min-height:90px; font-size:11px; color:var(--color-text-secondary); overflow-y:auto; white-space:pre-wrap; line-height:1.5;">
             Click "Use Page Text" to scrape the current job page...
           </div>
-          <button id="btn-use-page-jd" class="btn-secondary btn-purple" style="margin-top:8px;">🌐 Scrape JD from Current Page</button>
+          <button id="btn-use-page-jd" class="btn-secondary btn-purple" style="margin-top:8px;">Scrape JD from Page</button>
         </div>
 
         <div class="divider"></div>
 
         <div class="btn-row">
-          <button id="btn-save-jd" class="btn-secondary btn-green">💾 Save JD</button>
-          <button id="btn-clear-jd" class="btn-secondary">🗑️ Clear</button>
+          <button id="btn-save-jd" class="btn-secondary btn-green">Save JD</button>
+          <button id="btn-clear-jd" class="btn-secondary">Clear</button>
         </div>
 
         <div id="jd-status" class="status-box" style="display:none;"></div>
@@ -712,7 +729,7 @@
     <div class="tab-scroll">
 
       <div class="card">
-        <div class="card-title">🤖 AI Answer Generator</div>
+        <div class="card-title"><span>🤖 AI Answer Generator</span></div>
         <div class="form-group">
           <label>Company</label>
           <input type="text" id="ai-company" class="form-control" placeholder="e.g. Google, Razorpay...">
@@ -726,14 +743,14 @@
           <textarea id="ai-question-input" class="form-control" placeholder="e.g. Why are you interested in this role? Tell us about yourself..."></textarea>
         </div>
         <button id="btn-ask-ai" class="btn-secondary btn-blue" style="margin-top:2px;">
-          ✨ Generate Personalised Answer
+          Generate Answer
         </button>
         <div id="ai-result" class="ai-result">
           <div id="ai-answer-text"></div>
         </div>
         <div class="ai-result-actions" id="ai-actions" style="display:none;">
-          <button id="btn-copy-answer" class="btn-secondary btn-green" style="font-size:11px; padding:6px 10px;">📋 Copy</button>
-          <button id="btn-regen-answer" class="btn-secondary" style="font-size:11px; padding:6px 10px;">🔄 Regenerate</button>
+          <button id="btn-copy-answer" class="btn-secondary btn-green" style="font-size:11px; padding:6px 10px;">Copy</button>
+          <button id="btn-regen-answer" class="btn-secondary" style="font-size:11px; padding:6px 10px;">Regenerate</button>
         </div>
       </div>
 
@@ -747,7 +764,7 @@
     <div class="tab-scroll">
 
       <div class="card">
-        <div class="card-title">📧 Cold Email / Referral Request</div>
+        <div class="card-title"><span>📧 Cold Email / Referral Request</span></div>
 
         <div class="row">
           <div class="col form-group">
@@ -763,7 +780,7 @@
         <div class="row">
           <div class="col form-group">
             <label>Company</label>
-            <input type="text" id="email-company" class="form-control" placeholder="e.g. Google" id="email-company">
+            <input type="text" id="email-company" class="form-control" placeholder="e.g. Google">
           </div>
           <div class="col form-group">
             <label>Role Applying For</label>
@@ -787,8 +804,8 @@
         </div>
 
         <div class="btn-row">
-          <button id="btn-preview-email" class="btn-secondary btn-purple">👁️ Preview</button>
-          <button id="btn-send-email" class="btn-secondary btn-green">🚀 Send Email</button>
+          <button id="btn-preview-email" class="btn-secondary btn-purple">Preview</button>
+          <button id="btn-send-email" class="btn-secondary btn-green">Send Email</button>
         </div>
 
         <div id="email-preview" class="ai-result" style="margin-top:10px;"></div>
@@ -813,7 +830,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">👤 Personal Info</div>
+        <div class="card-title"><span>👤 Personal Info</span></div>
         <div class="row">
           <div class="col form-group">
             <label>First Name</label>
@@ -843,7 +860,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">🎓 Education</div>
+        <div class="card-title"><span>🎓 Education</span></div>
         <div class="form-group">
           <label>University / College</label>
           <input type="text" id="prof-university" class="form-control">
@@ -865,7 +882,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">🔗 Links & Work</div>
+        <div class="card-title"><span>🔗 Links & Work</span></div>
         <div class="form-group">
           <label>LinkedIn URL</label>
           <input type="text" id="prof-linkedin" class="form-control">
@@ -890,7 +907,7 @@
         </div>
       </div>
 
-      <button id="btn-save-profile" class="btn-secondary btn-green">💾 Save Profile</button>
+      <button id="btn-save-profile" class="btn-secondary btn-green">Save Profile</button>
       <div id="profile-status" class="status-box" style="display:none; margin-top:8px;"></div>
 
     </div>

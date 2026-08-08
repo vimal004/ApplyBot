@@ -1,83 +1,90 @@
-/* ApplyBot Extension Styles & Floating Widget CSS */
+/* ApplyBot Extension Styles & Floating Widget CSS - Premium Monochromatic Dark Theme */
 
 :root {
-  --ab-bg: #0f172a;
-  --ab-card: #1e293b;
-  --ab-card-border: #334155;
-  --ab-primary: #3b82f6;
-  --ab-primary-hover: #2563eb;
-  --ab-success: #10b981;
-  --ab-success-hover: #059669;
-  --ab-text-main: #f8fafc;
-  --ab-text-muted: #94a3b8;
-  --ab-radius: 10px;
-  --ab-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --ab-bg: #070708;
+  --ab-surface: rgba(18, 18, 22, 0.9);
+  --ab-card-border: rgba(255, 255, 255, 0.06);
+  --ab-primary: #ffffff;
+  --ab-text-main: #f4f4f5;
+  --ab-text-muted: #8e8e9f;
+  --ab-radius-xl: 16px;
+  --ab-radius-full: 9999px;
+  --ab-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --ab-easing-expressive: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Floating Action Button on Web Pages */
+/* Floating Action Pill Button on Web Pages */
 #applybot-floating-widget {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 999999;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid #3b82f6;
-  border-radius: 50px;
-  padding: 8px 16px 8px 12px;
+  gap: 10px;
+  background: var(--ab-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ab-card-border);
+  border-radius: var(--ab-radius-full);
+  padding: 8px 18px 8px 10px;
   box-shadow: var(--ab-shadow);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 300ms var(--ab-easing-expressive),
+              background 300ms ease,
+              border-color 300ms ease;
   user-select: none;
 }
 
 #applybot-floating-widget:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.35);
-  background: rgba(15, 23, 42, 0.98);
-  border-color: #60a5fa;
+  transform: translateY(-2px) scale(1.02);
+  background: rgba(25, 25, 30, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+#applybot-floating-widget:active {
+  transform: translateY(0) scale(0.98);
 }
 
 #applybot-floating-widget .ab-icon {
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  width: 28px;
+  height: 28px;
+  background: var(--ab-primary);
   border-radius: 50%;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+  color: var(--ab-bg);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+  font-weight: 800;
 }
 
 #applybot-floating-widget .ab-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f8fafc;
-  letter-spacing: 0.2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.1px;
 }
 
 #applybot-floating-widget .ab-close-btn {
-  margin-left: 6px;
-  font-size: 14px;
-  color: #94a3b8;
+  margin-left: 4px;
+  font-size: 13px;
+  color: var(--ab-text-muted);
   border-radius: 50%;
   width: 20px;
   height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 #applybot-floating-widget .ab-close-btn:hover {
-  color: #ef4444;
+  color: #ff453a;
+  background: rgba(255, 69, 58, 0.1);
 }
 
 /* Toast Banner on web page after filling */
@@ -86,24 +93,26 @@
   top: 20px;
   right: 20px;
   z-index: 9999999;
-  background: #0f172a;
-  border: 1px solid #10b981;
-  color: #f8fafc;
+  background: var(--ab-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ab-card-border);
+  color: #ffffff;
   padding: 12px 20px;
-  border-radius: 12px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--ab-radius-xl);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
   box-shadow: var(--ab-shadow);
   display: flex;
   align-items: center;
   gap: 10px;
-  animation: ab-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ab-slide-in 0.35s var(--ab-easing-expressive);
 }
 
 @keyframes ab-slide-in {
   from {
-    transform: translateY(-20px);
+    transform: translateY(-24px);
     opacity: 0;
   }
   to {
