@@ -21,13 +21,16 @@ class LaTeXCompiler:
             try:
                 cmd_args = [tectonic_bin, "-o", output_dir, tex_file_path]
                 res = subprocess.run(cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
-                
+
                 # Check for output PDF
                 generated_pdf = os.path.join(output_dir, f"{base_name}.pdf")
                 if os.path.exists(generated_pdf):
                     if generated_pdf != output_pdf_path:
                         shutil.move(generated_pdf, output_pdf_path)
-                    return True, f"Successfully compiled tailored ATS PDF using Tectonic!"
+                    return True, "Successfully compiled tailored ATS PDF using Tectonic!"
+                else:
+                    print(f"[Compiler Error] Tectonic ran but produced no PDF.")
+                    print(f"[Tectonic stderr]\n{res.stderr[-3000:]}")
             except Exception as e:
                 print(f"[Compiler Warning] Tectonic compilation failed: {e}")
 
@@ -43,6 +46,8 @@ class LaTeXCompiler:
                         if generated_pdf != output_pdf_path:
                             shutil.move(generated_pdf, output_pdf_path)
                         return True, f"Successfully compiled tailored ATS PDF using {cmd}."
+                    else:
+                        print(f"[Compiler Error] {cmd} produced no PDF.\n{res.stderr[-1000:]}")
                 except Exception as e:
                     print(f"[Compiler Warning] {cmd} execution failed: {e}")
 
@@ -56,13 +61,16 @@ class LaTeXCompiler:
                 base_pdf = os.path.join(output_dir, "main.pdf")
                 if os.path.exists(base_pdf):
                     shutil.move(base_pdf, output_pdf_path)
-                    return True, "Successfully compiled curated PDF resume using Tectonic engine!"
+                    return True, "Successfully compiled base PDF resume using Tectonic engine!"
             except Exception as err:
                 print(f"[Compiler Fallback Note] {err}")
 
+        # Last-resort: only copy static PDF if the caller was compiling the base main.tex
+        # (never silently deliver the untailored static PDF when a tailored .tex was generated)
+        is_base_tex = os.path.abspath(tex_file_path) == os.path.join(project_root, "main.tex")
         fallback_source = os.path.join(project_root, "Vimal_Resume.pdf")
-        if os.path.exists(fallback_source):
+        if is_base_tex and os.path.exists(fallback_source):
             shutil.copy(fallback_source, output_pdf_path)
             return True, "Prepared static PDF resume (LaTeX CLI compiler pending)."
-            
-        return False, "Failed to compile LaTeX to PDF."
+
+        return False, "Failed to compile tailored LaTeX resume to PDF. Check server logs for tectonic errors."

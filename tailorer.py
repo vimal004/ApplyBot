@@ -60,27 +60,47 @@ class ResumeTailorer:
 
     @staticmethod
     def sanitize_latex(tex_content: str) -> str:
+        """
+        Robustly extract pure LaTeX from LLM output.
+        Handles:
+          - Code fences: ```latex ... ```
+          - Plain preamble text before \\documentclass
+          - Trailing LLM commentary after \\end{document}
+        """
+        # Step 1: If code fences exist, extract the fenced block first
         if "```" in tex_content:
             parts = tex_content.split("```")
             for part in parts:
-                if "\\documentclass" in part:
-                    tex_content = part.replace("latex", "", 1).strip()
+                stripped = part.lstrip()
+                # Strip the language tag (e.g. "latex\n" or "tex\n")
+                if stripped.lower().startswith(("latex", "tex")):
+                    stripped = stripped.split("\n", 1)[-1]
+                if "\\documentclass" in stripped:
+                    tex_content = stripped.strip()
                     break
 
-        if "\\begin{document}" in tex_content and "\\end{document}" not in tex_content:
-            tex_content += "\n\\end{document}"
-        elif "\\end{document}" in tex_content:
-            tex_content = tex_content.split("\\end{document}")[0] + "\\end{document}"
+        # Step 2: Slice from \documentclass onwards — strips any LLM preamble text
+        doc_start = tex_content.find("\\documentclass")
+        if doc_start > 0:
+            tex_content = tex_content[doc_start:]
 
-        return tex_content
+        # Step 3: Truncate after \end{document} — strips trailing LLM commentary
+        end_marker = "\\end{document}"
+        if end_marker in tex_content:
+            tex_content = tex_content.split(end_marker)[0] + end_marker
+        elif "\\begin{document}" in tex_content:
+            # Missing \end{document} — append it
+            tex_content += "\n\\end{document}"
+
+        return tex_content.strip()
 
     @staticmethod
     def tailor_latex_resume(base_tex_path: str, job_data: Dict[str, Any], output_tex_path: str) -> str:
         """
         Reads base main.tex and performs deep LLM ATS optimization:
-        1. Tailors Technical Skills order to prioritize target JD technologies.
-        2. Re-writes experience/project bullet points via Groq LLM to weave in JD keywords.
-        3. Ensures LaTeX safe syntax escaping.
+        1. Splits the .tex into preamble+header (kept verbatim) and content body (sent to LLM).
+        2. LLM rewrites only the content body sections to weave in JD keywords.
+        3. Reassembles the full valid .tex and validates completeness before writing.
         """
         with open(base_tex_path, 'r', encoding='utf-8') as f:
             tex_content = f.read()
@@ -88,40 +108,79 @@ class ResumeTailorer:
         company = job_data.get("company", "Target Company")
         role = job_data.get("role", "Target Role")
         requirements = job_data.get("requirements", [])
-        req_str = "\n".join(requirements[:6])
+        req_str = "\n".join(requirements[:8])
 
         # Pre-calculate missing keywords to instruct LLM explicitly
         _, _, missing_kw = ResumeTailorer.calculate_ats_score(job_data)
 
-        # 1. Groq LLM Deep Tailoring Prompt
+        # 1. Groq LLM Deep Tailoring — send only the content body, not the preamble
         if config.groq.api_key:
+            # Split: keep everything up to \begin{document} as the static preamble
+            begin_doc_marker = "\\begin{document}"
+            if begin_doc_marker in tex_content:
+                preamble_part = tex_content.split(begin_doc_marker)[0] + begin_doc_marker + "\n"
+                content_body = tex_content.split(begin_doc_marker)[1].rstrip()
+                # Strip trailing \end{document} from content body (we'll add it back)
+                if "\\end{document}" in content_body:
+                    content_body = content_body.split("\\end{document}")[0].rstrip()
+            else:
+                preamble_part = ""
+                content_body = tex_content
+
             system_prompt = (
-                "You are an elite ATS Resume Optimization Expert. Your goal is to optimize a candidate's LaTeX resume "
-                "for maximum ATS keyword density (95%+ ATS score) while preserving strict LaTeX code validity.\n\n"
+                "You are an elite ATS Resume Optimization Expert. Optimize a LaTeX resume body for maximum ATS keyword density.\n\n"
                 "MANDATORY INSTRUCTIONS:\n"
-                "1. Keep all LaTeX document setup, headers, and section structures intact.\n"
+                "1. You will receive ONLY the content body of a LaTeX resume (after \\begin{document}).\n"
                 "2. Adapt the Technical Skills section so keywords relevant to the JD are listed FIRST.\n"
                 "3. Rephrase bullet points under Experience and Projects to emphasize technologies and metrics matching the JD.\n"
                 "4. Ensure ALL LaTeX special characters (%, &, $, #, _) remain properly escaped (e.g. \\&, \\%, \\_).\n"
-                "5. Return ONLY the complete valid LaTeX document text."
+                "5. Return ONLY the rewritten content body — do NOT include \\documentclass, \\usepackage, or \\begin{document}.\n"
+                "6. Do NOT include any explanation, commentary, or code fences — ONLY the raw LaTeX content."
             )
 
-            target_keywords_str = f"Missing/Target Keywords to integrate: {', '.join(missing_kw)}\n" if missing_kw else ""
+            target_keywords_str = f"Target Keywords to integrate: {', '.join(missing_kw)}\n" if missing_kw else ""
             user_prompt = (
                 f"Target Role: {role} at {company}\n"
-                f"Job Requirements / JD:\n{req_str}\n\n"
+                f"Job Requirements:\n{req_str}\n\n"
                 f"{target_keywords_str}"
-                f"Base LaTeX Resume Code:\n{tex_content}\n\n"
-                f"Optimize this LaTeX resume to maximize ATS match for '{role} at {company}' by integrating the target keywords."
+                f"LaTeX Resume Content Body to optimize:\n{content_body}\n\n"
+                f"Return the optimized LaTeX content body for '{role} at {company}'."
             )
 
             try:
-                tailored_tex = ResumeTailorer.ask_groq_llm(user_prompt, system_prompt, max_tokens=4096)
-                if "\\documentclass" in tailored_tex:
-                    tailored_tex = ResumeTailorer.sanitize_latex(tailored_tex)
+                tailored_body = ResumeTailorer.ask_groq_llm(user_prompt, system_prompt, max_tokens=6000)
+
+                # Strip any accidental preamble the LLM might have added
+                if "\\documentclass" in tailored_body:
+                    # LLM returned full document — extract body only
+                    if begin_doc_marker in tailored_body:
+                        tailored_body = tailored_body.split(begin_doc_marker)[1]
+                    if "\\end{document}" in tailored_body:
+                        tailored_body = tailored_body.split("\\end{document}")[0]
+
+                # Strip code fences if present
+                if "```" in tailored_body:
+                    parts = tailored_body.split("```")
+                    for part in parts:
+                        stripped = part.lstrip()
+                        if stripped.lower().startswith(("latex", "tex")):
+                            stripped = stripped.split("\n", 1)[-1]
+                        if "\\section" in stripped or "\\begin" in stripped:
+                            tailored_body = stripped.strip()
+                            break
+
+                # Reassemble complete .tex document
+                if "\\section" in tailored_body or "\\begin{center}" in tailored_body:
+                    if "\\end{document}" in tailored_body:
+                        tailored_body = tailored_body.split("\\end{document}")[0].rstrip()
+                    tailored_full = preamble_part + tailored_body + "\n\n\\end{document}\n"
+
                     with open(output_tex_path, 'w', encoding='utf-8') as f:
-                        f.write(tailored_tex)
+                        f.write(tailored_full)
+                    print(f"[LLM Tailor] Successfully generated tailored LaTeX for '{role} at {company}'")
                     return output_tex_path
+                else:
+                    print(f"[LLM Tailor Warning] LLM returned unexpected content. Falling back to deterministic injector.")
             except Exception as e:
                 print(f"[LLM Resume Tailor Note] {e}. Using deterministic ATS keyword injector.")
 
