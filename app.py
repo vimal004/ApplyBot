@@ -1,10 +1,54 @@
 import os
 import json
+import datetime
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram_bot import ApplyBotPipeline
 from email_sender import HREmailSender
 from config import config
+
+TRACKER_LOG_PATH = os.path.join(os.path.dirname(__file__), "outputs", "applications_log.json")
+
+def _read_tracker():
+    if not os.path.exists(TRACKER_LOG_PATH):
+        return []
+    try:
+        with open(TRACKER_LOG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def _write_tracker(entries):
+    os.makedirs(os.path.dirname(TRACKER_LOG_PATH), exist_ok=True)
+    with open(TRACKER_LOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(entries, f, indent=2, ensure_ascii=False)
+
+def _log_application(result):
+    """Append a newly processed application into the tracker log."""
+    try:
+        job = result.get("job", {})
+        action = result.get("action_result", {})
+        entries = _read_tracker()
+        pdf_path = result.get("pdf_path", "")
+        pdf_filename = os.path.basename(pdf_path) if pdf_path else ""
+        entry = {
+            "id": datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"),
+            "applied_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "company": job.get("company", "Unknown"),
+            "role": job.get("role", "Unknown"),
+            "location": job.get("location", ""),
+            "salary": job.get("salary", ""),
+            "apply_target": job.get("apply_target", ""),
+            "apply_mode": action.get("type", "UNKNOWN"),
+            "ats_score": result.get("ats_score", 0),
+            "pdf_filename": pdf_filename,
+            "status": "Applied" if action.get("sent") else "Draft",
+            "notes": ""
+        }
+        entries.insert(0, entry)
+        _write_tracker(entries)
+    except Exception as e:
+        print(f"[Tracker] Failed to log application: {e}")
 
 PORT = 5050
 
@@ -87,6 +131,15 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(content)
             else:
                 self.send_error(404, "File Not Found")
+        elif path == "/api/tracker":
+            entries = _read_tracker()
+            res_payload = json.dumps(entries).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
         else:
             self.send_error(404, "Endpoint Not Found")
 
@@ -104,7 +157,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 superfast_mode = data.get("superfast_mode", False)
 
                 result = ApplyBotPipeline.process_referral(raw_text, superfast_mode)
-                
+                _log_application(result)   # persist to tracker
                 response_json = json.dumps(result).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -198,6 +251,95 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_cors_headers()
                 self.end_headers()
                 self.wfile.write(err_msg)
+        elif path == "/api/tracker/update":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                entry_id = data.get("id")
+                entries = _read_tracker()
+                for e in entries:
+                    if e["id"] == entry_id:
+                        if "status" in data: e["status"] = data["status"]
+                        if "notes"  in data: e["notes"]  = data["notes"]
+                        break
+                _write_tracker(entries)
+                res_payload = json.dumps({"success": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err))); self.send_cors_headers(); self.end_headers()
+                self.wfile.write(err)
+        elif path == "/api/tracker/delete":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                entry_id = data.get("id")
+                entries = [e for e in _read_tracker() if e["id"] != entry_id]
+                _write_tracker(entries)
+                res_payload = json.dumps({"success": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err))); self.send_cors_headers(); self.end_headers()
+                self.wfile.write(err)
+        elif path == "/api/tracker/add":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                company = data.get("company", "").strip() or "Unknown"
+                role = data.get("role", "").strip() or "Unknown"
+                location = data.get("location", "").strip()
+                salary = data.get("salary", "").strip()
+                apply_target = data.get("apply_target", "").strip()
+                apply_mode = data.get("apply_mode", "MANUAL").strip()
+                ats_score = int(data.get("ats_score", 0))
+                status = data.get("status", "Applied").strip()
+                notes = data.get("notes", "").strip()
+
+                entries = _read_tracker()
+                entry = {
+                    "id": datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"),
+                    "applied_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "company": company,
+                    "role": role,
+                    "location": location,
+                    "salary": salary,
+                    "apply_target": apply_target,
+                    "apply_mode": apply_mode,
+                    "ats_score": ats_score,
+                    "pdf_filename": "",
+                    "status": status,
+                    "notes": notes
+                }
+                entries.insert(0, entry)
+                _write_tracker(entries)
+                res_payload = json.dumps({"success": True, "entry": entry}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err))); self.send_cors_headers(); self.end_headers()
+                self.wfile.write(err)
         else:
             self.send_error(404, "API Endpoint Not Found")
 
