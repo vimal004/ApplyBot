@@ -128,23 +128,26 @@ class ResumeTailorer:
                 content_body = tex_content
 
             system_prompt = (
-                "You are an elite ATS Resume Optimization Expert. Optimize a LaTeX resume body for maximum ATS keyword density.\n\n"
-                "MANDATORY INSTRUCTIONS:\n"
-                "1. You will receive ONLY the content body of a LaTeX resume (after \\begin{document}).\n"
-                "2. Adapt the Technical Skills section so keywords relevant to the JD are listed FIRST.\n"
-                "3. Rephrase bullet points under Experience and Projects to emphasize technologies and metrics matching the JD.\n"
-                "4. Ensure ALL LaTeX special characters (%, &, $, #, _) remain properly escaped (e.g. \\&, \\%, \\_).\n"
-                "5. Return ONLY the rewritten content body — do NOT include \\documentclass, \\usepackage, or \\begin{document}.\n"
-                "6. Do NOT include any explanation, commentary, or code fences — ONLY the raw LaTeX content."
+                "You are an expert executive resume writer. Your goal is to subtly refine a candidate's LaTeX resume body for a target role without making it look artificially tailored or keyword-stuffed.\n\n"
+                "CRITICAL ATS & QUALITY RULES:\n"
+                "1. MINIMAL & SUBTLE EDITS: Make minimal changes to existing bullet points. Modify at most 2-4 bullet points across the entire resume only where a missing technical skill naturally fits into an existing project context.\n"
+                "2. NO REPETITIVE PHRASING: NEVER repeat the same technology, tool, or phrase (e.g. 'using Python for data analysis') across multiple bullets. Each bullet point must remain unique, concise, and focused on its specific project/achievement.\n"
+                "3. IGNORE SOFT SKILLS / GENERIC JD FLUFF: Completely IGNORE non-technical or generic soft-skill requirements in the JD (e.g. 'basic coding skills', 'strong analytical thinking', 'curiosity to learn', 'good communication'). DO NOT add these phrases into any bullet points.\n"
+                "4. NO ARTIFICIAL SUFFIXES: NEVER tack phrases onto the end of bullet points (e.g., avoid adding ', utilizing microservices architecture' or ', applying mathematical models').\n"
+                "5. ZERO EXTRA BOLDING: Do NOT add new \\textbf{} tags to words inside bullet points. Keep formatting identical to the original.\n"
+                "6. TECHNICAL SKILLS SECTION FIRST: Align the Technical Skills section by reordering matching hard skills to the front.\n"
+                "7. PRESERVE ORIGINAL TRUTH: Keep all metrics, numbers, and core technical descriptions accurate to the original resume.\n"
+                "8. LATEX INTEGRATION: Keep ALL LaTeX syntax and character escapes (\\%, \\&, \\_, \\$) intact.\n"
+                "9. OUTPUT FORMAT: Return ONLY the raw LaTeX content body (sections and items) — no preamble, no \\documentclass, no code blocks."
             )
 
-            target_keywords_str = f"Target Keywords to integrate: {', '.join(missing_kw)}\n" if missing_kw else ""
+            target_keywords_str = f"Missing Technical Keywords to seamlessly weave into Technical Skills or relevant project bullets: {', '.join(missing_kw)}\n" if missing_kw else ""
             user_prompt = (
                 f"Target Role: {role} at {company}\n"
-                f"Job Requirements:\n{req_str}\n\n"
-                f"{target_keywords_str}"
-                f"LaTeX Resume Content Body to optimize:\n{content_body}\n\n"
-                f"Return the optimized LaTeX content body for '{role} at {company}'."
+                f"Job Requirements Summary:\n{req_str}\n\n"
+                f"{target_keywords_str}\n"
+                f"LaTeX Resume Content Body to refine:\n{content_body}\n\n"
+                f"Return the subtly refined, professional LaTeX content body for '{role} at {company}'."
             )
 
             try:

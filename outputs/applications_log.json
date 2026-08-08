@@ -1,16 +1,16 @@
 [
   {
-    "id": "20260808125252874807",
-    "applied_at": "2026-08-08 12:52",
-    "company": "Google",
-    "role": "Software Engineer Intern",
-    "location": "Bengaluru",
-    "salary": "₹1.5L/mo",
-    "apply_target": "",
-    "apply_mode": "MANUAL",
-    "ats_score": 95,
-    "pdf_filename": "",
-    "status": "Interviewing",
-    "notes": "Referred by senior software engineer."
+    "id": "20260808125832711188",
+    "applied_at": "2026-08-08 12:58",
+    "company": "M37Labs",
+    "role": "AI/ML Intern",
+    "location": "Gurugram",
+    "salary": "₹25,000/month",
+    "apply_target": "aniket@m37labs.com",
+    "apply_mode": "EMAIL",
+    "ats_score": 100,
+    "pdf_filename": "Vimal_Manoharan_Resume_M37Labs.pdf",
+    "status": "Applied",
+    "notes": ""
   }
 ]
