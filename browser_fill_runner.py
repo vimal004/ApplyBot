@@ -126,11 +126,12 @@ def inspect_and_generate_live_plan(page, job_data, profile):
     q_blocks = page.query_selector_all("div[role='listitem']")
     log(f"div[role='listitem'] blocks found: {len(q_blocks)}")
     for q_idx, q in enumerate(q_blocks):
-        # Only process blocks that actually contain radio/checkbox controls
+        # Process blocks that contain radio, checkbox, or dropdown/combobox controls
         try:
             has_radio = q.query_selector(
                 "div[role='radio'], div[role='checkbox'], input[type='radio'], "
-                "input[type='checkbox'], div[role='radiogroup']"
+                "input[type='checkbox'], div[role='radiogroup'], div[role='listbox'], "
+                "div[role='combobox'], select, .v8y8e"
             )
         except Exception:
             has_radio = None
@@ -151,21 +152,18 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         if not q_title:
             continue
         
-        # Extract option labels from radio/checkbox elements via data-value
+        # Extract option labels from radio/checkbox/dropdown elements
         try:
             options = q.evaluate("""(el) => {
                 const opts = [];
-                const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
-                radios.forEach(r => {
-                    const dataVal = r.getAttribute('data-value');
-                    if (dataVal && dataVal !== '__other_option__') {
+                const controls = el.querySelectorAll('div[role="radio"], div[role="checkbox"], div[role="option"], option');
+                controls.forEach(r => {
+                    const dataVal = r.getAttribute('data-value') || r.getAttribute('value');
+                    const txt = r.innerText ? r.innerText.trim() : '';
+                    if (dataVal && dataVal !== '__other_option__' && dataVal !== '') {
                         opts.push(dataVal);
-                    } else {
-                        const spans = r.querySelectorAll('span');
-                        for (const s of spans) {
-                            const t = s.innerText.trim();
-                            if (t && t !== '*') { opts.push(t); break; }
-                        }
+                    } else if (txt && txt !== '*' && txt !== 'Choose') {
+                        opts.push(txt);
                     }
                 });
                 return opts;
@@ -188,9 +186,9 @@ def inspect_and_generate_live_plan(page, job_data, profile):
                 "question": q_title,
                 "options": options
             })
-            log(f"  [Radio Q{q_idx}] '{q_title[:60]}' => options: {options[:5]}")
+            log(f"  [Choice Q{q_idx}] '{q_title[:60]}' => options: {options[:5]}")
 
-    log(f"Radio question blocks (actual radios): {len(radio_questions)}")
+    log(f"Choice/Radio/Dropdown question blocks: {len(radio_questions)}")
 
     if not fields and not radio_questions:
         log("WARNING: No fields AND no radio questions found! Returning empty plan.")
@@ -201,35 +199,50 @@ def inspect_and_generate_live_plan(page, job_data, profile):
     raw_text = job_data.get("raw_text", "")
     log(f"Job context: company='{company}', role='{role}', raw_text_len={len(raw_text)}")
 
-    # Trim project summary to keep prompt concise and prevent Groq 6000 TPM rate limit
     projects_summary = "\n".join([
-        f"- {p['name']} ({p['tech'][:40]}): {p['description'][:100]}"
-        for p in config.profile.key_projects[:8]  # Top 8 key projects
+        f"- {p['name']} ({p['tech'][:40]}): {p['description'][:120]} [Live Demo / Repo: {p.get('live_demo') or p['url']}]"
+        for p in config.profile.key_projects[:8]
+    ])
+
+    work_exp_summary = "\n".join([
+        f"- {w['role']} at {w['company']} ({w['dates']}): {w['description']}"
+        for w in getattr(config.profile, "work_experience", [])
     ])
 
     system_prompt = (
         "You are an expert AI Job Application Assistant acting on behalf of Vimal Manoharan, a Computer Science "
-        "Engineering student at SRM (graduating 2026, CGPA 8.91/10.0).\n\n"
-        "Candidate Profile:\n"
-        f"- Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone}\n"
-        f"- Location: {config.profile.location}, Degree: {config.profile.degree}\n"
+        "Engineering graduate from SRM Institute of Science and Technology (graduated May 2026, CGPA 8.91/10.0).\n\n"
+        "CANDIDATE PROFILE:\n"
+        f"- Full Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone} (raw: {config.profile.raw_phone})\n"
+        f"- Location: {config.profile.location}, University: {config.profile.university}\n"
+        f"- Degree: Bachelor of Technology in Computer Science Engineering (B.Tech)\n"
+        f"- Highest Qualification: B.Tech\n"
+        f"- CGPA: {config.profile.gpa}, Graduation Year: {config.profile.graduation_year} (2026 Batch)\n"
+        f"- Last Stipend Paid: {getattr(config.profile, 'last_stipend', '20,000 / month')}\n"
         f"- LinkedIn: {config.profile.linkedin_url}, GitHub: {config.profile.github_url}\n"
-        f"- Resume: {config.profile.resume_gdrive_url}\n"
-        f"- Graduation Year: {config.profile.graduation_year}\n"
-        f"- University: {config.profile.university}\n\n"
+        f"- Resume Link: {config.profile.resume_gdrive_url}\n\n"
+        f"VIMAL'S REAL PAID WORK EXPERIENCE & INTERNSHIPS:\n{work_exp_summary}\n\n"
         f"VIMAL'S GITHUB PROJECTS:\n{projects_summary}\n\n"
-        "CRITICAL RULES FOR FORM FILLING:\n"
-        "1. TEXT INPUT FIELDS: Use action='fill'. Set 'index' to the field's index number.\n"
-        "   - Standard fields (Name, Email, Phone, Location, College, CGPA, Links): use exact profile values.\n"
-        "   - Essay/Custom questions: Write 2-4 impressive sentences. Reference relevant projects!\n"
-        "2. RADIO / CHOICE QUESTIONS: Use action='click_option'. Set 'question_index' to the question's index number.\n"
-        "   - The 'value' MUST be one of the EXACT option strings listed for that question.\n"
-        "   - Graduation year is 2026. Available to start within 15 days.\n"
-        "   - Do NOT select 'Other:' unless no listed option matches.\n"
-        "3. Generate an action for EVERY text field AND EVERY radio question. Do not skip any.\n\n"
-        "Output ONLY a valid JSON array (no markdown, no explanation):\n"
-        '[{"index": 0, "action": "fill", "label": "field label", "value": "answer"},\n'
-        ' {"question_index": 3, "action": "click_option", "label": "question", "value": "exact option text"}]'
+        "CRITICAL RULES FOR FORM ANSWERS:\n"
+        "1. INTERNSHIP & PRIOR EXPERIENCE QUESTIONS:\n"
+        "   - Vimal HAS paid internship & freelance work experience! Mention his roles at Aakar Labs (React Native Developer Intern on Aaku AI travel companion) and KSK Electronics (Software Developer Intern on ERP & RAG SOP).\n"
+        "   - DO NOT say 'No prior experience' or 'only personal projects'!\n"
+        "   - For 'Company where most impact work done', specify 'Siddha Shivalayas Clinic (https://siddhashivalayas.vercel.app)' or 'Aakar Labs'.\n"
+        "   - For 'Link to product worked on', give 'https://siddhashivalayas.vercel.app'.\n"
+        "   - For 'last Stipend Paid', answer '20,000 / month'.\n\n"
+        "2. QUALIFICATION & GRADUATION YEAR:\n"
+        "   - Highest Qualification: select/fill 'B.Tech'.\n"
+        "   - Graduation year: select '2026'.\n"
+        "   - DO NOT fill any 'Other:' text input if a standard option (like 2026 or B.Tech) is chosen. Leave 'Other:' text input empty!\n\n"
+        "3. DOMAIN-CURATED ESSAY QUESTIONS (e.g. 'What excites you about the role?'):\n"
+        "   - Carefully analyze target company and role domain (e.g. Product Management, FinTech, AI, Full-Stack).\n"
+        "   - Tailor answer SPECIFICALLY to that domain and company! (e.g. for Product Intern at NxtPe FinTech: focus on product analytics, payments UX, feature roadmap, and reference product-centric work like Aaku AI travel app or QuensultingAI Voice Receptionist).\n"
+        "   - DO NOT mention irrelevant random projects!\n\n"
+        "4. ACTION SCHEME:\n"
+        "   - For text input fields: use action='fill', set 'index'.\n"
+        "   - For radio/checkbox/dropdown choice questions: use action='click_option', set 'question_index'. The 'value' MUST be an EXACT option string listed.\n"
+        "   - Generate actions for ALL text fields and choice questions.\n\n"
+        "Output ONLY a valid JSON array of objects."
     )
 
     user_prompt = (
@@ -426,15 +439,19 @@ with sync_playwright() as p:
                     if idx is not None and isinstance(idx, int) and 0 <= idx < len(all_inputs):
                         target_el = all_inputs[idx]
                         if target_el and target_el.is_visible():
-                            target_el.fill(str(val))
-                            target_el.dispatch_event("input")
-                            target_el.dispatch_event("change")
-                            target_el.dispatch_event("blur")
-                            page.wait_for_timeout(300)
-                            filled = True
-                            filled_count += 1
-                            log(f"  [FILLED idx={idx}] '{label[:40]}' => '{str(val)[:60]}...'")
-                            
+                            _lbl_attr = (target_el.get_attribute("aria-label") or target_el.get_attribute("placeholder") or "").strip().lower()
+                            if _lbl_attr in ["other response", "other"]:
+                                log(f"  [SKIPPED fill idx={idx}] '{label}' target is an Other response input box.")
+                            else:
+                                target_el.fill(str(val))
+                                target_el.dispatch_event("input")
+                                target_el.dispatch_event("change")
+                                target_el.dispatch_event("blur")
+                                page.wait_for_timeout(300)
+                                filled = True
+                                filled_count += 1
+                                log(f"  [FILLED idx={idx}] '{label[:40]}' => '{str(val)[:60]}...'")
+                             
                     # Strategy 2: Container text matching
                     if not filled and label:
                         containers = page.query_selector_all("div[role='listitem'], div[jsmodel], div.geFormItem, fieldset, label")
@@ -446,6 +463,10 @@ with sync_playwright() as p:
                             if label.lower()[:30] in c_text.lower():
                                 inp = container.query_selector("input:not([type='hidden']), textarea")
                                 if inp and inp.is_visible():
+                                    _lbl_attr = (inp.get_attribute("aria-label") or inp.get_attribute("placeholder") or "").strip().lower()
+                                    if _lbl_attr in ["other response", "other"]:
+                                        log(f"  [SKIPPED fill container] '{label}' target is an Other response input box.")
+                                        break
                                     inp.fill(str(val))
                                     inp.dispatch_event("input")
                                     inp.dispatch_event("change")
@@ -463,14 +484,16 @@ with sync_playwright() as p:
                             if not el or not el.is_visible():
                                 el = page.get_by_placeholder(label, exact=False).first
                             if el and el.is_visible():
-                                el.fill(str(val))
-                                el.dispatch_event("input")
-                                el.dispatch_event("change")
-                                el.dispatch_event("blur")
-                                page.wait_for_timeout(300)
-                                filled = True
-                                filled_count += 1
-                                log(f"  [FILLED playwright] '{label[:40]}' => '{str(val)[:60]}...'")
+                                _lbl_attr = (el.get_attribute("aria-label") or el.get_attribute("placeholder") or "").strip().lower()
+                                if _lbl_attr not in ["other response", "other"]:
+                                    el.fill(str(val))
+                                    el.dispatch_event("input")
+                                    el.dispatch_event("change")
+                                    el.dispatch_event("blur")
+                                    page.wait_for_timeout(300)
+                                    filled = True
+                                    filled_count += 1
+                                    log(f"  [FILLED playwright] '{label[:40]}' => '{str(val)[:60]}...'")
                         except Exception:
                             pass
                     
@@ -480,7 +503,7 @@ with sync_playwright() as p:
                 elif action == "click_option" and val:
                     clicked = False
                     
-                    # Strategy 1: Find question container and click matching radio via JS
+                    # Strategy 1: Find question container and click matching radio/dropdown via JS
                     try:
                         q_blocks_exec = page.query_selector_all("div[role='listitem']")
                         for qb in q_blocks_exec:
@@ -490,32 +513,70 @@ with sync_playwright() as p:
                                     return h ? h.innerText.replace('*','').trim() : '';
                                 }""") or ""
                             except Exception:
-                                continue
-                            if label and label.lower()[:25] in heading_text.lower():
+                                heading_text = ""
+                            
+                            match_q = False
+                            if label and heading_text and label.lower()[:20] in heading_text.lower():
+                                match_q = True
+                            elif label and not heading_text:
+                                block_text = qb.evaluate("el => el.innerText") or ""
+                                if label.lower()[:20] in block_text.lower():
+                                    match_q = True
+
+                            if match_q:
                                 try:
-                                    clicked_js = qb.evaluate("""(el, targetVal) => {
+                                    res = qb.evaluate("""(el, targetVal) => {
+                                        // Check if container has a dropdown listbox/combobox
+                                        const listbox = el.querySelector('div[role="listbox"], div[role="combobox"], .v8y8e, select');
+                                        if (listbox) {
+                                            listbox.click();
+                                            return { isDropdown: true };
+                                        }
+                                        
+                                        // Radios / Checkboxes
                                         const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
                                         for (const r of radios) {
                                             const dv = r.getAttribute('data-value');
-                                            if (dv === targetVal) { r.click(); return true; }
+                                            if (dv === targetVal) { r.click(); return { success: true }; }
                                         }
                                         const tl = targetVal.toLowerCase();
                                         for (const r of radios) {
                                             const rt = r.innerText.trim().toLowerCase();
-                                            if (rt === tl || rt.includes(tl) || tl.includes(rt)) { r.click(); return true; }
+                                            if (rt === tl || rt.includes(tl) || tl.includes(rt)) { r.click(); return { success: true }; }
                                         }
-                                        return false;
+                                        return { success: false };
                                     }""", str(val))
-                                    if clicked_js:
+                                    
+                                    if res and res.get("isDropdown"):
+                                        page.wait_for_timeout(400)
+                                        opt_clicked = page.evaluate("""(targetVal) => {
+                                            const options = document.querySelectorAll('div[role="option"], option, div[data-value], .exportOption');
+                                            for (const o of options) {
+                                                const dv = (o.getAttribute('data-value') || o.getAttribute('value') || '').trim();
+                                                const txt = (o.innerText || '').trim();
+                                                if (dv === targetVal || txt === targetVal || txt.toLowerCase() === targetVal.toLowerCase() || (dv && dv.toLowerCase() === targetVal.toLowerCase())) {
+                                                    o.click();
+                                                    return true;
+                                                }
+                                            }
+                                            return false;
+                                        }""", str(val))
+                                        if opt_clicked:
+                                            page.wait_for_timeout(300)
+                                            clicked = True
+                                            filled_count += 1
+                                            log(f"  [CLICKED dropdown option] '{label[:40]}' => '{str(val)[:50]}'")
+                                            break
+                                    elif res and res.get("success"):
                                         page.wait_for_timeout(300)
                                         clicked = True
                                         filled_count += 1
                                         log(f"  [CLICKED radio] '{label[:40]}' => '{str(val)[:50]}'")
                                         break
                                 except Exception as rex:
-                                    log(f"  [Radio JS error] {rex}")
+                                    log(f"  [Option JS error] {rex}")
                     except Exception as ex:
-                        log(f"  [Radio container error] {ex}")
+                        log(f"  [Choice container error] {ex}")
                     
                     # Strategy 2: Fallback to page-wide text click
                     if not clicked:
@@ -545,6 +606,11 @@ with sync_playwright() as p:
                 if not el.is_visible():
                     continue
 
+                aria_lbl = (el.get_attribute("aria-label") or "").strip().lower()
+                ph_lbl = (el.get_attribute("placeholder") or "").strip().lower()
+                if aria_lbl in ["other response", "other"] or ph_lbl in ["other response", "other"]:
+                    continue
+
                 val_curr = ""
                 try:
                     val_curr = el.input_value().strip()
@@ -554,7 +620,7 @@ with sync_playwright() as p:
                 if val_curr:
                     continue
 
-                label_text = (el.get_attribute("aria-label") or el.get_attribute("placeholder") or el.get_attribute("name") or el.get_attribute("id") or "").lower()
+                label_text = (aria_lbl or ph_lbl or el.get_attribute("name") or el.get_attribute("id") or "").lower()
                 try:
                     parent = el.evaluate_handle('el => el.closest("div[role=\\"listitem\\"], label, fieldset")')
                     if parent:
@@ -594,6 +660,10 @@ with sync_playwright() as p:
                     el.dispatch_event("change")
                 elif "linkedin" in label_text:
                     el.fill(profile["linkedin"])
+                    el.dispatch_event("input")
+                    el.dispatch_event("change")
+                elif "stipend" in label_text or "salary" in label_text:
+                    el.fill(profile.get("last_stipend", "20,000 / month"))
                     el.dispatch_event("input")
                     el.dispatch_event("change")
                 elif "github" in label_text or "portfolio" in label_text or "website" in label_text:

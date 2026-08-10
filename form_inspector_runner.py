@@ -83,7 +83,8 @@ with sync_playwright() as p:
             try:
                 has_radio = q.query_selector(
                     "div[role='radio'], div[role='checkbox'], input[type='radio'], "
-                    "input[type='checkbox'], div[role='radiogroup']"
+                    "input[type='checkbox'], div[role='radiogroup'], div[role='listbox'], "
+                    "div[role='combobox'], select, .v8y8e"
                 )
             except Exception:
                 has_radio = None
@@ -106,17 +107,14 @@ with sync_playwright() as p:
             try:
                 options = q.evaluate("""(el) => {
                     const opts = [];
-                    const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
-                    radios.forEach(r => {
-                        const dataVal = r.getAttribute('data-value');
-                        if (dataVal && dataVal !== '__other_option__') {
+                    const controls = el.querySelectorAll('div[role="radio"], div[role="checkbox"], div[role="option"], option');
+                    controls.forEach(r => {
+                        const dataVal = r.getAttribute('data-value') || r.getAttribute('value');
+                        const txt = r.innerText ? r.innerText.trim() : '';
+                        if (dataVal && dataVal !== '__other_option__' && dataVal !== '') {
                             opts.push(dataVal);
-                        } else {
-                            const spans = r.querySelectorAll('span');
-                            for (const s of spans) {
-                                const t = s.innerText.trim();
-                                if (t && t !== '*') { opts.push(t); break; }
-                            }
+                        } else if (txt && txt !== '*' && txt !== 'Choose') {
+                            opts.push(txt);
                         }
                     });
                     return opts;

@@ -33,17 +33,49 @@ class CandidateProfile:
     degree: str = "Bachelor of Technology in Computer Science Engineering"
     gpa: str = "8.91 / 10.0"
     graduation_year: int = 2026
-    batch_status: str = "2026 Batch"
+    batch_status: str = "Graduate (2026 Batch)"
     
     experience_years: str = "1+ years (Internships & Freelance)"
     notice_period: str = "Immediate"
     expected_salary: str = "As per industry standards / Negotiable"
+    last_stipend: str = "20,000 / month"
     
     core_skills: List[str] = field(default_factory=lambda: [
         "Python", "JavaScript", "React.js", "React Native", "Expo", "Node.js", 
         "FastAPI", "Express.js", "Java", "C++", "SQL", "MongoDB", "LangChain", 
         "LangGraph", "RAG Pipelines", "AI Agents", "Docker", "AWS EC2", "Nginx", 
         "Chroma DB", "Tailwind CSS", "Scikit-learn", "Selenium"
+    ])
+
+    work_experience: List[Dict[str, str]] = field(default_factory=lambda: [
+        {
+            "role": "React Native Frontend Developer Intern",
+            "company": "Aakar Labs",
+            "location": "Chennai, India",
+            "dates": "Sep 2025 – Mar 2026 (7 months)",
+            "description": "Collaborated within an Agile, product-focused team to design and pair-program mobile interfaces for Aaku, an AI-powered travel companion app using React Native and Expo. Partnered with backend AI engineers to validate AI agent trip planning features, engineered reusable UI components, and engaged in cross-functional product design feedback sessions."
+        },
+        {
+            "role": "Software Developer Intern",
+            "company": "KSK Electronics Pvt. Ltd.",
+            "location": "Chennai, India",
+            "dates": "Aug 2025 – Oct 2025 (3 months)",
+            "description": "Developed and refactored a full-stack ERP platform using React, Node.js, and MongoDB. Architected corporate RAG SOP framework using LangChain and Chroma DB. Implemented RBAC and automated GST validation workflows."
+        },
+        {
+            "role": "Freelance Full-Stack Developer",
+            "company": "Siddha Shivalayas Clinic",
+            "location": "Chennai, India",
+            "dates": "Jan 2025 – Apr 2025 (4 months)",
+            "description": "Built MERN-stack Clinic Management System for patient records, billing, and inventory for 300+ profiles. Implemented SOLID principles and real-time inventory deduction logic with analytics dashboards."
+        },
+        {
+            "role": "Generative AI Trainee",
+            "company": "Intel Unnati Program",
+            "location": "Remote, India",
+            "dates": "Jan 2024 – Mar 2024 (3 months)",
+            "description": "Completed industrial training in Generative AI, LLM architectures, and agentic workflows. Architected data pipelines for LangChain AI agents."
+        }
     ])
     
     key_projects: List[Dict[str, str]] = field(default_factory=lambda: [

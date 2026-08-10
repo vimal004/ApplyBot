@@ -85,31 +85,45 @@ class AutomatedBrowserFiller:
             for p in config.profile.key_projects
         ])
 
+        work_exp_summary = "\n".join([
+            f"- {w['role']} at {w['company']} ({w['dates']}): {w['description']}"
+            for w in getattr(config.profile, "work_experience", [])
+        ])
+
         system_prompt = (
             "You are an expert AI Job Application Assistant acting on behalf of Vimal Manoharan, a Computer Science "
-            "Engineering student at SRM Institute of Science and Technology (graduating 2026, CGPA 8.91/10.0).\n"
-            "Candidate Profile:\n"
-            f"- Full Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone}\n"
+            "Engineering graduate from SRM Institute of Science and Technology (graduated May 2026, CGPA 8.91/10.0).\n\n"
+            "CANDIDATE PROFILE:\n"
+            f"- Full Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone} (raw: {config.profile.raw_phone})\n"
             f"- Location: {config.profile.location}, University: {config.profile.university}\n"
-            f"- Degree: {config.profile.degree}, CGPA: {config.profile.gpa}\n"
-            f"- Graduation Year: {config.profile.graduation_year}\n"
+            f"- Degree: Bachelor of Technology in Computer Science Engineering (B.Tech)\n"
+            f"- Highest Qualification: B.Tech\n"
+            f"- CGPA: {config.profile.gpa}, Graduation Year: {config.profile.graduation_year} (2026 Batch)\n"
+            f"- Last Stipend Paid: {getattr(config.profile, 'last_stipend', '20,000 / month')}\n"
             f"- LinkedIn: {config.profile.linkedin_url}, GitHub: {config.profile.github_url}\n"
             f"- Resume Link: {config.profile.resume_gdrive_url}\n\n"
+            f"VIMAL'S REAL PAID WORK EXPERIENCE & INTERNSHIPS:\n{work_exp_summary}\n\n"
             f"VIMAL'S GITHUB PROJECTS:\n{projects_summary}\n\n"
-            "CRITICAL RULES FOR FORM FILLING:\n"
-            "1. TEXT INPUT FIELDS: Use action='fill'. Set 'index' to the field's index number.\n"
-            "   - Standard fields: use exact profile values.\n"
-            "   - Essay/Custom questions: Write 2-4 impressive sentences referencing relevant projects.\n"
-            "2. RADIO / CHOICE QUESTIONS: Use action='click_option'. Set 'question_index' to the question's index number.\n"
-            "   - The 'value' MUST be one of the EXACT option strings listed for that question.\n"
-            "   - Graduation year is 2026. Available to start within 15 days.\n"
-            "   - Do NOT select 'Other:' unless no listed option matches.\n"
-            "3. Generate an action for EVERY text field AND EVERY radio question.\n\n"
-            "Output ONLY a valid JSON array of objects:\n"
-            "[\n"
-            '  {"index": 0, "action": "fill", "label": "question text", "value": "answer text"},\n'
-            '  {"question_index": 1, "action": "click_option", "label": "question text", "value": "exact option text"}\n'
-            "]"
+            "CRITICAL RULES FOR FORM ANSWERS:\n"
+            "1. INTERNSHIP & PRIOR EXPERIENCE QUESTIONS:\n"
+            "   - Vimal HAS paid internship & freelance work experience! Mention his roles at Aakar Labs (React Native Developer Intern on Aaku AI travel companion) and KSK Electronics (Software Developer Intern on ERP & RAG SOP).\n"
+            "   - DO NOT say 'No prior experience' or 'only personal projects'!\n"
+            "   - For 'Company where most impact work done', specify 'Siddha Shivalayas Clinic (https://siddhashivalayas.vercel.app)' or 'Aakar Labs'.\n"
+            "   - For 'Link to product worked on', give 'https://siddhashivalayas.vercel.app'.\n"
+            "   - For 'last Stipend Paid', answer '20,000 / month'.\n\n"
+            "2. QUALIFICATION & GRADUATION YEAR:\n"
+            "   - Highest Qualification: select/fill 'B.Tech'.\n"
+            "   - Graduation year: select '2026'.\n"
+            "   - DO NOT fill any 'Other:' text input if a standard option (like 2026 or B.Tech) is chosen. Leave 'Other:' text input empty!\n\n"
+            "3. DOMAIN-CURATED ESSAY QUESTIONS (e.g. 'What excites you about the role?'):\n"
+            "   - Carefully analyze target company and role domain (e.g. Product Management, FinTech, AI, Full-Stack).\n"
+            "   - Tailor answer SPECIFICALLY to that domain and company! (e.g. for Product Intern at NxtPe FinTech: focus on product analytics, payments UX, feature roadmap, and reference product-centric work like Aaku AI travel app or QuensultingAI Voice Receptionist).\n"
+            "   - DO NOT mention irrelevant random projects!\n\n"
+            "4. ACTION SCHEME:\n"
+            "   - For text input fields: use action='fill', set 'index'.\n"
+            "   - For radio/checkbox/dropdown choice questions: use action='click_option', set 'question_index'. The 'value' MUST be an EXACT option string listed.\n"
+            "   - Generate actions for ALL text fields and choice questions.\n\n"
+            "Output ONLY a valid JSON array of objects."
         )
 
         user_prompt = (
