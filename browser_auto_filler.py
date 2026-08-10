@@ -145,5 +145,53 @@ class AutomatedBrowserFiller:
             plan = json.loads(llm_res.strip())
             return plan if isinstance(plan, list) else []
         except Exception as e:
-            print(f"[LLM Action Plan Error] {e}")
-            return []
+            print(f"[LLM Action Plan Error] {e}. Using Local Deterministic Heuristic Plan Generator...")
+            
+        fallback_plan = []
+        for f in fields:
+            idx = f.get("index")
+            lbl = f.get("label", "").lower()
+            val = ""
+            if "email" in lbl: val = config.profile.email
+            elif "location" in lbl or "city" in lbl or "address" in lbl: val = config.profile.location
+            elif "first name" in lbl: val = config.profile.first_name
+            elif "last name" in lbl: val = config.profile.last_name
+            elif "phone" in lbl or "mobile" in lbl or "contact" in lbl: val = config.profile.raw_phone
+            elif "linkedin" in lbl: val = config.profile.linkedin_url
+            elif "github" in lbl or "portfolio" in lbl or "website" in lbl: val = config.profile.github_url
+            elif "college" in lbl or "university" in lbl or "institute" in lbl: val = config.profile.university
+            elif "degree" in lbl or "branch" in lbl or "major" in lbl: val = config.profile.degree
+            elif "gpa" in lbl or "cgpa" in lbl or "marks" in lbl: val = config.profile.gpa
+            elif "stipend" in lbl or "salary" in lbl: val = getattr(config.profile, "last_stipend", "20,000 / month")
+            elif "impact" in lbl or "company" in lbl: val = "Siddha Shivalayas Clinic (https://siddhashivalayas.vercel.app)"
+            elif "product" in lbl or "link" in lbl or "app store" in lbl or "weblink" in lbl: val = "https://siddhashivalayas.vercel.app"
+            elif "prior" in lbl or "internship" in lbl or "experience" in lbl: val = "React Native Frontend Developer Intern at Aakar Labs (7 months, Aaku AI travel companion) and Software Developer Intern at KSK Electronics (3 months, full-stack ERP & RAG SOP)."
+            elif "excite" in lbl or "why" in lbl or "motivation" in lbl: val = f"I'm excited about the {role} role at {company} because it offers the opportunity to work on high-impact products and user experiences. My background developing production-grade applications like Aaku AI travel companion app and QuensultingAI Voice Receptionist has given me strong domain skills in product development and analytics."
+            elif "video" in lbl or "youtube" in lbl or "2 minute" in lbl: val = "Video link will be provided upon request"
+            elif "name" in lbl and "file" not in lbl: val = config.profile.full_name
+            
+            if val and idx is not None:
+                fallback_plan.append({"index": idx, "action": "fill", "label": f.get("label", ""), "value": val})
+
+        for rq in radio_questions:
+            q_idx = rq.get("question_index")
+            q_title = rq.get("question", "").lower()
+            opts = rq.get("options", [])
+            chosen_opt = ""
+            if "graduat" in q_title or "batch" in q_title or "year" in q_title:
+                for o in opts:
+                    if "2026" in o: chosen_opt = o; break
+            elif "qualification" in q_title or "degree" in q_title or "highest" in q_title:
+                for o in opts:
+                    if "b.tech" in o.lower() or "btech" in o.lower() or "b.e" in o.lower(): chosen_opt = o; break
+            elif "available" in q_title or "start" in q_title or "notice" in q_title:
+                for o in opts:
+                    if "15" in o or "immediate" in o.lower() or "less than" in o.lower(): chosen_opt = o; break
+            if not chosen_opt and opts:
+                for o in opts:
+                    if "other" not in o.lower(): chosen_opt = o; break
+                if not chosen_opt: chosen_opt = opts[0]
+            if chosen_opt and q_idx is not None:
+                fallback_plan.append({"question_index": q_idx, "action": "click_option", "label": rq.get("question", ""), "value": chosen_opt})
+
+        return fallback_plan

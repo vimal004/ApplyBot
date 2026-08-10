@@ -19,6 +19,27 @@ with sync_playwright() as p:
         
         fields = []
         elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+        
+        if not elements or not any(e.is_visible() for e in elements):
+            for frame in page.frames:
+                try:
+                    f_elems = frame.query_selector_all("input:not([type='hidden']), textarea, select")
+                    if f_elems and any(fe.is_visible() for fe in f_elems):
+                        elements = f_elems
+                        break
+                except Exception:
+                    pass
+
+            if not elements or not any(e.is_visible() for e in elements):
+                try:
+                    apply_btn = page.query_selector("button:has-text('Apply'), a:has-text('Apply'), div[role='button']:has-text('Apply'), span:has-text('Apply'), button:has-text('Next'), span:has-text('Next')")
+                    if apply_btn and apply_btn.is_visible():
+                        apply_btn.click()
+                        page.wait_for_timeout(2500)
+                        elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+                except Exception:
+                    pass
+
         visible_count = 0
         for idx, el in enumerate(elements):
             if not el.is_visible():
