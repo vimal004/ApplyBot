@@ -1,0 +1,5 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+source venv/bin/activate
+echo "🚀 Starting ApplyBot..."
+python app.py

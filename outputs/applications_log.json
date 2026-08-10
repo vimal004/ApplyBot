@@ -1,5 +1,33 @@
 [
   {
+    "id": "20260810133009923626",
+    "applied_at": "2026-08-10 13:30",
+    "company": "Enrichly HR",
+    "role": "Software Engineering Intern",
+    "location": "Remote",
+    "salary": "₹25,000/month",
+    "apply_target": "https://docs.google.com/forms/d/e/1FAIpQLSe6-UgSSKtYoO8q6KIZMT-aa6mb-31-9-iOa9LqpC_ptf9GxQ/viewform",
+    "apply_mode": "FORM_AUTOFILL",
+    "ats_score": 100,
+    "pdf_filename": "Vimal_Manoharan_Resume_Enrichly_HR.pdf",
+    "status": "Draft",
+    "notes": ""
+  },
+  {
+    "id": "20260810132734462146",
+    "applied_at": "2026-08-10 13:27",
+    "company": "ViralWorks Technologies",
+    "role": "Product Analyst Intern",
+    "location": "Bengaluru",
+    "salary": "₹30,000/month",
+    "apply_target": "ankit@myheartcraft.com",
+    "apply_mode": "EMAIL",
+    "ats_score": 100,
+    "pdf_filename": "Vimal_Manoharan_Resume_ViralWorks_Technologies.pdf",
+    "status": "Applied",
+    "notes": ""
+  },
+  {
     "id": "20260808130705730306",
     "applied_at": "2026-08-08 13:07",
     "company": "Brilworks Software",
