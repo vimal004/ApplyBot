@@ -16,7 +16,8 @@ class LaTeXCompiler:
         base_name = os.path.splitext(os.path.basename(tex_file_path))[0]
         
         # 1. Check for Tectonic (Fast, modern, self-contained LaTeX engine)
-        tectonic_bin = shutil.which("tectonic") or "/opt/homebrew/bin/tectonic"
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        tectonic_bin = shutil.which("tectonic") or os.path.join(project_root, "tectonic") or "/opt/homebrew/bin/tectonic"
         if os.path.exists(tectonic_bin) or shutil.which("tectonic"):
             try:
                 cmd_args = [tectonic_bin, "-o", output_dir, tex_file_path]

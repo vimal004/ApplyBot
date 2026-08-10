@@ -2,7 +2,7 @@ services:
   - type: web
     name: applybot
     runtime: python
-    buildCommand: pip install -r requirements.txt && playwright install chromium
+    buildCommand: pip install -r requirements.txt && curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh
     startCommand: python app.py
     envVars:
       - key: SENDER_EMAIL
@@ -12,7 +12,7 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
-        value: llama-3.1-8b-instant
+        value: llama-3.3-70b-versatile
       - key: SMTP_SERVER
         value: smtp.gmail.com
       - key: SMTP_PORT
