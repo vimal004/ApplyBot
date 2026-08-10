@@ -50,7 +50,7 @@ def _log_application(result):
     except Exception as e:
         print(f"[Tracker] Failed to log application: {e}")
 
-PORT = 5050
+PORT = int(os.environ.get("PORT", 5050))
 
 class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -345,6 +345,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
 
 def run_server():
     server_address = ("", PORT)
+    HTTPServer.allow_reuse_address = True
     httpd = HTTPServer(server_address, ApplyBotHTTPRequestHandler)
     print(f"============================================================")
     print(f"⚡ ApplyBot Dashboard Running at: http://localhost:{PORT}")

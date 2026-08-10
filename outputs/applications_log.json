@@ -1,7 +1,21 @@
 [
   {
-    "id": "20260808125832711188",
-    "applied_at": "2026-08-08 12:58",
+    "id": "20260808130705730306",
+    "applied_at": "2026-08-08 13:07",
+    "company": "Brilworks Software",
+    "role": "Data Engineering Intern",
+    "location": "Ahmedabad",
+    "salary": "₹25,000/month",
+    "apply_target": "https://brilworks.keka.com/careers/applyjob/144990",
+    "apply_mode": "FORM_AUTOFILL",
+    "ats_score": 100,
+    "pdf_filename": "Vimal_Manoharan_Resume_Brilworks_Software.pdf",
+    "status": "Draft",
+    "notes": ""
+  },
+  {
+    "id": "20260808130449901781",
+    "applied_at": "2026-08-08 13:04",
     "company": "M37Labs",
     "role": "AI/ML Intern",
     "location": "Gurugram",
