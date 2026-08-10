@@ -313,65 +313,72 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         "Generate a JSON array with actions for ALL text fields AND ALL radio questions."
     )
 
-    if not config.groq.api_key:
-        log("ERROR: No Groq API key! Cannot call LLM.")
-        return []
-
-    models_to_try = [config.groq.model_name, "llama-3.1-8b-instant", "llama-3.3-70b-specdec"]
+    providers = getattr(config.multi_llm, "providers", [])
     
-    for model_candidate in models_to_try:
-        log(f"Calling Groq API: model={model_candidate}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
+    for p in providers:
+        p_name = p.get("name", "LLM")
+        env_var = p.get("api_key_env", "")
+        api_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
         
-        try:
-            url_api = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {config.groq.api_key}",
-                "User-Agent": "ApplyBot/1.0"
-            }
-            payload = {
-                "model": model_candidate,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                "temperature": 0.3,
-                "max_tokens": 2000
-            }
+        if not api_key:
+            log(f"Skipping {p_name}: No API key set for {env_var}")
+            continue
             
-            req_data = json.dumps(payload).encode("utf-8")
-            log(f"Request payload size: {len(req_data)} bytes")
+        endpoint = p.get("endpoint")
+        models = p.get("models", [])
+        
+        for model_candidate in models:
+            log(f"Calling {p_name} API ({model_candidate}): system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
             
-            req = urllib.request.Request(url_api, data=req_data, headers=headers)
-            with urllib.request.urlopen(req, timeout=30) as response:
-                res_bytes = response.read()
-                res_data = json.loads(res_bytes.decode("utf-8"))
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                    "User-Agent": "ApplyBot/1.0"
+                }
+                if p_name == "OpenRouter":
+                    headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
+                    headers["X-Title"] = "ApplyBot"
+                    
+                payload = {
+                    "model": model_candidate,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 2000
+                }
                 
-                llm_res = res_data["choices"][0]["message"]["content"].strip()
-                log(f"LLM response received ({len(llm_res)} chars)")
-                
-                if "```" in llm_res:
-                    parts = llm_res.split("```")
-                    for p in parts:
-                        if "[" in p and "]" in p:
-                            llm_res = p.replace("json", "").strip()
-                            break
-                
-                plan = json.loads(llm_res.strip())
-                log(f"Parsed action plan: {len(plan)} actions")
-                for a in plan:
-                    log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
-                return plan
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode("utf-8") if e.fp else "N/A"
-            log(f"Groq API HTTP Error {e.code} on model {model_candidate}: {error_body[:300]}")
-            if e.code == 429:
-                log("Rate limit hit! Trying next fallback model...")
+                req_data = json.dumps(payload).encode("utf-8")
+                req = urllib.request.Request(endpoint, data=req_data, headers=headers)
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    res_bytes = response.read()
+                    res_data = json.loads(res_bytes.decode("utf-8"))
+                    
+                    llm_res = res_data["choices"][0]["message"]["content"].strip()
+                    log(f"LLM response received from {p_name}/{model_candidate} ({len(llm_res)} chars)")
+                    
+                    if "```" in llm_res:
+                        parts = llm_res.split("```")
+                        for part in parts:
+                            if "[" in part and "]" in part:
+                                llm_res = part.replace("json", "").strip()
+                                break
+                    
+                    plan = json.loads(llm_res.strip())
+                    log(f"Parsed action plan from {p_name}: {len(plan)} actions")
+                    for a in plan:
+                        log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
+                    return plan
+            except urllib.error.HTTPError as e:
+                error_body = e.read().decode("utf-8") if e.fp else "N/A"
+                log(f"{p_name} API HTTP Error {e.code} on model {model_candidate}: {error_body[:200]}")
                 time.sleep(1)
                 continue
-        except Exception as e:
-            log(f"Groq API Error on model {model_candidate}: {e}")
-            continue
+            except Exception as e:
+                log(f"{p_name} API Error on model {model_candidate}: {e}")
+                continue
 
     log("WARNING: Groq API rate limited / unavailable. Executing Local Deterministic Heuristic Plan Generator...")
     fallback_plan = []

@@ -188,10 +188,50 @@ class GroqConfig:
     temperature: float = 0.7
 
 @dataclass
+class MultiLLMConfig:
+    groq_api_key: str = os.getenv("GROQ_API_KEY", "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")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", os.getenv("GOOGLE_API_KEY", "AQ.Ab8RN6KKGfgtChCU5WPR9hLoWTEorfUDP2R0iMPL-e9rcp7Epw"))
+    cerebras_api_key: str = os.getenv("CEREBRAS_API_KEY", "")
+    openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "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")
+    
+    # Priority ordered fallback providers & models with generous rate limits
+    providers: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {
+            "name": "Groq",
+            "api_key_env": "GROQ_API_KEY",
+            "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+            "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "qwen-2.5-32b"]
+        },
+        {
+            "name": "Gemini",
+            "api_key_env": "GEMINI_API_KEY",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+            "models": ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"]
+        },
+        {
+            "name": "Cerebras",
+            "api_key_env": "CEREBRAS_API_KEY",
+            "endpoint": "https://api.cerebras.ai/v1/chat/completions",
+            "models": ["llama3.1-8b", "llama3.1-70b"]
+        },
+        {
+            "name": "OpenRouter",
+            "api_key_env": "OPENROUTER_API_KEY",
+            "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+            "models": [
+                "meta-llama/llama-3.3-70b-instruct:free",
+                "google/gemini-2.0-flash-exp:free",
+                "qwen/qwen-2.5-72b-instruct:free"
+            ]
+        }
+    ])
+
+@dataclass
 class AppConfig:
     profile: CandidateProfile = field(default_factory=CandidateProfile)
     email: EmailConfig = field(default_factory=EmailConfig)
     groq: GroqConfig = field(default_factory=GroqConfig)
+    multi_llm: MultiLLMConfig = field(default_factory=MultiLLMConfig)
     
     # Auto-fill mode: 'MANUAL_REVIEW' or 'SUPERFAST_AUTO'
     auto_fill_mode: str = "MANUAL_REVIEW" 

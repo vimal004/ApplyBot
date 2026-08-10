@@ -202,36 +202,63 @@ class ResumeTailorer:
         return output_tex_path
 
     @staticmethod
-    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 4096) -> str:
-        api_key = config.groq.api_key
-        if not api_key:
-            return ResumeTailorer._fallback_human_answer(prompt)
+    def ask_multi_provider_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 4096) -> str:
+        """
+        Multi-provider LLM tier fallback: Groq -> Gemini -> Cerebras -> OpenRouter
+        """
+        providers = getattr(config.multi_llm, "providers", [])
+        
+        for p in providers:
+            p_name = p.get("name", "LLM")
+            env_var = p.get("api_key_env", "")
+            api_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
+            
+            if not api_key:
+                continue
+                
+            endpoint = p.get("endpoint")
+            models = p.get("models", [])
+            
+            for m in models:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                    "User-Agent": "ApplyBot/1.0"
+                }
+                if p_name == "OpenRouter":
+                    headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
+                    headers["X-Title"] = "ApplyBot"
+                    
+                payload = {
+                    "model": m,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": max_tokens
+                }
+                
+                try:
+                    req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        res_data = json.loads(response.read().decode('utf-8'))
+                        res_text = res_data['choices'][0]['message']['content'].strip()
+                        print(f"[{p_name} AI] Successfully generated response using model '{m}'")
+                        return res_text
+                except urllib.error.HTTPError as e:
+                    err_txt = e.read().decode('utf-8') if e.fp else str(e)
+                    print(f"[{p_name} AI Note] HTTP {e.code} on model '{m}': {err_txt[:150]}")
+                    time.sleep(1)
+                except Exception as e:
+                    print(f"[{p_name} AI Note] Model '{m}' failed: {e}")
+                    
+        print("[Multi-LLM Fallback Warning] All configured LLM API providers rate-limited / unfulfilled. Using local fallback engine.")
+        return ResumeTailorer._fallback_human_answer(prompt)
 
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-        }
-        
-        payload = {
-            "model": config.groq.model_name,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": max_tokens
-        }
-        
-        try:
-            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
-            with urllib.request.urlopen(req, timeout=12) as response:
-                res_data = json.loads(response.read().decode('utf-8'))
-                return res_data['choices'][0]['message']['content'].strip()
-        except Exception as e:
-            print(f"[Groq API Note] API call unfulfilled ({e}). Using local fallback engine.")
-            return ResumeTailorer._fallback_human_answer(prompt)
+    @staticmethod
+    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 4096) -> str:
+        return ResumeTailorer.ask_multi_provider_llm(prompt, system_prompt, max_tokens)
 
     @staticmethod
     def infer_salutation(company: str, hr_email: str) -> str:
