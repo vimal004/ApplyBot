@@ -18,12 +18,13 @@ with sync_playwright() as p:
         title = page.title()
         
         fields = []
-        elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+        INPUT_SEL = "input:not([type='hidden']):not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']):not([type='image']), textarea, select"
+        elements = page.query_selector_all(INPUT_SEL)
         
         if not elements or not any(e.is_visible() for e in elements):
             for frame in page.frames:
                 try:
-                    f_elems = frame.query_selector_all("input:not([type='hidden']), textarea, select")
+                    f_elems = frame.query_selector_all(INPUT_SEL)
                     if f_elems and any(fe.is_visible() for fe in f_elems):
                         elements = f_elems
                         break
@@ -36,7 +37,7 @@ with sync_playwright() as p:
                     if apply_btn and apply_btn.is_visible():
                         apply_btn.click()
                         page.wait_for_timeout(2500)
-                        elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+                        elements = page.query_selector_all(INPUT_SEL)
                 except Exception:
                     pass
 
@@ -64,30 +65,31 @@ with sync_playwright() as p:
             aria_label = (el.get_attribute("aria-label") or "").strip()
             placeholder = (el.get_attribute("placeholder") or "").strip()
             id_attr = (el.get_attribute("id") or "").strip()
-            
-            label = ""
-            if aria_label and aria_label.lower() not in ["your answer", "option 1", "short answer text", "long answer text"]:
-                label = aria_label
-            elif placeholder and placeholder.lower() not in ["your answer", "option 1"]:
-                label = placeholder
-                
-            if not label:
-                try:
-                    container = el.evaluate_handle("el => el.closest('div[role=\"listitem\"], div[jsmodel], fieldset, label')")
-                    if container:
-                        heading = container.evaluate("""c => {
-                            const h = c.querySelector('div[role="heading"], legend, .M7eF9, .hoP2b, h1, h2, h3, h4');
-                            if (h && h.innerText) return h.innerText;
-                            return c.innerText;
-                        }""")
-                        if heading:
-                            lines = [line.strip() for line in heading.split('\n') if line.strip() and line.strip() != '*']
-                            if lines:
-                                label = lines[0]
-                except Exception:
-                    pass
-                    
-            if not label:
+            try:
+                lbl = el.evaluate("""el => {
+                    const isGuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((s || '').trim());
+                    const blockContainer = el.closest('.tally-block, div[data-block-id], div[role="listitem"], .form-group, .field, fieldset, label, div[class*="block"], div[class*="input"], div[class*="field"]');
+                    if (blockContainer) {
+                        const heading = blockContainer.querySelector('h1, h2, h3, h4, label, legend, div[role="heading"], .tally-text-block, .M7eF9, .hoP2b, .field-label, p');
+                        if (heading && heading.innerText) {
+                            const lines = heading.innerText.split("\\n").map(l => l.trim()).filter(l => l && l !== '*' && !isGuid(l));
+                            if (lines.length > 0 && lines[0].length < 250 && !isGuid(lines[0])) return lines[0];
+                        }
+                    }
+                    if (el.id) {
+                        const lblEl = document.querySelector(`label[for="${el.id}"]`);
+                        if (lblEl && lblEl.innerText && lblEl.innerText.trim() && !isGuid(lblEl.innerText.trim())) return lblEl.innerText.trim();
+                    }
+                    const aria = (el.getAttribute('aria-label') || '').trim();
+                    if (aria && !['your answer', 'option 1', 'short answer text', 'long answer text', 'enter here'].includes(aria.toLowerCase()) && !isGuid(aria)) return aria;
+                    const ph = (el.getAttribute('placeholder') || '').trim();
+                    if (ph && !['your answer', 'option 1', 'enter here'].includes(ph.toLowerCase()) && !isGuid(ph)) return ph;
+                    const name = (el.getAttribute('name') || el.getAttribute('id') || '').trim();
+                    if (name && !isGuid(name)) return name;
+                    return el.type || '';
+                }""")
+                label = lbl or f"Field_{idx}"
+            except Exception:
                 label = aria_label or placeholder or name or id_attr or f"Field_{idx}"
 
             fields.append({

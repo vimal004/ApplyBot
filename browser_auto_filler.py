@@ -136,7 +136,11 @@ class AutomatedBrowserFiller:
 
         try:
             llm_res = ResumeTailorer.ask_groq_llm(user_prompt, system_prompt, max_tokens=2000)
-            if "```" in llm_res:
+            start_idx = llm_res.find("[")
+            end_idx = llm_res.rfind("]")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                llm_res = llm_res[start_idx:end_idx+1]
+            elif "```" in llm_res:
                 parts = llm_res.split("```")
                 for p in parts:
                     if "[" in p and "]" in p:

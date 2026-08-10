@@ -211,41 +211,55 @@ class ResumeTailorer:
         for p in providers:
             p_name = p.get("name", "LLM")
             env_var = p.get("api_key_env", "")
-            api_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
+            raw_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
+            api_key = (raw_key or "").strip().strip('"').strip("'")
             
             if not api_key:
                 continue
                 
-            endpoint = p.get("endpoint")
             models = p.get("models", [])
             
             for m in models:
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
-                    "User-Agent": "ApplyBot/1.0"
-                }
-                if p_name == "OpenRouter":
-                    headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
-                    headers["X-Title"] = "ApplyBot"
-                    
-                payload = {
-                    "model": m,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.3,
-                    "max_tokens": max_tokens
-                }
-                
                 try:
-                    req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
-                    with urllib.request.urlopen(req, timeout=15) as response:
-                        res_data = json.loads(response.read().decode('utf-8'))
-                        res_text = res_data['choices'][0]['message']['content'].strip()
-                        print(f"[{p_name} AI] Successfully generated response using model '{m}'")
-                        return res_text
+                    if p_name == "Gemini":
+                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+                        payload = {
+                            "contents": [{
+                                "parts": [{"text": f"{system_prompt}\n\n{prompt}"}]
+                            }]
+                        }
+                        req = urllib.request.Request(gemini_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
+                        with urllib.request.urlopen(req, timeout=15) as response:
+                            res_data = json.loads(response.read().decode('utf-8'))
+                            res_text = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                            print(f"[Gemini AI] Successfully generated response using model '{m}'")
+                            return res_text
+                    else:
+                        endpoint = p.get("endpoint")
+                        headers = {
+                            "Content-Type": "application/json",
+                            "Authorization": f"Bearer {api_key}",
+                            "User-Agent": "ApplyBot/1.0"
+                        }
+                        if p_name == "OpenRouter":
+                            headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
+                            headers["X-Title"] = "ApplyBot"
+                            
+                        payload = {
+                            "model": m,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": prompt}
+                            ],
+                            "temperature": 0.3,
+                            "max_tokens": max_tokens
+                        }
+                        req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
+                        with urllib.request.urlopen(req, timeout=15) as response:
+                            res_data = json.loads(response.read().decode('utf-8'))
+                            res_text = res_data['choices'][0]['message']['content'].strip()
+                            print(f"[{p_name} AI] Successfully generated response using model '{m}'")
+                            return res_text
                 except urllib.error.HTTPError as e:
                     err_txt = e.read().decode('utf-8') if e.fp else str(e)
                     print(f"[{p_name} AI Note] HTTP {e.code} on model '{m}': {err_txt[:150]}")

@@ -200,13 +200,13 @@ class MultiLLMConfig:
             "name": "Groq",
             "api_key_env": "GROQ_API_KEY",
             "endpoint": "https://api.groq.com/openai/v1/chat/completions",
-            "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "qwen-2.5-32b"]
+            "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.2-3b-preview", "llama3-8b-8192"]
         },
         {
             "name": "Gemini",
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-            "models": ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro"]
+            "models": ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
         },
         {
             "name": "Cerebras",

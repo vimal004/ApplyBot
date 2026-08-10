@@ -56,7 +56,8 @@ def inspect_and_generate_live_plan(page, job_data, profile):
     log("--- inspect_and_generate_live_plan START ---")
     
     fields = []
-    elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+    INPUT_SEL = "input:not([type='hidden']):not([type='radio']):not([type='checkbox']):not([type='submit']):not([type='button']):not([type='image']), textarea, select"
+    elements = page.query_selector_all(INPUT_SEL)
     log(f"Main page input/textarea/select elements found: {len(elements)}")
     
     # Deep Inspection: If 0 visible elements found, check iframes or click Apply/Next button
@@ -66,7 +67,7 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         # 1. Search frames
         for frame in page.frames:
             try:
-                f_elems = frame.query_selector_all("input:not([type='hidden']), textarea, select")
+                f_elems = frame.query_selector_all(INPUT_SEL)
                 if f_elems and any(fe.is_visible() for fe in f_elems):
                     log(f"Found {len(f_elems)} inputs in iframe: {frame.url}")
                     elements = f_elems
@@ -82,7 +83,7 @@ def inspect_and_generate_live_plan(page, job_data, profile):
                     log(f"Found Apply/Next button on page! Clicking to reveal form...")
                     apply_btn.click()
                     page.wait_for_timeout(2500)
-                    elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+                    elements = page.query_selector_all(INPUT_SEL)
             except Exception as btn_ex:
                 log(f"Error clicking Apply button: {btn_ex}")
 
@@ -114,35 +115,37 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         # Single JS expression to extract the real question title
         try:
             lbl = el.evaluate("""el => {
-                // 1. Associated <label for="id"> or preceding label
-                if (el.id) {
-                    const lblEl = document.querySelector(`label[for="${el.id}"]`);
-                    if (lblEl && lblEl.innerText && lblEl.innerText.trim()) return lblEl.innerText.trim();
+                const isGuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((s || '').trim());
+                
+                // 1. Parent Tally / ATS block container heading
+                const blockContainer = el.closest('.tally-block, div[data-block-id], div[role="listitem"], .form-group, .field, fieldset, label, div[class*="block"], div[class*="input"], div[class*="field"]');
+                if (blockContainer) {
+                    const heading = blockContainer.querySelector('h1, h2, h3, h4, label, legend, div[role="heading"], .tally-text-block, .M7eF9, .hoP2b, .field-label, p');
+                    if (heading && heading.innerText) {
+                        const lines = heading.innerText.split("\\n").map(l => l.trim()).filter(l => l && l !== '*' && !isGuid(l));
+                        if (lines.length > 0 && lines[0].length < 250 && !isGuid(lines[0])) return lines[0];
+                    }
                 }
                 
-                // 2. Parent container label/heading/text
-                const container = el.closest('div[role="listitem"], .form-group, .field, fieldset, label, div[class*="input"], div[class*="field"]');
-                if (container) {
-                    const heading = container.querySelector('label, div[role="heading"], legend, .M7eF9, .hoP2b, h1, h2, h3, h4, .field-label, p');
-                    if (heading && heading.innerText) {
-                        const lines = heading.innerText.split("\\n").map(l => l.trim()).filter(l => l && l !== '*');
-                        if (lines.length > 0 && lines[0].length < 150) return lines[0];
-                    }
+                // 2. Associated <label for="id"> or preceding label
+                if (el.id) {
+                    const lblEl = document.querySelector(`label[for="${el.id}"]`);
+                    if (lblEl && lblEl.innerText && lblEl.innerText.trim() && !isGuid(lblEl.innerText.trim())) return lblEl.innerText.trim();
                 }
                 
                 // 3. Aria-label
                 const aria = (el.getAttribute('aria-label') || '').trim();
-                if (aria && !['your answer', 'option 1', 'short answer text', 'long answer text', 'enter here'].includes(aria.toLowerCase())) return aria;
+                if (aria && !['your answer', 'option 1', 'short answer text', 'long answer text', 'enter here'].includes(aria.toLowerCase()) && !isGuid(aria)) return aria;
                 
-                // 4. Name / ID
-                const name = (el.getAttribute('name') || el.getAttribute('id') || '').trim();
-                if (name) return name;
-                
-                // 5. Placeholder
+                // 4. Placeholder
                 const ph = (el.getAttribute('placeholder') || '').trim();
-                if (ph && !['your answer', 'option 1', 'enter here'].includes(ph.toLowerCase())) return ph;
+                if (ph && !['your answer', 'option 1', 'enter here'].includes(ph.toLowerCase()) && !isGuid(ph)) return ph;
                 
-                return el.type || el.name || el.id || '';
+                // 5. Name / ID (only if NOT a UUID/GUID)
+                const name = (el.getAttribute('name') || el.getAttribute('id') || '').trim();
+                if (name && !isGuid(name)) return name;
+                
+                return el.type || '';
             }""")
         except Exception as ex:
             log(f"  JS evaluate error for element {idx}: {ex}")
@@ -318,59 +321,78 @@ def inspect_and_generate_live_plan(page, job_data, profile):
     for p in providers:
         p_name = p.get("name", "LLM")
         env_var = p.get("api_key_env", "")
-        api_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
+        raw_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
+        api_key = (raw_key or "").strip().strip('"').strip("'")
         
         if not api_key:
             log(f"Skipping {p_name}: No API key set for {env_var}")
             continue
             
-        endpoint = p.get("endpoint")
         models = p.get("models", [])
         
         for model_candidate in models:
             log(f"Calling {p_name} API ({model_candidate}): system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
             
             try:
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
-                    "User-Agent": "ApplyBot/1.0"
-                }
-                if p_name == "OpenRouter":
-                    headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
-                    headers["X-Title"] = "ApplyBot"
+                if p_name == "Gemini":
+                    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_candidate}:generateContent?key={api_key}"
+                    payload = {
+                        "contents": [{
+                            "parts": [{"text": f"SYSTEM: {system_prompt}\n\nUSER: {user_prompt}"}]
+                        }]
+                    }
+                    req_data = json.dumps(payload).encode("utf-8")
+                    req = urllib.request.Request(gemini_url, data=req_data, headers={"Content-Type": "application/json"})
+                    with urllib.request.urlopen(req, timeout=30) as response:
+                        res_bytes = response.read()
+                        res_data = json.loads(res_bytes.decode("utf-8"))
+                        llm_res = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                else:
+                    endpoint = p.get("endpoint")
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {api_key}",
+                        "User-Agent": "ApplyBot/1.0"
+                    }
+                    if p_name == "OpenRouter":
+                        headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
+                        headers["X-Title"] = "ApplyBot"
+                        
+                    payload = {
+                        "model": model_candidate,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": 2000
+                    }
+                    req_data = json.dumps(payload).encode("utf-8")
+                    req = urllib.request.Request(endpoint, data=req_data, headers=headers)
+                    with urllib.request.urlopen(req, timeout=30) as response:
+                        res_bytes = response.read()
+                        res_data = json.loads(res_bytes.decode("utf-8"))
+                        llm_res = res_data["choices"][0]["message"]["content"].strip()
                     
-                payload = {
-                    "model": model_candidate,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    "temperature": 0.3,
-                    "max_tokens": 2000
-                }
+                log(f"LLM response received from {p_name}/{model_candidate} ({len(llm_res)} chars)")
                 
-                req_data = json.dumps(payload).encode("utf-8")
-                req = urllib.request.Request(endpoint, data=req_data, headers=headers)
-                with urllib.request.urlopen(req, timeout=30) as response:
-                    res_bytes = response.read()
-                    res_data = json.loads(res_bytes.decode("utf-8"))
-                    
-                    llm_res = res_data["choices"][0]["message"]["content"].strip()
-                    log(f"LLM response received from {p_name}/{model_candidate} ({len(llm_res)} chars)")
-                    
-                    if "```" in llm_res:
-                        parts = llm_res.split("```")
-                        for part in parts:
-                            if "[" in part and "]" in part:
-                                llm_res = part.replace("json", "").strip()
-                                break
-                    
-                    plan = json.loads(llm_res.strip())
-                    log(f"Parsed action plan from {p_name}: {len(plan)} actions")
-                    for a in plan:
-                        log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
-                    return plan
+                # Robust JSON array extraction
+                start_idx = llm_res.find("[")
+                end_idx = llm_res.rfind("]")
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    llm_res = llm_res[start_idx:end_idx+1]
+                elif "```" in llm_res:
+                    parts = llm_res.split("```")
+                    for part in parts:
+                        if "[" in part and "]" in part:
+                            llm_res = part.replace("json", "").strip()
+                            break
+                
+                plan = json.loads(llm_res.strip())
+                log(f"Parsed action plan from {p_name}: {len(plan)} actions")
+                for a in plan:
+                    log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
+                return plan
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode("utf-8") if e.fp else "N/A"
                 log(f"{p_name} API HTTP Error {e.code} on model {model_candidate}: {error_body[:200]}")
