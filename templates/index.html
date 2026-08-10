@@ -1143,7 +1143,18 @@
                     body: JSON.stringify(currentPayload)
                 });
 
-                const result = await response.json();
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseErr) {
+                    // Server returned non-JSON (e.g. Render 502 HTML page on timeout)
+                    alert('❌ Server error (HTTP ' + response.status + '). The request may have timed out. Please try again.');
+                    btn.innerHTML = 'Send Email Now';
+                    btn.disabled = false;
+                    return;
+                }
+
                 if (result.success) {
                     alert('✅ SUCCESS: ' + result.message);
                     btn.innerHTML = '✅ Email Sent!';
@@ -1157,11 +1168,12 @@
                     btn.disabled = false;
                 }
             } catch (err) {
-                alert('Error sending email: ' + err);
+                alert('Error sending email: ' + err.message);
                 btn.innerHTML = 'Send Email Now';
                 btn.disabled = false;
             }
         }
+
 
         async function triggerAutoFill() {
             if (!currentPayload) return;

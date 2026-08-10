@@ -2,7 +2,7 @@ services:
   - type: web
     name: applybot
     runtime: python
-    buildCommand: pip install -r requirements.txt && curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh
+    buildCommand: pip install -r requirements.txt
     startCommand: python app.py
     envVars:
       - key: SENDER_EMAIL
