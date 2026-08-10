@@ -166,6 +166,22 @@ def inspect_and_generate_live_plan(page, job_data, profile):
                         opts.push(txt);
                     }
                 });
+                
+                // Fallback for closed dropdowns (listbox / combobox)
+                const listbox = el.querySelector('div[role="listbox"], div[role="combobox"], select, .v8y8e');
+                if (listbox && opts.length === 0) {
+                    try {
+                        listbox.click();
+                        const openOpts = document.querySelectorAll('div[role="option"], .exportOption');
+                        openOpts.forEach(o => {
+                            const txt = (o.innerText || o.textContent || '').trim();
+                            if (txt && txt !== 'Choose' && txt !== '*' && !opts.includes(txt)) {
+                                opts.push(txt);
+                            }
+                        });
+                        document.body.click();
+                    } catch (e) {}
+                }
                 return opts;
             }""")
         except Exception:
@@ -526,23 +542,40 @@ with sync_playwright() as p:
                             if match_q:
                                 try:
                                     res = qb.evaluate("""(el, targetVal) => {
-                                        // Check if container has a dropdown listbox/combobox
+                                        // 1. Dropdown (listbox / combobox)
                                         const listbox = el.querySelector('div[role="listbox"], div[role="combobox"], .v8y8e, select');
                                         if (listbox) {
                                             listbox.click();
                                             return { isDropdown: true };
                                         }
                                         
-                                        // Radios / Checkboxes
+                                        // 2. Radios / Checkboxes
                                         const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
                                         for (const r of radios) {
                                             const dv = r.getAttribute('data-value');
-                                            if (dv === targetVal) { r.click(); return { success: true }; }
+                                            const rText = (r.innerText || r.textContent || '').trim().toLowerCase();
+                                            const tValLower = targetVal.toLowerCase().trim();
+                                            
+                                            let match = false;
+                                            if (dv === targetVal || (dv && dv.toLowerCase() === tValLower)) match = true;
+                                            if (!match && rText && (rText === tValLower || rText.includes(tValLower) || tValLower.includes(rText))) match = true;
+                                            
+                                            if (match) {
+                                                r.click();
+                                                const inner = r.querySelector('span, div, .vdLWh, .docssharedWizToggleLabeledContainer');
+                                                if (inner) inner.click();
+                                                return { success: true };
+                                            }
                                         }
-                                        const tl = targetVal.toLowerCase();
-                                        for (const r of radios) {
-                                            const rt = r.innerText.trim().toLowerCase();
-                                            if (rt === tl || rt.includes(tl) || tl.includes(rt)) { r.click(); return { success: true }; }
+                                        
+                                        // 3. Fallback: match labeled container text
+                                        const labels = el.querySelectorAll('label, .docssharedWizToggleLabeledContainer, span');
+                                        for (const lbl of labels) {
+                                            const lText = lbl.innerText ? lbl.innerText.trim().toLowerCase() : '';
+                                            if (lText && (lText === targetVal.toLowerCase() || lText.includes(targetVal.toLowerCase()) || targetVal.toLowerCase().includes(lText))) {
+                                                lbl.click();
+                                                return { success: true };
+                                            }
                                         }
                                         return { success: false };
                                     }""", str(val))
@@ -571,7 +604,7 @@ with sync_playwright() as p:
                                         page.wait_for_timeout(300)
                                         clicked = True
                                         filled_count += 1
-                                        log(f"  [CLICKED radio] '{label[:40]}' => '{str(val)[:50]}'")
+                                        log(f"  [CLICKED radio/checkbox] '{label[:40]}' => '{str(val)[:50]}'")
                                         break
                                 except Exception as rex:
                                     log(f"  [Option JS error] {rex}")
@@ -689,11 +722,46 @@ with sync_playwright() as p:
                         
             # File upload for Resume
             if pdf_path and os.path.exists(pdf_path):
+                log(f"Attempting resume upload for pdf_path: {pdf_path}")
+                uploaded = False
                 file_inputs = page.query_selector_all("input[type='file']")
                 if file_inputs:
-                    file_inputs[0].set_input_files(pdf_path)
-                    page.wait_for_timeout(500)
-                    log(f"Resume uploaded: {pdf_path}")
+                    try:
+                        file_inputs[0].set_input_files(pdf_path)
+                        page.wait_for_timeout(1000)
+                        uploaded = True
+                        log(f"Resume uploaded directly: {pdf_path}")
+                    except Exception as ex:
+                        log(f"Direct file upload error: {ex}")
+
+                if not uploaded:
+                    try:
+                        add_file_btn = page.query_selector("div[role='button']:has-text('Add File'), button:has-text('Add File')")
+                        if not add_file_btn:
+                            add_file_btn = page.get_by_text("Add File", exact=False).first
+                        if add_file_btn and add_file_btn.is_visible():
+                            add_file_btn.click()
+                            log("Clicked 'Add File' button. Waiting for file picker...")
+                            page.wait_for_timeout(2500)
+
+                            for frame in page.frames:
+                                frame_inputs = frame.query_selector_all("input[type='file']")
+                                if frame_inputs:
+                                    frame_inputs[0].set_input_files(pdf_path)
+                                    page.wait_for_timeout(1500)
+                                    uploaded = True
+                                    log(f"Resume uploaded in frame: {pdf_path}")
+                                    break
+                            
+                            if not uploaded:
+                                fi_after = page.query_selector_all("input[type='file']")
+                                if fi_after:
+                                    fi_after[0].set_input_files(pdf_path)
+                                    page.wait_for_timeout(1000)
+                                    uploaded = True
+                                    log(f"Resume uploaded after Add File click: {pdf_path}")
+                    except Exception as af_ex:
+                        log(f"Add File button upload error: {af_ex}")
         except Exception as e:
             log(f"Fallback auto-fill error: {e}")
 
