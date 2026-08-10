@@ -64,6 +64,22 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         if not el.is_visible():
             continue
         visible_count += 1
+        
+        # Skip "Other response" text inputs (belong to radio "Other:" options)
+        _aria_lbl = (el.get_attribute("aria-label") or "").strip().lower()
+        if _aria_lbl in ["other response", "other"]:
+            log(f"  [Field {idx}] SKIPPED (Other response radio text input)")
+            continue
+        
+        # Skip inputs inside a radiogroup container
+        try:
+            inside_radio = el.evaluate("el => !!el.closest('div[role=\"radiogroup\"], div[role=\"group\"]')")
+            if inside_radio:
+                log(f"  [Field {idx}] SKIPPED (inside radiogroup)")
+                continue
+        except Exception:
+            pass
+        
         t = el.get_attribute("type") or el.evaluate("el => el.tagName")
         name = el.get_attribute("name") or ""
         id_attr = (el.get_attribute("id") or "").strip()
@@ -110,22 +126,71 @@ def inspect_and_generate_live_plan(page, job_data, profile):
     q_blocks = page.query_selector_all("div[role='listitem']")
     log(f"div[role='listitem'] blocks found: {len(q_blocks)}")
     for q_idx, q in enumerate(q_blocks):
+        # Only process blocks that actually contain radio/checkbox controls
         try:
-            txt = q.evaluate("el => el.innerText")
+            has_radio = q.query_selector(
+                "div[role='radio'], div[role='checkbox'], input[type='radio'], "
+                "input[type='checkbox'], div[role='radiogroup']"
+            )
         except Exception:
-            txt = ""
-        if txt:
-            lines = [l.strip() for l in txt.split('\n') if l.strip()]
-            if len(lines) >= 2:
-                q_title = lines[0]
-                options = lines[1:]
-                radio_questions.append({
-                    "question_index": q_idx,
-                    "question": q_title,
-                    "options": options
-                })
+            has_radio = None
+        if not has_radio:
+            continue
+        
+        # Extract question title from heading element
+        try:
+            q_title = q.evaluate("""el => {
+                const heading = el.querySelector('div[role="heading"], .M7eF9, .hoP2b');
+                if (heading && heading.innerText) {
+                    return heading.innerText.split("\\n").map(l => l.trim()).filter(l => l && l !== '*')[0] || '';
+                }
+                return '';
+            }""")
+        except Exception:
+            q_title = ""
+        if not q_title:
+            continue
+        
+        # Extract option labels from radio/checkbox elements via data-value
+        try:
+            options = q.evaluate("""(el) => {
+                const opts = [];
+                const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
+                radios.forEach(r => {
+                    const dataVal = r.getAttribute('data-value');
+                    if (dataVal && dataVal !== '__other_option__') {
+                        opts.push(dataVal);
+                    } else {
+                        const spans = r.querySelectorAll('span');
+                        for (const s of spans) {
+                            const t = s.innerText.trim();
+                            if (t && t !== '*') { opts.push(t); break; }
+                        }
+                    }
+                });
+                return opts;
+            }""")
+        except Exception:
+            options = []
+        
+        # Fallback: extract from container text
+        if not options:
+            try:
+                txt = q.evaluate("el => el.innerText") or ""
+                lines = [l.strip() for l in txt.split('\n') if l.strip() and l.strip() != '*' and l.strip() != q_title]
+                options = lines
+            except Exception:
+                pass
+        
+        if options:
+            radio_questions.append({
+                "question_index": q_idx,
+                "question": q_title,
+                "options": options
+            })
+            log(f"  [Radio Q{q_idx}] '{q_title[:60]}' => options: {options[:5]}")
 
-    log(f"Radio question blocks: {len(radio_questions)}")
+    log(f"Radio question blocks (actual radios): {len(radio_questions)}")
 
     if not fields and not radio_questions:
         log("WARNING: No fields AND no radio questions found! Returning empty plan.")
@@ -149,22 +214,30 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         f"- Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone}\n"
         f"- Location: {config.profile.location}, Degree: {config.profile.degree}\n"
         f"- LinkedIn: {config.profile.linkedin_url}, GitHub: {config.profile.github_url}\n"
-        f"- Resume: {config.profile.resume_gdrive_url}\n\n"
+        f"- Resume: {config.profile.resume_gdrive_url}\n"
+        f"- Graduation Year: {config.profile.graduation_year}\n"
+        f"- University: {config.profile.university}\n\n"
         f"VIMAL'S GITHUB PROJECTS:\n{projects_summary}\n\n"
-        "RULES FOR FORM FILLING:\n"
-        "1. Standard fields (Name, Email, Phone, Location, College, CGPA, Batch, Links): fill exact values.\n"
-        "2. Essay / Custom / Strategy questions: Write 2-4 clear, impressive sentences tailored to the question. Reference Vimal's relevant projects with GitHub links!\n"
-        "3. Radio questions: Pick exact option string.\n\n"
-        "Output ONLY a valid JSON array of objects:\n"
-        '[\n  {"index": 0, "action": "fill", "label": "question text", "value": "answer text"}\n]'
+        "CRITICAL RULES FOR FORM FILLING:\n"
+        "1. TEXT INPUT FIELDS: Use action='fill'. Set 'index' to the field's index number.\n"
+        "   - Standard fields (Name, Email, Phone, Location, College, CGPA, Links): use exact profile values.\n"
+        "   - Essay/Custom questions: Write 2-4 impressive sentences. Reference relevant projects!\n"
+        "2. RADIO / CHOICE QUESTIONS: Use action='click_option'. Set 'question_index' to the question's index number.\n"
+        "   - The 'value' MUST be one of the EXACT option strings listed for that question.\n"
+        "   - Graduation year is 2026. Available to start within 15 days.\n"
+        "   - Do NOT select 'Other:' unless no listed option matches.\n"
+        "3. Generate an action for EVERY text field AND EVERY radio question. Do not skip any.\n\n"
+        "Output ONLY a valid JSON array (no markdown, no explanation):\n"
+        '[{"index": 0, "action": "fill", "label": "field label", "value": "answer"},\n'
+        ' {"question_index": 3, "action": "click_option", "label": "question", "value": "exact option text"}]'
     )
 
     user_prompt = (
         f"Applying for: {role} at {company}\n"
         f"Job Summary: {raw_text[:800]}\n\n"
-        f"Form Fields List:\n{json.dumps(fields, indent=2)}\n\n"
-        f"Radio Questions:\n{json.dumps(radio_questions, indent=2)}\n\n"
-        "Generate JSON array of actions for EVERY field above."
+        f"=== TEXT INPUT FIELDS (use action='fill', reference by 'index') ===\n{json.dumps(fields, indent=2)}\n\n"
+        f"=== RADIO/CHOICE QUESTIONS (use action='click_option', reference by 'question_index') ===\n{json.dumps(radio_questions, indent=2)}\n\n"
+        "Generate a JSON array with actions for ALL text fields AND ALL radio questions."
     )
 
     if not config.groq.api_key:
@@ -213,6 +286,8 @@ def inspect_and_generate_live_plan(page, job_data, profile):
                 
                 plan = json.loads(llm_res.strip())
                 log(f"Parsed action plan: {len(plan)} actions")
+                for a in plan:
+                    log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
                 return plan
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8") if e.fp else "N/A"
@@ -403,15 +478,62 @@ with sync_playwright() as p:
                         log(f"  [MISS] Could not find element for: '{label[:60]}'")
 
                 elif action == "click_option" and val:
+                    clicked = False
+                    
+                    # Strategy 1: Find question container and click matching radio via JS
                     try:
-                        elem = page.get_by_text(str(val), exact=False).first
-                        if elem and elem.is_visible():
-                            elem.click()
-                            page.wait_for_timeout(200)
-                            filled_count += 1
-                            log(f"  [CLICKED] '{label[:40]}' => '{str(val)[:50]}'")
-                    except Exception:
-                        pass
+                        q_blocks_exec = page.query_selector_all("div[role='listitem']")
+                        for qb in q_blocks_exec:
+                            try:
+                                heading_text = qb.evaluate("""el => {
+                                    const h = el.querySelector('div[role="heading"], .M7eF9, .hoP2b');
+                                    return h ? h.innerText.replace('*','').trim() : '';
+                                }""") or ""
+                            except Exception:
+                                continue
+                            if label and label.lower()[:25] in heading_text.lower():
+                                try:
+                                    clicked_js = qb.evaluate("""(el, targetVal) => {
+                                        const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
+                                        for (const r of radios) {
+                                            const dv = r.getAttribute('data-value');
+                                            if (dv === targetVal) { r.click(); return true; }
+                                        }
+                                        const tl = targetVal.toLowerCase();
+                                        for (const r of radios) {
+                                            const rt = r.innerText.trim().toLowerCase();
+                                            if (rt === tl || rt.includes(tl) || tl.includes(rt)) { r.click(); return true; }
+                                        }
+                                        return false;
+                                    }""", str(val))
+                                    if clicked_js:
+                                        page.wait_for_timeout(300)
+                                        clicked = True
+                                        filled_count += 1
+                                        log(f"  [CLICKED radio] '{label[:40]}' => '{str(val)[:50]}'")
+                                        break
+                                except Exception as rex:
+                                    log(f"  [Radio JS error] {rex}")
+                    except Exception as ex:
+                        log(f"  [Radio container error] {ex}")
+                    
+                    # Strategy 2: Fallback to page-wide text click
+                    if not clicked:
+                        try:
+                            elem = page.get_by_text(str(val), exact=True).first
+                            if not elem or not elem.is_visible():
+                                elem = page.get_by_text(str(val), exact=False).first
+                            if elem and elem.is_visible():
+                                elem.click()
+                                page.wait_for_timeout(200)
+                                clicked = True
+                                filled_count += 1
+                                log(f"  [CLICKED text-fallback] '{label[:40]}' => '{str(val)[:50]}'")
+                        except Exception:
+                            pass
+                    
+                    if not clicked:
+                        log(f"  [MISS click_option] '{label[:60]}' => '{str(val)[:50]}'")
             except Exception as e:
                 log(f"  [Action Error] {label[:30]}: {e}")
                 

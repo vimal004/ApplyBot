@@ -19,7 +19,25 @@ with sync_playwright() as p:
         
         fields = []
         elements = page.query_selector_all("input:not([type='hidden']), textarea, select")
+        visible_count = 0
         for idx, el in enumerate(elements):
+            if not el.is_visible():
+                continue
+            visible_count += 1
+            
+            # Skip "Other response" text inputs (belong to radio "Other:" options)
+            _aria_lbl = (el.get_attribute("aria-label") or "").strip().lower()
+            if _aria_lbl in ["other response", "other"]:
+                continue
+            
+            # Skip inputs inside a radiogroup container
+            try:
+                inside_radio = el.evaluate("el => !!el.closest('div[role=\"radiogroup\"], div[role=\"group\"]')")
+                if inside_radio:
+                    continue
+            except Exception:
+                pass
+
             t = el.get_attribute("type") or el.evaluate("el => el.tagName")
             name = el.get_attribute("name") or ""
             aria_label = (el.get_attribute("aria-label") or "").strip()
@@ -62,17 +80,64 @@ with sync_playwright() as p:
         radio_questions = []
         q_blocks = page.query_selector_all("div[role='listitem']")
         for q_idx, q in enumerate(q_blocks):
-            txt = q.evaluate("el => el.innerText")
-            if txt:
-                lines = [l.strip() for l in txt.split('\n') if l.strip()]
-                if len(lines) >= 2:
-                    q_title = lines[0]
-                    options = lines[1:]
-                    radio_questions.append({
-                        "question_index": q_idx,
-                        "question": q_title,
-                        "options": options
-                    })
+            try:
+                has_radio = q.query_selector(
+                    "div[role='radio'], div[role='checkbox'], input[type='radio'], "
+                    "input[type='checkbox'], div[role='radiogroup']"
+                )
+            except Exception:
+                has_radio = None
+            if not has_radio:
+                continue
+            
+            try:
+                q_title = q.evaluate("""el => {
+                    const heading = el.querySelector('div[role="heading"], .M7eF9, .hoP2b');
+                    if (heading && heading.innerText) {
+                        return heading.innerText.split("\\n").map(l => l.trim()).filter(l => l && l !== '*')[0] || '';
+                    }
+                    return '';
+                }""")
+            except Exception:
+                q_title = ""
+            if not q_title:
+                continue
+            
+            try:
+                options = q.evaluate("""(el) => {
+                    const opts = [];
+                    const radios = el.querySelectorAll('div[role="radio"], div[role="checkbox"]');
+                    radios.forEach(r => {
+                        const dataVal = r.getAttribute('data-value');
+                        if (dataVal && dataVal !== '__other_option__') {
+                            opts.push(dataVal);
+                        } else {
+                            const spans = r.querySelectorAll('span');
+                            for (const s of spans) {
+                                const t = s.innerText.trim();
+                                if (t && t !== '*') { opts.push(t); break; }
+                            }
+                        }
+                    });
+                    return opts;
+                }""")
+            except Exception:
+                options = []
+            
+            if not options:
+                try:
+                    txt = q.evaluate("el => el.innerText") or ""
+                    lines = [l.strip() for l in txt.split('\n') if l.strip() and l.strip() != '*' and l.strip() != q_title]
+                    options = lines
+                except Exception:
+                    pass
+            
+            if options:
+                radio_questions.append({
+                    "question_index": q_idx,
+                    "question": q_title,
+                    "options": options
+                })
 
         print(json.dumps({
             "title": title,
