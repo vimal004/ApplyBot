@@ -3,10 +3,14 @@ cd "$(dirname "$0")"
 
 echo "⚡ Ensuring ApplyBot background service is loaded and active..."
 mkdir -p ~/Library/LaunchAgents
+mkdir -p ~/.config/com.vimal.applybot
+
+ln -sf ~/.config/com.vimal.applybot/backend.log "$(pwd)/backend.log"
+
 cp "$(pwd)/com.vimal.applybot.backend.plist" ~/Library/LaunchAgents/com.vimal.applybot.backend.plist
 launchctl load -w ~/Library/LaunchAgents/com.vimal.applybot.backend.plist 2>/dev/null || true
 
-sleep 1
+sleep 2
 if curl -s http://localhost:5050/api/telegram/status > /dev/null; then
     echo "============================================================"
     echo "✅ ApplyBot 24/7 Background Daemon is RUNNING!"
@@ -21,6 +25,6 @@ if curl -s http://localhost:5050/api/telegram/status > /dev/null; then
     echo "  - Stop daemon:     launchctl unload ~/Library/LaunchAgents/com.vimal.applybot.backend.plist"
     echo "  - Start daemon:    launchctl load -w ~/Library/LaunchAgents/com.vimal.applybot.backend.plist"
 else
-    echo "❌ ApplyBot service failed to start. Check backend.log for details."
+    echo "❌ ApplyBot service initializing... check 'tail -f backend.log' for live status."
 fi
 

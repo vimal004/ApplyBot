@@ -493,10 +493,50 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404, "API Endpoint Not Found")
 
+def _free_port(port: int):
+    import subprocess
+    import time
+    try:
+        out = subprocess.check_output(["lsof", "-t", f"-i:{port}"]).decode().strip()
+        if out:
+            current_pid = os.getpid()
+            killed_any = False
+            for pid_str in out.split():
+                try:
+                    pid = int(pid_str)
+                    if pid != current_pid:
+                        print(f"[ApplyBot] Clearing process {pid} using port {port}...")
+                        os.kill(pid, 9)
+                        killed_any = True
+                except Exception:
+                    pass
+            if killed_any:
+                time.sleep(1.5)
+    except Exception:
+        pass
+
 def run_server():
+    import time
+    _free_port(PORT)
     server_address = ("", PORT)
     HTTPServer.allow_reuse_address = True
-    httpd = HTTPServer(server_address, ApplyBotHTTPRequestHandler)
+    
+    httpd = None
+    for attempt in range(5):
+        try:
+            httpd = HTTPServer(server_address, ApplyBotHTTPRequestHandler)
+            break
+        except OSError as err:
+            if err.errno == 48:
+                print(f"[ApplyBot] Port {PORT} busy, retrying in 1s (attempt {attempt+1}/5)...")
+                _free_port(PORT)
+                time.sleep(1)
+            else:
+                raise err
+
+    if not httpd:
+        raise RuntimeError(f"Could not bind to port {PORT}")
+
     print(f"============================================================")
     print(f"⚡ ApplyBot Dashboard Running at: http://localhost:{PORT}")
     print(f"============================================================")
