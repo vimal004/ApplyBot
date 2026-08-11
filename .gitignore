@@ -46,3 +46,8 @@ Thumbs.db
 
 # Local PDF files
 Vimal_Resume.pdf
+
+# Telegram session (contains auth token — NEVER commit)
+telegram_session.session
+outputs/telegram_checkpoint.json
+outputs/telegram_queue.json

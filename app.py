@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram_bot import ApplyBotPipeline
 from email_sender import HREmailSender
 from config import config
+from telegram_watcher import telegram_watcher, TelegramWatcher
 
 TRACKER_LOG_PATH = os.path.join(os.path.dirname(__file__), "outputs", "applications_log.json")
 
@@ -140,6 +141,27 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_cors_headers()
             self.end_headers()
             self.wfile.write(res_payload)
+
+        # ── Telegram Watcher Endpoints ──
+        elif path == "/api/telegram/status":
+            res_payload = json.dumps(telegram_watcher.status).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
+        elif path == "/api/telegram/queue":
+            queue = TelegramWatcher.get_queue()
+            res_payload = json.dumps(queue).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
         else:
             self.send_error(404, "Endpoint Not Found")
 
@@ -341,6 +363,133 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(500); self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(err))); self.send_cors_headers(); self.end_headers()
                 self.wfile.write(err)
+        elif path == "/api/telegram/fetch":
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 0:
+                self.rfile.read(content_length)  # consume body
+            try:
+                results = telegram_watcher.fetch_messages(limit=50)
+                res_payload = json.dumps({
+                    "success": True,
+                    "fetched": len(results),
+                    "message": f"Fetched {len(results)} new job postings"
+                }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(err)
+
+        elif path == "/api/telegram/start":
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 0:
+                self.rfile.read(content_length)
+            started = telegram_watcher.start_listener_thread()
+            res_payload = json.dumps({
+                "success": started,
+                "status": telegram_watcher.status
+            }).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
+        elif path == "/api/telegram/stop":
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 0:
+                self.rfile.read(content_length)
+            telegram_watcher.stop_listener()
+            res_payload = json.dumps({
+                "success": True,
+                "status": telegram_watcher.status
+            }).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
+        elif path == "/api/telegram/queue/process":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                queue_id = data.get("id", "")
+                raw_text = data.get("raw_text", "")
+                superfast = data.get("superfast_mode", False)
+
+                if raw_text:
+                    result = ApplyBotPipeline.process_referral(raw_text, superfast)
+                    _log_application(result)
+                    TelegramWatcher.remove_from_queue(queue_id)
+                    response_json = json.dumps(result).encode("utf-8")
+                    self.send_response(200)
+                else:
+                    response_json = json.dumps({"error": "No raw_text provided"}).encode("utf-8")
+                    self.send_response(400)
+
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(response_json)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(response_json)
+            except Exception as e:
+                err = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(err)
+
+        elif path == "/api/telegram/queue/skip":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                queue_id = data.get("id", "")
+                removed = TelegramWatcher.remove_from_queue(queue_id)
+                res_payload = json.dumps({"success": removed}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(err)
+
+        elif path == "/api/telegram/queue/clear":
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 0:
+                self.rfile.read(content_length)
+            TelegramWatcher.clear_queue()
+            res_payload = json.dumps({"success": True}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
         else:
             self.send_error(404, "API Endpoint Not Found")
 
@@ -351,6 +500,14 @@ def run_server():
     print(f"============================================================")
     print(f"⚡ ApplyBot Dashboard Running at: http://localhost:{PORT}")
     print(f"============================================================")
+
+    # Auto-start Telegram watcher if credentials are configured
+    if telegram_watcher.is_available:
+        print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
+        telegram_watcher.start_listener_thread()
+    else:
+        print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
+
     httpd.serve_forever()
 
 if __name__ == "__main__":

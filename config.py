@@ -227,11 +227,19 @@ class MultiLLMConfig:
     ])
 
 @dataclass
+class TelegramConfig:
+    """Telegram Client API credentials for automated group ingestion."""
+    api_id: str = os.environ.get("TELEGRAM_API_ID", "")
+    api_hash: str = os.environ.get("TELEGRAM_API_HASH", "")
+    group_name: str = os.environ.get("TELEGRAM_GROUP", "SDE Premium Referrals 2.0")
+
+@dataclass
 class AppConfig:
     profile: CandidateProfile = field(default_factory=CandidateProfile)
     email: EmailConfig = field(default_factory=EmailConfig)
     groq: GroqConfig = field(default_factory=GroqConfig)
     multi_llm: MultiLLMConfig = field(default_factory=MultiLLMConfig)
+    telegram: TelegramConfig = field(default_factory=TelegramConfig)
     
     # Auto-fill mode: 'MANUAL_REVIEW' or 'SUPERFAST_AUTO'
     auto_fill_mode: str = "MANUAL_REVIEW" 

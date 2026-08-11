@@ -818,6 +818,210 @@
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             border-color: var(--color-border-hover);
         }
+
+        /* Telegram Feed Styles */
+        .tg-feed-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .tg-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+        }
+
+        .tg-status-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tg-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .tg-status-dot.connected {
+            background-color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+            animation: pulse-green 2s infinite;
+        }
+
+        .tg-status-dot.disconnected {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .tg-status-dot.pending {
+            background-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+            animation: pulse-yellow 1.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .tg-status-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .tg-status-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #ffffff;
+        }
+
+        .tg-status-sub {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .tg-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tg-queue-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tg-queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tg-queue-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tg-job-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+            transition: border-color var(--duration-short) var(--easing-standard);
+        }
+
+        .tg-job-card:hover {
+            border-color: var(--color-border-hover);
+        }
+
+        .tg-job-card.eligible {
+            border-left: 3px solid #22c55e;
+        }
+
+        .tg-job-card.not-eligible {
+            border-left: 3px solid #f59e0b;
+            opacity: 0.7;
+        }
+
+        .tg-job-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tg-job-company {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+        }
+
+        .tg-job-role {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+        }
+
+        .tg-job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .tg-job-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .tg-job-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .tg-badge-eligible {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .tg-badge-eligible.yes {
+            background: rgba(34, 197, 94, 0.12);
+            color: #86efac;
+        }
+
+        .tg-badge-eligible.no {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fcd34d;
+        }
+
+        .tg-empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+        }
+
+        .tg-empty-state p {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -832,6 +1036,10 @@
             <nav class="nav-tabs">
                 <button class="nav-tab active" id="nav-btn-ingestion" onclick="switchView('ingestion')">
                     <span>⚡ Ingestion & Generator</span>
+                </button>
+                <button class="nav-tab" id="nav-btn-telegram" onclick="switchView('telegram')">
+                    <span>📡 Telegram Feed</span>
+                    <span class="badge-count" id="tg-queue-badge">0</span>
                 </button>
                 <button class="nav-tab" id="nav-btn-tracker" onclick="switchView('tracker')">
                     <span>📋 Application Tracker</span>
@@ -891,6 +1099,43 @@
                 <div id="output-content">
                     <div class="empty-state">
                         Paste a Telegram post on the left and click <b>Run ApplyBot Pipeline</b> to generate tailored ATS resumes, HR emails, and auto-fill scripts.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN: Telegram Auto-Ingestion Feed -->
+    <div id="view-telegram" class="page-view">
+        <div class="tg-feed-container">
+            <!-- Status Bar -->
+            <div class="tg-status-bar">
+                <div class="tg-status-left">
+                    <div class="tg-status-dot disconnected" id="tg-status-dot"></div>
+                    <div class="tg-status-text">
+                        <div class="tg-status-title" id="tg-status-title">Checking connection...</div>
+                        <div class="tg-status-sub" id="tg-status-sub">Telegram auto-ingestion</div>
+                    </div>
+                </div>
+                <div class="tg-actions">
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgFetchNow()" id="tg-btn-fetch">🔄 Fetch Now</button>
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgToggleListener()" id="tg-btn-toggle">▶ Start Listener</button>
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgClearQueue()">🗑 Clear Queue</button>
+                </div>
+            </div>
+
+            <!-- Queue -->
+            <div class="tg-queue-grid">
+                <div class="tg-queue-header">
+                    <div class="tg-queue-title">
+                        <span>📥 Queued Job Postings</span>
+                        <span class="badge-count" id="tg-queue-count">0</span>
+                    </div>
+                </div>
+                <div id="tg-queue-list">
+                    <div class="tg-empty-state">
+                        <div>📡 No job postings in queue</div>
+                        <p>Click "Fetch Now" to pull recent messages from the Telegram group, or start the real-time listener.</p>
                     </div>
                 </div>
             </div>
@@ -1151,13 +1396,13 @@
 
         // View Navigation Switcher
         function switchView(viewName) {
-            document.getElementById('view-ingestion').classList.toggle('active', viewName === 'ingestion');
-            document.getElementById('view-tracker').classList.toggle('active', viewName === 'tracker');
-            document.getElementById('view-qa').classList.toggle('active', viewName === 'qa');
-            
-            document.getElementById('nav-btn-ingestion').classList.toggle('active', viewName === 'ingestion');
-            document.getElementById('nav-btn-tracker').classList.toggle('active', viewName === 'tracker');
-            document.getElementById('nav-btn-qa').classList.toggle('active', viewName === 'qa');
+            const views = ['ingestion', 'telegram', 'tracker', 'qa'];
+            views.forEach(v => {
+                const viewEl = document.getElementById('view-' + v);
+                const btnEl = document.getElementById('nav-btn-' + v);
+                if (viewEl) viewEl.classList.toggle('active', viewName === v);
+                if (btnEl) btnEl.classList.toggle('active', viewName === v);
+            });
 
             if (viewName === 'tracker') {
                 loadTracker();
@@ -1166,6 +1411,9 @@
                 if (lastActiveJob && !document.getElementById('qa-company').value) {
                     syncFromActiveJob();
                 }
+            } else if (viewName === 'telegram') {
+                tgRefreshStatus();
+                tgLoadQueue();
             }
         }
 
@@ -1814,6 +2062,241 @@
 
         // Initial fetch on page load
         fetchTrackerBadge();
+
+        // ── Telegram Feed Functions ───────────────────────────────
+        let tgListenerActive = false;
+
+        async function tgRefreshStatus() {
+            try {
+                const res = await fetch('/api/telegram/status');
+                const status = await res.json();
+                const dot = document.getElementById('tg-status-dot');
+                const title = document.getElementById('tg-status-title');
+                const sub = document.getElementById('tg-status-sub');
+                const btn = document.getElementById('tg-btn-toggle');
+
+                if (status.listening) {
+                    dot.className = 'tg-status-dot connected';
+                    title.textContent = 'Connected & Listening';
+                    sub.textContent = 'Group: ' + (status.group || 'N/A');
+                    btn.textContent = '⏹ Stop Listener';
+                    tgListenerActive = true;
+                } else if (status.connected) {
+                    dot.className = 'tg-status-dot pending';
+                    title.textContent = 'Connected (Idle)';
+                    sub.textContent = status.message || 'Listener not running';
+                    btn.textContent = '▶ Start Listener';
+                    tgListenerActive = false;
+                } else if (!status.available) {
+                    dot.className = 'tg-status-dot disconnected';
+                    title.textContent = 'Not Configured';
+                    sub.textContent = status.has_credentials ? 'Run: python telegram_login.py' : 'Add TELEGRAM_API_ID/HASH to .env';
+                    btn.textContent = '▶ Start Listener';
+                    tgListenerActive = false;
+                } else {
+                    dot.className = 'tg-status-dot disconnected';
+                    title.textContent = 'Disconnected';
+                    sub.textContent = status.message || 'Click Start Listener';
+                    btn.textContent = '▶ Start Listener';
+                    tgListenerActive = false;
+                }
+            } catch (e) {
+                console.error('Telegram status error:', e);
+            }
+        }
+
+        async function tgLoadQueue() {
+            try {
+                const res = await fetch('/api/telegram/queue');
+                const queue = await res.json();
+                const container = document.getElementById('tg-queue-list');
+                const countEl = document.getElementById('tg-queue-count');
+                const badgeEl = document.getElementById('tg-queue-badge');
+
+                countEl.textContent = queue.length;
+                badgeEl.textContent = queue.length;
+
+                if (queue.length === 0) {
+                    container.replaceChildren();
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'tg-empty-state';
+                    const mainText = document.createElement('div');
+                    mainText.textContent = '📡 No job postings in queue';
+                    const subText = document.createElement('p');
+                    subText.textContent = 'Click "Fetch Now" to pull recent messages, or start the real-time listener.';
+                    emptyDiv.appendChild(mainText);
+                    emptyDiv.appendChild(subText);
+                    container.appendChild(emptyDiv);
+                    return;
+                }
+
+                container.replaceChildren();
+                queue.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'tg-job-card ' + (item.is_eligible ? 'eligible' : 'not-eligible');
+
+                    const info = document.createElement('div');
+                    info.className = 'tg-job-info';
+
+                    const companyEl = document.createElement('div');
+                    companyEl.className = 'tg-job-company';
+                    companyEl.textContent = item.company || 'Unknown Company';
+                    info.appendChild(companyEl);
+
+                    const roleEl = document.createElement('div');
+                    roleEl.className = 'tg-job-role';
+                    roleEl.textContent = item.role || 'Unknown Role';
+                    info.appendChild(roleEl);
+
+                    const meta = document.createElement('div');
+                    meta.className = 'tg-job-meta';
+
+                    if (item.location) {
+                        const loc = document.createElement('span');
+                        loc.textContent = '📍 ' + item.location;
+                        meta.appendChild(loc);
+                    }
+                    if (item.salary) {
+                        const sal = document.createElement('span');
+                        sal.textContent = '💰 ' + item.salary;
+                        meta.appendChild(sal);
+                    }
+                    if (item.batch) {
+                        const batch = document.createElement('span');
+                        batch.textContent = '🎓 ' + item.batch;
+                        meta.appendChild(batch);
+                    }
+                    if (item.apply_mode) {
+                        const mode = document.createElement('span');
+                        mode.textContent = (item.apply_mode === 'EMAIL' ? '✉️ Email' : '🔗 Link');
+                        meta.appendChild(mode);
+                    }
+                    if (item.ingested_at) {
+                        const time = document.createElement('span');
+                        time.textContent = '🕒 ' + item.ingested_at;
+                        meta.appendChild(time);
+                    }
+                    info.appendChild(meta);
+
+                    const badge = document.createElement('div');
+                    badge.className = 'tg-badge-eligible ' + (item.is_eligible ? 'yes' : 'no');
+                    badge.textContent = item.is_eligible ? '✓ Eligible' : '✗ Not Eligible';
+                    info.appendChild(badge);
+
+                    card.appendChild(info);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'tg-job-actions';
+
+                    const processBtn = document.createElement('button');
+                    processBtn.className = 'btn-primary';
+                    processBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
+                    processBtn.textContent = '⚡ Process';
+                    processBtn.addEventListener('click', () => tgProcessItem(item));
+                    actions.appendChild(processBtn);
+
+                    const skipBtn = document.createElement('button');
+                    skipBtn.className = 'btn-secondary';
+                    skipBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
+                    skipBtn.textContent = '⏩ Skip';
+                    skipBtn.addEventListener('click', () => tgSkipItem(item.id));
+                    actions.appendChild(skipBtn);
+
+                    card.appendChild(actions);
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                console.error('Telegram queue error:', e);
+            }
+        }
+
+        async function tgFetchNow() {
+            const btn = document.getElementById('tg-btn-fetch');
+            btn.textContent = '⏳ Fetching...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/telegram/fetch', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ ' + data.message;
+                    tgLoadQueue();
+                    setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 2000);
+                } else {
+                    btn.textContent = '❌ ' + (data.message || 'Failed');
+                    setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 3000);
+                }
+            } catch (e) {
+                btn.textContent = '❌ Error';
+                setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 3000);
+            }
+        }
+
+        async function tgToggleListener() {
+            const endpoint = tgListenerActive ? '/api/telegram/stop' : '/api/telegram/start';
+            const btn = document.getElementById('tg-btn-toggle');
+            btn.disabled = true;
+            btn.textContent = '⏳ ...';
+            try {
+                await fetch(endpoint, { method: 'POST' });
+                // Give it a moment to connect
+                setTimeout(() => {
+                    tgRefreshStatus();
+                    btn.disabled = false;
+                }, 1500);
+            } catch (e) {
+                btn.disabled = false;
+                tgRefreshStatus();
+            }
+        }
+
+        async function tgProcessItem(item) {
+            try {
+                const res = await fetch('/api/telegram/queue/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: item.id, raw_text: item.raw_text })
+                });
+                const data = await res.json();
+                if (!data.error) {
+                    tgLoadQueue();
+                    fetchTrackerBadge();
+                }
+            } catch (e) {
+                console.error('Process error:', e);
+            }
+        }
+
+        async function tgSkipItem(queueId) {
+            try {
+                await fetch('/api/telegram/queue/skip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: queueId })
+                });
+                tgLoadQueue();
+            } catch (e) {
+                console.error('Skip error:', e);
+            }
+        }
+
+        async function tgClearQueue() {
+            try {
+                await fetch('/api/telegram/queue/clear', { method: 'POST' });
+                tgLoadQueue();
+            } catch (e) {
+                console.error('Clear queue error:', e);
+            }
+        }
+
+        // Initial Telegram status check
+        tgRefreshStatus();
+        tgLoadQueue();
+
+        // Poll telegram status every 30 seconds
+        setInterval(() => {
+            tgRefreshStatus();
+            tgLoadQueue();
+        }, 30000);
     </script>
 </body>
 </html>
