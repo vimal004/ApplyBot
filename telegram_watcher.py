@@ -253,52 +253,66 @@ class TelegramWatcher:
     # ── Message Processing ─────────────────────────────────────────────
 
     @staticmethod
-    def _process_message(msg_text: str, msg_id: int, msg_date: Any) -> Optional[Dict[str, Any]]:
+    def _process_message(msg_text: str, msg_id: int, msg_date: Any) -> List[Dict[str, Any]]:
         """
-        Parse a Telegram message into a structured job posting
-        and add it to the queue.
+        Parse a Telegram message (which may contain multiple jobs)
+        and add them to the queue. Returns a list of queued entries.
         """
         from parser import TelegramJobParser
 
         try:
-            # Parse the message using the existing parser
-            parsed = TelegramJobParser.parse_message(msg_text)
+            # Parse the message using the updated parser (returns a list of job dicts)
+            parsed_jobs = TelegramJobParser.parse_message(msg_text)
 
             queue = TelegramWatcher._load_queue()
+            added_entries = []
 
-            # Deduplication check
-            if TelegramWatcher._is_duplicate(msg_text, queue):
-                print(f"[Telegram] Skipping duplicate: {parsed.get('company', 'Unknown')} - {parsed.get('role', 'Unknown')}")
-                return None
+            for idx, parsed in enumerate(parsed_jobs):
+                # Unique ID per job in the message
+                job_id = f"tg_{msg_id}_{idx}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                
+                # Check for duplicates (using company & role combo)
+                is_dup = False
+                for item in queue:
+                    if (item.get("company", "").lower() == parsed.get("company", "").lower() and
+                            item.get("role", "").lower() == parsed.get("role", "").lower()):
+                        is_dup = True
+                        break
+                
+                if is_dup:
+                    print(f"[Telegram] Skipping duplicate: {parsed.get('company', 'Unknown')} - {parsed.get('role', 'Unknown')}")
+                    continue
 
-            # Create queue entry
-            entry = {
-                "id": f"tg_{msg_id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "telegram_msg_id": msg_id,
-                "ingested_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "message_date": str(msg_date) if msg_date else "",
-                "company": parsed.get("company", "Unknown"),
-                "role": parsed.get("role", "Unknown"),
-                "batch": parsed.get("batch", ""),
-                "salary": parsed.get("salary", ""),
-                "location": parsed.get("location", ""),
-                "apply_target": parsed.get("apply_target", ""),
-                "apply_mode": parsed.get("apply_mode", "UNKNOWN"),
-                "is_eligible": parsed.get("is_eligible", False),
-                "requirements": parsed.get("requirements", []),
-                "raw_text": msg_text,
-                "status": "queued"  # queued | processed | skipped
-            }
+                entry = {
+                    "id": job_id,
+                    "telegram_msg_id": msg_id,
+                    "ingested_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "message_date": str(msg_date) if msg_date else "",
+                    "company": parsed.get("company", "Unknown"),
+                    "role": parsed.get("role", "Unknown"),
+                    "batch": parsed.get("batch", ""),
+                    "salary": parsed.get("salary", ""),
+                    "location": parsed.get("location", ""),
+                    "apply_target": parsed.get("apply_target", ""),
+                    "apply_mode": parsed.get("apply_mode", "UNKNOWN"),
+                    "is_eligible": parsed.get("is_eligible", False),
+                    "requirements": parsed.get("requirements", []),
+                    "raw_text": msg_text,
+                    "status": "queued"
+                }
 
-            queue.insert(0, entry)
-            TelegramWatcher._save_queue(queue)
+                queue.insert(0, entry)
+                added_entries.append(entry)
+                print(f"[Telegram] Queued: {entry['company']} - {entry['role']} (eligible={entry['is_eligible']})")
 
-            print(f"[Telegram] Queued: {entry['company']} - {entry['role']} (eligible={entry['is_eligible']})")
-            return entry
+            if added_entries:
+                TelegramWatcher._save_queue(queue)
+
+            return added_entries
 
         except Exception as e:
             print(f"[Telegram] Failed to process message {msg_id}: {e}")
-            return None
+            return []
 
     # ── Fetch (Catch-up) ───────────────────────────────────────────────
 
@@ -331,11 +345,11 @@ class TelegramWatcher:
                 if not self._is_job_posting(message.text):
                     continue
 
-                entry = self._process_message(
+                entries = self._process_message(
                     message.text, message.id, message.date
                 )
-                if entry:
-                    results.append(entry)
+                if entries:
+                    results.extend(entries)
 
             # Update checkpoint
             if max_id_seen > last_msg_id:
@@ -419,10 +433,10 @@ class TelegramWatcher:
             if not self._is_job_posting(event.text):
                 return
 
-            entry = self._process_message(
+            entries = self._process_message(
                 event.text, event.message.id, event.message.date
             )
-            if entry:
+            if entries:
                 # Update checkpoint
                 checkpoint = self._load_checkpoint()
                 if event.message.id > checkpoint.get("last_message_id", 0):

@@ -12,39 +12,48 @@ class TelegramJobParser:
     """
 
     LLM_SYSTEM_PROMPT = """
-You are an expert recruitment parser. Extract structured job details from the provided Telegram job referral message.
-Return ONLY valid JSON matching this exact structure:
+You are an expert recruitment parser. Extract structured job details from the provided Telegram message.
+A single message may contain multiple separate job openings (for different roles or companies).
+Return ONLY a valid JSON object matching this exact structure:
 {
-  "company": "Company Name",
-  "role": "Job Role / Designation",
-  "batch": "Eligible Batches (e.g. 2024/2025 or 2020 and before)",
-  "salary": "Salary / CTC / Stipend details (e.g. 20-35 LPA or ₹30,000/month)",
-  "location": "Job Location",
-  "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
-  "apply_target": "Email address OR application URL",
-  "apply_mode": "EMAIL" or "LINK",
-  "subject_line": "Target email subject line if mentioned in post (else empty string)"
+  "jobs": [
+    {
+      "company": "Company Name",
+      "role": "Job Role / Designation",
+      "batch": "Eligible Batches (e.g. 2024/2025 or 2020 and before)",
+      "salary": "Salary / CTC / Stipend details (e.g. 20-35 LPA or ₹30,000/month)",
+      "location": "Job Location",
+      "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
+      "apply_target": "Email address OR application URL",
+      "apply_mode": "EMAIL" or "LINK",
+      "subject_line": "Target email subject line if mentioned in post (else empty string)"
+    }
+  ]
 }
 Do not include markdown backticks or any conversational text outside the JSON object.
+If there is only one job, still return it inside the "jobs" list.
+
 """
 
     @staticmethod
-    def parse_message(raw_text: str) -> Dict[str, Any]:
+    def parse_message(raw_text: str) -> List[Dict[str, Any]]:
         text = raw_text.strip()
 
         # 1. Try Groq LLM Parsing if API key is present
         if config.groq.api_key:
             llm_result = TelegramJobParser._parse_with_groq(text)
             if llm_result:
-                # Add candidate eligibility evaluation
-                llm_result["is_eligible"] = TelegramJobParser._check_batch_eligibility(
-                    llm_result.get("batch", ""), candidate_batch="2026"
-                )
-                llm_result["raw_text"] = raw_text
+                # Add candidate eligibility evaluation and raw text
+                for job in llm_result:
+                    job["is_eligible"] = TelegramJobParser._check_batch_eligibility(
+                        job.get("batch", ""), candidate_batch="2026"
+                    )
+                    job["raw_text"] = raw_text
                 return llm_result
 
         # 2. Fallback Heuristic Parser if LLM is unavailable or unfulfilled
-        return TelegramJobParser._parse_with_heuristics(text)
+        fallback_job = TelegramJobParser._parse_with_heuristics(text)
+        return [fallback_job]
 
     @staticmethod
     def _parse_with_groq(text: str) -> Dict[str, Any]:
@@ -72,26 +81,37 @@ Do not include markdown backticks or any conversational text outside the JSON ob
                 content = res_data['choices'][0]['message']['content'].strip()
                 parsed_json = json.loads(content)
                 
-                # Sanitize extracted target
-                apply_target = parsed_json.get("apply_target", "")
-                apply_mode = parsed_json.get("apply_mode", "UNKNOWN").upper()
-                
-                if "@" in apply_target and not apply_target.startswith("http"):
-                    apply_mode = "EMAIL"
-                elif apply_target.startswith("http"):
-                    apply_mode = "LINK"
+                # Check if it returned a list of jobs as requested
+                raw_jobs = parsed_json.get("jobs", [])
+                if not isinstance(raw_jobs, list):
+                    # Handle single job object fallback
+                    if isinstance(parsed_json, dict) and "company" in parsed_json:
+                        raw_jobs = [parsed_json]
+                    else:
+                        raw_jobs = []
+
+                processed_jobs = []
+                for job in raw_jobs:
+                    apply_target = job.get("apply_target", "")
+                    apply_mode = job.get("apply_mode", "UNKNOWN").upper()
                     
-                return {
-                    "company": parsed_json.get("company", "Company")[:30],
-                    "role": parsed_json.get("role", "Software Engineer")[:30],
-                    "batch": parsed_json.get("batch", "Any"),
-                    "salary": parsed_json.get("salary", "Not Specified"),
-                    "location": parsed_json.get("location", "India"),
-                    "requirements": parsed_json.get("requirements", []),
-                    "apply_target": apply_target,
-                    "apply_mode": apply_mode,
-                    "subject_line": parsed_json.get("subject_line", "")
-                }
+                    if "@" in apply_target and not apply_target.startswith("http"):
+                        apply_mode = "EMAIL"
+                    elif apply_target.startswith("http"):
+                        apply_mode = "LINK"
+                        
+                    processed_jobs.append({
+                        "company": job.get("company", "Company")[:30],
+                        "role": job.get("role", "Software Engineer")[:30],
+                        "batch": job.get("batch", "Any"),
+                        "salary": job.get("salary", "Not Specified"),
+                        "location": job.get("location", "India"),
+                        "requirements": job.get("requirements", []),
+                        "apply_target": apply_target,
+                        "apply_mode": apply_mode,
+                        "subject_line": job.get("subject_line", "")
+                    })
+                return processed_jobs
         except Exception as e:
             print(f"[Groq Parser Note] Falling back to heuristics ({e})")
             return None

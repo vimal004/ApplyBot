@@ -1117,7 +1117,13 @@
                         <div class="tg-status-sub" id="tg-status-sub">Telegram auto-ingestion</div>
                     </div>
                 </div>
-                <div class="tg-actions">
+                <div class="tg-actions" style="align-items: center;">
+                    <!-- Dropdown Filter -->
+                    <select id="tg-filter-mode" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(0, 0, 0, 0.6);" onchange="tgLoadQueue()">
+                        <option value="ALL">All Applications</option>
+                        <option value="EMAIL">Email Apps Only</option>
+                        <option value="LINK">Link/Form Apps Only</option>
+                    </select>
                     <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgFetchNow()" id="tg-btn-fetch">🔄 Fetch Now</button>
                     <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgToggleListener()" id="tg-btn-toggle">▶ Start Listener</button>
                     <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgClearQueue()">🗑 Clear Queue</button>
@@ -1132,11 +1138,33 @@
                         <span class="badge-count" id="tg-queue-count">0</span>
                     </div>
                 </div>
-                <div id="tg-queue-list">
-                    <div class="tg-empty-state">
-                        <div>📡 No job postings in queue</div>
-                        <p>Click "Fetch Now" to pull recent messages from the Telegram group, or start the real-time listener.</p>
+
+                <!-- Section: Email Applications -->
+                <div id="tg-section-email-wrapper">
+                    <div class="tg-queue-section-header" style="margin-top: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">✉️ Direct Email Applications</span>
+                        <span class="badge-count" id="tg-email-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
                     </div>
+                    <div id="tg-queue-list-email" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; margin-top: 1rem;">
+                        <!-- Email jobs will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Section: Form/Link Applications -->
+                <div id="tg-section-link-wrapper">
+                    <div class="tg-queue-section-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">🔗 Web Form / Link Applications</span>
+                        <span class="badge-count" id="tg-link-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
+                    </div>
+                    <div id="tg-queue-list-link" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                        <!-- Link jobs will be rendered here -->
+                    </div>
+                </div>
+                
+                <!-- Shared empty state template (hidden by default) -->
+                <div id="tg-queue-empty" class="tg-empty-state" style="display: none;">
+                    <div>📡 No job postings in queue</div>
+                    <p>Click "Fetch Now" to pull recent messages from the Telegram group, or start the real-time listener.</p>
                 </div>
             </div>
         </div>
@@ -2109,31 +2137,52 @@
             try {
                 const res = await fetch('/api/telegram/queue');
                 const queue = await res.json();
-                const container = document.getElementById('tg-queue-list');
+                const containerEmail = document.getElementById('tg-queue-list-email');
+                const containerLink = document.getElementById('tg-queue-list-link');
                 const countEl = document.getElementById('tg-queue-count');
                 const badgeEl = document.getElementById('tg-queue-badge');
+                const emailCountEl = document.getElementById('tg-email-count');
+                const linkCountEl = document.getElementById('tg-link-count');
+                const emptyEl = document.getElementById('tg-queue-empty');
+                const filterMode = document.getElementById('tg-filter-mode').value;
 
                 countEl.textContent = queue.length;
                 badgeEl.textContent = queue.length;
 
+                containerEmail.replaceChildren();
+                containerLink.replaceChildren();
+
+                // Show/hide sections based on dropdown filter
+                const showEmailSection = (filterMode === 'ALL' || filterMode === 'EMAIL');
+                const showLinkSection = (filterMode === 'ALL' || filterMode === 'LINK');
+
+                document.getElementById('tg-section-email-wrapper').style.display = showEmailSection ? 'block' : 'none';
+                document.getElementById('tg-section-link-wrapper').style.display = showLinkSection ? 'block' : 'none';
+
                 if (queue.length === 0) {
-                    container.replaceChildren();
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'tg-empty-state';
-                    const mainText = document.createElement('div');
-                    mainText.textContent = '📡 No job postings in queue';
-                    const subText = document.createElement('p');
-                    subText.textContent = 'Click "Fetch Now" to pull recent messages, or start the real-time listener.';
-                    emptyDiv.appendChild(mainText);
-                    emptyDiv.appendChild(subText);
-                    container.appendChild(emptyDiv);
+                    emptyEl.style.display = 'block';
+                    emailCountEl.textContent = '0';
+                    linkCountEl.textContent = '0';
                     return;
+                } else {
+                    emptyEl.style.display = 'none';
                 }
 
-                container.replaceChildren();
+                let emailCount = 0;
+                let linkCount = 0;
+
                 queue.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'tg-job-card ' + (item.is_eligible ? 'eligible' : 'not-eligible');
+                    card.style.flexDirection = 'column';
+                    card.style.cursor = 'pointer';
+
+                    const mainRow = document.createElement('div');
+                    mainRow.style.display = 'flex';
+                    mainRow.style.width = '100%';
+                    mainRow.style.justifyContent = 'space-between';
+                    mainRow.style.alignItems = 'flex-start';
+                    mainRow.style.gap = '1.5rem';
 
                     const info = document.createElement('div');
                     info.className = 'tg-job-info';
@@ -2183,10 +2232,11 @@
                     badge.textContent = item.is_eligible ? '✓ Eligible' : '✗ Not Eligible';
                     info.appendChild(badge);
 
-                    card.appendChild(info);
+                    mainRow.appendChild(info);
 
                     const actions = document.createElement('div');
                     actions.className = 'tg-job-actions';
+                    actions.addEventListener('click', (e) => e.stopPropagation()); // prevent expansion on button clicks
 
                     const processBtn = document.createElement('button');
                     processBtn.className = 'btn-primary';
@@ -2202,9 +2252,58 @@
                     skipBtn.addEventListener('click', () => tgSkipItem(item.id));
                     actions.appendChild(skipBtn);
 
-                    card.appendChild(actions);
-                    container.appendChild(card);
+                    mainRow.appendChild(actions);
+                    card.appendChild(mainRow);
+
+                    // Expandable Raw Text Section
+                    const rawTextContainer = document.createElement('div');
+                    rawTextContainer.style.display = 'none';
+                    rawTextContainer.style.width = '100%';
+                    rawTextContainer.style.marginTop = '1rem';
+                    rawTextContainer.style.padding = '1rem';
+                    rawTextContainer.style.background = 'rgba(0, 0, 0, 0.4)';
+                    rawTextContainer.style.border = '1px solid var(--color-border)';
+                    rawTextContainer.style.borderRadius = 'var(--radius-md)';
+                    rawTextContainer.style.fontFamily = "'JetBrains Mono', monospace";
+                    rawTextContainer.style.fontSize = '0.78rem';
+                    rawTextContainer.style.whiteSpace = 'pre-wrap';
+                    rawTextContainer.style.color = 'var(--color-text-secondary)';
+                    rawTextContainer.textContent = item.raw_text || 'No raw text message details available.';
+                    card.appendChild(rawTextContainer);
+
+                    card.addEventListener('click', () => {
+                        const isCollapsed = (rawTextContainer.style.display === 'none');
+                        rawTextContainer.style.display = isCollapsed ? 'block' : 'none';
+                        card.style.borderColor = isCollapsed ? 'var(--color-border-hover)' : 'var(--color-border)';
+                    });
+
+                    if (item.apply_mode === 'EMAIL') {
+                        containerEmail.appendChild(card);
+                        emailCount++;
+                    } else {
+                        containerLink.appendChild(card);
+                        linkCount++;
+                    }
                 });
+
+                emailCountEl.textContent = emailCount;
+                linkCountEl.textContent = linkCount;
+
+                if (emailCount === 0 && showEmailSection) {
+                    const empty = document.createElement('div');
+                    empty.className = 'tg-empty-state';
+                    empty.style.padding = '2rem 1rem';
+                    empty.textContent = 'No direct email jobs in queue';
+                    containerEmail.appendChild(empty);
+                }
+                if (linkCount === 0 && showLinkSection) {
+                    const empty = document.createElement('div');
+                    empty.className = 'tg-empty-state';
+                    empty.style.padding = '2rem 1rem';
+                    empty.textContent = 'No web form/link jobs in queue';
+                    containerLink.appendChild(empty);
+                }
+
             } catch (e) {
                 console.error('Telegram queue error:', e);
             }
@@ -2251,18 +2350,32 @@
 
         async function tgProcessItem(item) {
             try {
-                const res = await fetch('/api/telegram/queue/process', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: item.id, raw_text: item.raw_text })
-                });
-                const data = await res.json();
-                if (!data.error) {
-                    tgLoadQueue();
-                    fetchTrackerBadge();
+                // Populate the Ingestion input area with this raw telegram message
+                const inputArea = document.getElementById('telegram-input');
+                if (inputArea) {
+                    inputArea.value = item.raw_text || '';
                 }
+                
+                // Switch view to the Ingestion & Generator screen
+                switchView('ingestion');
+
+                // Trigger removal from Telegram Queue (moves it out since it's now being manually reviewed/processed)
+                tgSkipItem(item.id);
+                
+                // Automatically click the manual process button to trigger parsing/filling
+                setTimeout(() => {
+                    const processBtn = document.getElementById('btn-process');
+                    if (processBtn) {
+                        processBtn.click();
+                    } else {
+                        // Fallback fallback if btn-process does not exist
+                        const runPipelineBtn = document.querySelector('.card .btn-primary');
+                        if (runPipelineBtn) runPipelineBtn.click();
+                    }
+                }, 100);
+
             } catch (e) {
-                console.error('Process error:', e);
+                console.error('Process redirect error:', e);
             }
         }
 
