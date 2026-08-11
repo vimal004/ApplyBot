@@ -234,16 +234,8 @@ class ResumeTailorer:
         return ResumeTailorer.ask_multi_provider_llm(prompt, system_prompt, max_tokens)
 
     @staticmethod
-    def infer_salutation(company: str, hr_email: str) -> str:
-        if hr_email and "@" in hr_email:
-            local_part = hr_email.split("@")[0]
-            if not any(k in local_part.lower() for k in ["hiring", "careers", "jobs", "builder", "info", "recruitment", "team", "hr", "apply", "talent"]):
-                clean_name = local_part.replace(".", " ").replace("_", " ").title()
-                if len(clean_name) > 2 and clean_name.replace(" ", "").isalpha():
-                    return f"Dear {clean_name},"
-        if company and company.lower() != "company":
-            return f"Dear {company} Hiring Team,"
-        return "Dear Hiring Manager,"
+    def infer_salutation(company: str = "", hr_email: str = "") -> str:
+        return "Dear HR team,"
 
     @staticmethod
     def generate_hr_cover_letter(company: str, role: str, requirements: list, hr_email: str = "") -> str:
@@ -253,7 +245,7 @@ class ResumeTailorer:
         system_prompt = (
             "You are an executive career advisor writing a detailed, highly persuasive cold email to a recruiter.\n"
             "MANDATORY RULES:\n"
-            "1. Start directly with the provided salutation line.\n"
+            "1. Start directly with the salutation line: 'Dear HR team,'.\n"
             "2. Structure the body into 3 clear, professional paragraphs:\n"
             "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Graduate from SRM IST (CGPA 8.91/10.0, Class of 2026).\n"
             "   - Paragraph 2: Highlight key technical experience directly relevant to the target role requirements (e.g. GenAI/LLM pipelines, AI Agents, React Native, Node.js, FastAPI, Docker, and AWS).\n"
@@ -264,7 +256,7 @@ class ResumeTailorer:
             "6. Target length: 130 to 170 words."
         )
         prompt = (
-            f"Salutation: '{salutation}'\n"
+            f"Salutation: 'Dear HR team,'\n"
             f"Candidate: Vimal Manoharan (B.Tech CSE '26, SRM IST, CGPA 8.91/10.0)\n"
             f"Applying for: {role} at {company}\n"
             f"Key technical highlights: GenAI & RAG pipelines, AI Agents, React Native, Node.js, FastAPI, MongoDB, Docker, AWS EC2.\n"
@@ -281,7 +273,7 @@ class ResumeTailorer:
                 cleaned = cleaned.split(term)[0].strip()
                 
         if not cleaned.startswith("Dear"):
-            cleaned = f"{salutation}\n\n" + cleaned
+            cleaned = f"Dear HR team,\n\n" + cleaned
             
         return cleaned
 

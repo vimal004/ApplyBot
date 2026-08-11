@@ -16,21 +16,24 @@ class ApplyBotPipeline:
     """
 
     @staticmethod
-    def process_referral(raw_telegram_text: str, superfast_mode: bool = False) -> Dict[str, Any]:
+    def process_referral(raw_telegram_text: str, superfast_mode: bool = False, job_dict: Dict[str, Any] = None) -> Dict[str, Any]:
         base_tex = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.tex")
         
-        # 1. Parse Telegram Post
-        parsed_res = TelegramJobParser.parse_message(raw_telegram_text)
-        if isinstance(parsed_res, list) and len(parsed_res) > 0:
-            job = parsed_res[0]
-        elif isinstance(parsed_res, dict):
-            job = parsed_res
+        # 1. Parse Telegram Post if job_dict is not supplied
+        if job_dict:
+            job = job_dict
         else:
-            job = {
-                "company": "Company", "role": "Software Engineer", "batch": "Any",
-                "salary": "Not Specified", "location": "India", "requirements": [],
-                "raw_text": raw_telegram_text, "apply_target": "", "apply_mode": "UNKNOWN"
-            }
+            parsed_res = TelegramJobParser.parse_message(raw_telegram_text)
+            if isinstance(parsed_res, list) and len(parsed_res) > 0:
+                job = parsed_res[0]
+            elif isinstance(parsed_res, dict):
+                job = parsed_res
+            else:
+                job = {
+                    "company": "Company", "role": "Software Engineer", "batch": "Any",
+                    "salary": "Not Specified", "location": "India", "requirements": [],
+                    "raw_text": raw_telegram_text, "apply_target": "", "apply_mode": "UNKNOWN"
+                }
 
         company_clean = re.sub(r'[^a-zA-Z0-9]', '_', job.get("company", "Company"))[:25].strip('_')
         role_clean = re.sub(r'[^a-zA-Z0-9]', '_', job.get("role", "Role"))[:25].strip('_')

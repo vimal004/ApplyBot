@@ -283,6 +283,32 @@ class TelegramWatcher:
                     print(f"[Telegram] Skipping duplicate: {parsed.get('company', 'Unknown')} - {parsed.get('role', 'Unknown')}")
                     continue
 
+                apply_mode = parsed.get("apply_mode", "UNKNOWN")
+                status = "queued"
+                status_msg = ""
+
+                # Automate mail sending if job requires email application
+                if apply_mode == "EMAIL":
+                    print(f"[Telegram Auto-Send] Direct EMAIL job detected for {parsed.get('company')} - {parsed.get('role')}. Auto-sending email...")
+                    try:
+                        from telegram_bot import ApplyBotPipeline
+                        from app import _log_application
+                        result = ApplyBotPipeline.process_referral(msg_text, superfast_mode=True, job_dict=parsed)
+                        _log_application(result)
+                        action_res = result.get("action_result", {})
+                        if action_res.get("sent"):
+                            status = "auto_sent"
+                            status_msg = action_res.get("status", "Email sent automatically")
+                            print(f"[Telegram Auto-Send Success] {status_msg}")
+                        else:
+                            status = "error"
+                            status_msg = action_res.get("status", "Failed to auto-send email")
+                            print(f"[Telegram Auto-Send Error] {status_msg}")
+                    except Exception as exc:
+                        status = "error"
+                        status_msg = str(exc)
+                        print(f"[Telegram Auto-Send Exception] {exc}")
+
                 entry = {
                     "id": job_id,
                     "telegram_msg_id": msg_id,
@@ -294,16 +320,17 @@ class TelegramWatcher:
                     "salary": parsed.get("salary", ""),
                     "location": parsed.get("location", ""),
                     "apply_target": parsed.get("apply_target", ""),
-                    "apply_mode": parsed.get("apply_mode", "UNKNOWN"),
+                    "apply_mode": apply_mode,
                     "is_eligible": parsed.get("is_eligible", False),
                     "requirements": parsed.get("requirements", []),
                     "raw_text": msg_text,
-                    "status": "queued"
+                    "status": status,
+                    "status_msg": status_msg
                 }
 
                 queue.insert(0, entry)
                 added_entries.append(entry)
-                print(f"[Telegram] Queued: {entry['company']} - {entry['role']} (eligible={entry['is_eligible']})")
+                print(f"[Telegram] Queued ({status}): {entry['company']} - {entry['role']} (eligible={entry['is_eligible']})")
 
             if added_entries:
                 TelegramWatcher._save_queue(queue)

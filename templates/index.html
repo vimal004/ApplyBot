@@ -2238,19 +2238,40 @@
                     actions.className = 'tg-job-actions';
                     actions.addEventListener('click', (e) => e.stopPropagation()); // prevent expansion on button clicks
 
-                    const processBtn = document.createElement('button');
-                    processBtn.className = 'btn-primary';
-                    processBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
-                    processBtn.textContent = '⚡ Process';
-                    processBtn.addEventListener('click', () => tgProcessItem(item));
-                    actions.appendChild(processBtn);
+                    if (item.status === 'auto_sent') {
+                        const sentBadge = document.createElement('span');
+                        sentBadge.style.cssText = 'background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
+                        sentBadge.textContent = '✅ Auto-Sent';
+                        sentBadge.title = item.status_msg || 'Email sent automatically';
+                        actions.appendChild(sentBadge);
+                    } else if (item.status === 'error') {
+                        const errBadge = document.createElement('span');
+                        errBadge.style.cssText = 'background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
+                        errBadge.textContent = '⚠️ Auto-Send Failed';
+                        errBadge.title = item.status_msg || 'Failed to auto-send email';
+                        actions.appendChild(errBadge);
 
-                    const skipBtn = document.createElement('button');
-                    skipBtn.className = 'btn-secondary';
-                    skipBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
-                    skipBtn.textContent = '⏩ Skip';
-                    skipBtn.addEventListener('click', () => tgSkipItem(item.id));
-                    actions.appendChild(skipBtn);
+                        const retryBtn = document.createElement('button');
+                        retryBtn.className = 'btn-primary';
+                        retryBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem; margin-left: 0.5rem;';
+                        retryBtn.textContent = '⚡ Retry';
+                        retryBtn.addEventListener('click', () => tgProcessItem(item));
+                        actions.appendChild(retryBtn);
+                    } else {
+                        const processBtn = document.createElement('button');
+                        processBtn.className = 'btn-primary';
+                        processBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
+                        processBtn.textContent = '⚡ Process';
+                        processBtn.addEventListener('click', () => tgProcessItem(item));
+                        actions.appendChild(processBtn);
+
+                        const skipBtn = document.createElement('button');
+                        skipBtn.className = 'btn-secondary';
+                        skipBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
+                        skipBtn.textContent = '⏩ Skip';
+                        skipBtn.addEventListener('click', () => tgSkipItem(item.id));
+                        actions.appendChild(skipBtn);
+                    }
 
                     mainRow.appendChild(actions);
                     card.appendChild(mainRow);
