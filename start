@@ -1,5 +1,26 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-source venv/bin/activate
-echo "🚀 Starting ApplyBot..."
-python app.py
+
+echo "⚡ Ensuring ApplyBot background service is loaded and active..."
+mkdir -p ~/Library/LaunchAgents
+cp "$(pwd)/com.vimal.applybot.backend.plist" ~/Library/LaunchAgents/com.vimal.applybot.backend.plist
+launchctl load -w ~/Library/LaunchAgents/com.vimal.applybot.backend.plist 2>/dev/null || true
+
+sleep 1
+if curl -s http://localhost:5050/api/telegram/status > /dev/null; then
+    echo "============================================================"
+    echo "✅ ApplyBot 24/7 Background Daemon is RUNNING!"
+    echo "⚡ Dashboard URL: http://localhost:5050"
+    echo "📋 Logs File:     $(pwd)/backend.log"
+    echo "============================================================"
+    echo "This service runs automatically in the background even if"
+    echo "you close your IDE or restart your Mac."
+    echo ""
+    echo "Commands:"
+    echo "  - View live logs:  tail -f backend.log"
+    echo "  - Stop daemon:     launchctl unload ~/Library/LaunchAgents/com.vimal.applybot.backend.plist"
+    echo "  - Start daemon:    launchctl load -w ~/Library/LaunchAgents/com.vimal.applybot.backend.plist"
+else
+    echo "❌ ApplyBot service failed to start. Check backend.log for details."
+fi
+
