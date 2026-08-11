@@ -986,7 +986,10 @@
                     <div class="card-title">
                         <span>🤖 Job-Specific Custom Question Assistant</span>
                     </div>
-                    <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearQAForm()">Clear Form</button>
+                    <div style="display: flex; gap: 0.4rem;">
+                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="syncFromActiveJob()">⚡ Sync Active Job</button>
+                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearQAForm()">Clear Form</button>
+                    </div>
                 </div>
 
                 <div class="form-grid" style="gap: 0.85rem;">
@@ -1131,6 +1134,7 @@
         let currentMode = 'MANUAL_REVIEW';
         let currentPayload = null;
         let trackerEntries = [];
+        let lastActiveJob = null;
 
         // Safe HTML escaping to strictly prevent XSS vulnerabilities
         function escapeHtml(str) {
@@ -1157,6 +1161,21 @@
 
             if (viewName === 'tracker') {
                 loadTracker();
+            } else if (viewName === 'qa') {
+                // Auto-sync active job if fields are empty
+                if (lastActiveJob && !document.getElementById('qa-company').value) {
+                    syncFromActiveJob();
+                }
+            }
+        }
+
+        function syncFromActiveJob() {
+            if (lastActiveJob) {
+                document.getElementById('qa-company').value = lastActiveJob.company || '';
+                document.getElementById('qa-role').value = lastActiveJob.role || '';
+                document.getElementById('qa-jd').value = lastActiveJob.raw_text || '';
+            } else {
+                alert('No active job processed yet in the Ingestion tab.');
             }
         }
 
@@ -1180,10 +1199,8 @@
             document.getElementById('qa-stats').innerText = '0 words | 0 chars';
         }
 
-        function quickFillQA(company, role, jdText) {
-            document.getElementById('qa-company').value = company || '';
-            document.getElementById('qa-role').value = role || '';
-            if (jdText) document.getElementById('qa-jd').value = jdText;
+        function quickFillQA() {
+            syncFromActiveJob();
             switchView('qa');
             document.getElementById('qa-question').focus();
         }
@@ -1412,6 +1429,15 @@
             }
 
             const job = data.job;
+            lastActiveJob = {
+                company: job.company || '',
+                role: job.role || '',
+                raw_text: job.raw_text || ''
+            };
+
+            // Auto-fill Q&A Assistant fields right away!
+            syncFromActiveJob();
+
             const action = data.action_result;
             const pdfFilename = data.pdf_path.split('/').pop();
             const pdfDownloadUrl = `/outputs/${encodeURIComponent(pdfFilename)}`;
@@ -1445,7 +1471,7 @@
                                 <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
                                     📄 Download Tailored PDF Resume
                                 </a>
-                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA('${escapeHtml(job.company)}', '${escapeHtml(job.role)}', '')">
+                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
                                     ❓ Ask Custom Qs
                                 </button>
                             </div>
@@ -1485,7 +1511,7 @@
                                 <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
                                     📄 Download Tailored PDF Resume
                                 </a>
-                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA('${escapeHtml(job.company)}', '${escapeHtml(job.role)}', '')">
+                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
                                     ❓ Ask Custom Qs
                                 </button>
                             </div>
