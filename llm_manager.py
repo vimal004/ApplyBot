@@ -142,7 +142,7 @@ class LLMManager:
                         data=json.dumps(payload).encode("utf-8"),
                         headers={"Content-Type": "application/json"}
                     )
-                    with urllib.request.urlopen(req, timeout=15) as response:
+                    with urllib.request.urlopen(req, timeout=30) as response:
                         res_data = json.loads(response.read().decode("utf-8"))
                         text = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
                         print(f"[{key_id} AI] Success using model '{model}' for task {task.name}")
@@ -176,7 +176,7 @@ class LLMManager:
                         data=json.dumps(payload).encode("utf-8"),
                         headers=headers
                     )
-                    with urllib.request.urlopen(req, timeout=15) as response:
+                    with urllib.request.urlopen(req, timeout=30) as response:
                         res_data = json.loads(response.read().decode("utf-8"))
                         text = res_data["choices"][0]["message"]["content"].strip()
                         print(f"[{key_id} AI] Success using model '{model}' for task {task.name}")

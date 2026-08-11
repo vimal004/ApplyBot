@@ -20,9 +20,20 @@ class ApplyBotPipeline:
         base_tex = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.tex")
         
         # 1. Parse Telegram Post
-        job = TelegramJobParser.parse_message(raw_telegram_text)
-        company_clean = re.sub(r'[^a-zA-Z0-9]', '_', job["company"])[:25].strip('_')
-        role_clean = re.sub(r'[^a-zA-Z0-9]', '_', job["role"])[:25].strip('_')
+        parsed_res = TelegramJobParser.parse_message(raw_telegram_text)
+        if isinstance(parsed_res, list) and len(parsed_res) > 0:
+            job = parsed_res[0]
+        elif isinstance(parsed_res, dict):
+            job = parsed_res
+        else:
+            job = {
+                "company": "Company", "role": "Software Engineer", "batch": "Any",
+                "salary": "Not Specified", "location": "India", "requirements": [],
+                "raw_text": raw_telegram_text, "apply_target": "", "apply_mode": "UNKNOWN"
+            }
+
+        company_clean = re.sub(r'[^a-zA-Z0-9]', '_', job.get("company", "Company"))[:25].strip('_')
+        role_clean = re.sub(r'[^a-zA-Z0-9]', '_', job.get("role", "Role"))[:25].strip('_')
         
         output_tex = os.path.join(config.output_dir, f"Resume_{company_clean}_{role_clean}.tex")
         output_pdf = os.path.join(config.output_dir, f"Vimal_Manoharan_Resume_{company_clean}.pdf")
