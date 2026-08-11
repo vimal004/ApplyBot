@@ -197,31 +197,31 @@ class MultiLLMConfig:
     # Priority ordered fallback providers & models with generous rate limits
     providers: List[Dict[str, Any]] = field(default_factory=lambda: [
         {
-            "name": "Groq",
-            "api_key_env": "GROQ_API_KEY",
-            "endpoint": "https://api.groq.com/openai/v1/chat/completions",
-            "models": ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.2-3b-preview", "llama3-8b-8192"]
-        },
-        {
             "name": "Gemini",
             "api_key_env": "GEMINI_API_KEY",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-            "models": ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+            "models": ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+        },
+        {
+            "name": "Groq",
+            "api_key_env": "GROQ_API_KEY",
+            "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+            "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-coder-32b"]
         },
         {
             "name": "Cerebras",
             "api_key_env": "CEREBRAS_API_KEY",
             "endpoint": "https://api.cerebras.ai/v1/chat/completions",
-            "models": ["llama3.1-8b", "llama3.1-70b"]
+            "models": ["llama-3.3-70b", "llama3.1-8b"]
         },
         {
             "name": "OpenRouter",
             "api_key_env": "OPENROUTER_API_KEY",
             "endpoint": "https://openrouter.ai/api/v1/chat/completions",
             "models": [
+                "openrouter/free",
                 "meta-llama/llama-3.3-70b-instruct:free",
-                "google/gemini-2.0-flash-exp:free",
-                "qwen/qwen-2.5-72b-instruct:free"
+                "google/gemini-2.0-flash-lite-001:free"
             ]
         }
     ])

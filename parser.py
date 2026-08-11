@@ -4,116 +4,104 @@ import urllib.request
 from typing import Dict, Any, List
 from config import config
 
+from llm_manager import llm_manager, TaskType
+
 class TelegramJobParser:
     """
     Smart LLM-Powered Telegram Referral Message Parser.
-    Uses Groq LLM (llama-3.1-8b-instant) to parse ANY arbitrarily structured Telegram post
-    into a clean JSON structure, with a robust heuristic fallback.
+    Uses LLMManager with multi-provider fallback (Groq -> Cerebras -> Gemini -> OpenRouter)
+    to parse arbitrarily structured Telegram posts into JSON, with heuristic fallback.
     """
 
-    LLM_SYSTEM_PROMPT = """
-You are an expert recruitment parser. Extract structured job details from the provided Telegram message.
-A single message may contain multiple separate job openings (for different roles or companies).
-Return ONLY a valid JSON object matching this exact structure:
+    LLM_SYSTEM_PROMPT = """You are an expert recruitment parser. Extract job details from Telegram posts.
+Return ONLY valid JSON matching this structure:
 {
   "jobs": [
     {
       "company": "Company Name",
       "role": "Job Role / Designation",
-      "batch": "Eligible Batches (e.g. 2024/2025 or 2020 and before)",
-      "salary": "Salary / CTC / Stipend details (e.g. 20-35 LPA or ₹30,000/month)",
+      "batch": "Eligible Batches (e.g. 2024/2025/2026)",
+      "salary": "Salary / CTC / Stipend details",
       "location": "Job Location",
-      "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
+      "requirements": ["Req 1", "Req 2"],
       "apply_target": "Email address OR application URL",
       "apply_mode": "EMAIL" or "LINK",
-      "subject_line": "Target email subject line if mentioned in post (else empty string)"
+      "subject_line": "Target email subject line if mentioned"
     }
   ]
-}
-Do not include markdown backticks or any conversational text outside the JSON object.
-If there is only one job, still return it inside the "jobs" list.
-
-"""
+}"""
 
     @staticmethod
     def parse_message(raw_text: str) -> List[Dict[str, Any]]:
         text = raw_text.strip()
 
-        # 1. Try Groq LLM Parsing if API key is present
-        if config.groq.api_key:
-            llm_result = TelegramJobParser._parse_with_groq(text)
-            if llm_result:
-                # Add candidate eligibility evaluation and raw text
-                for job in llm_result:
-                    job["is_eligible"] = TelegramJobParser._check_batch_eligibility(
-                        job.get("batch", ""), candidate_batch="2026"
-                    )
-                    job["raw_text"] = raw_text
-                return llm_result
+        # 1. Try LLM Parsing across task routes
+        llm_result = TelegramJobParser._parse_with_llm(text)
+        if llm_result:
+            for job in llm_result:
+                job["is_eligible"] = TelegramJobParser._check_batch_eligibility(
+                    job.get("batch", ""), candidate_batch="2026"
+                )
+                job["raw_text"] = raw_text
+            return llm_result
 
-        # 2. Fallback Heuristic Parser if LLM is unavailable or unfulfilled
+        # 2. Fallback Heuristic Parser if all LLM routes are unfulfilled
         fallback_job = TelegramJobParser._parse_with_heuristics(text)
         return [fallback_job]
 
     @staticmethod
-    def _parse_with_groq(text: str) -> Dict[str, Any]:
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {config.groq.api_key}",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-        }
-        
-        payload = {
-            "model": config.groq.model_name,
-            "messages": [
-                {"role": "system", "content": TelegramJobParser.LLM_SYSTEM_PROMPT.strip()},
-                {"role": "user", "content": text}
-            ],
-            "temperature": 0.1,
-            "response_format": {"type": "json_object"}
-        }
-
+    def _parse_with_llm(text: str) -> Optional[List[Dict[str, Any]]]:
         try:
-            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
-            with urllib.request.urlopen(req, timeout=8) as response:
-                res_data = json.loads(response.read().decode('utf-8'))
-                content = res_data['choices'][0]['message']['content'].strip()
-                parsed_json = json.loads(content)
-                
-                # Check if it returned a list of jobs as requested
-                raw_jobs = parsed_json.get("jobs", [])
-                if not isinstance(raw_jobs, list):
-                    # Handle single job object fallback
-                    if isinstance(parsed_json, dict) and "company" in parsed_json:
-                        raw_jobs = [parsed_json]
-                    else:
-                        raw_jobs = []
+            content = llm_manager.generate(
+                task=TaskType.PARSING,
+                prompt=text,
+                system_prompt=TelegramJobParser.LLM_SYSTEM_PROMPT.strip(),
+                max_tokens=1000,
+                temperature=0.1,
+                json_mode=True
+            )
+            if not content:
+                return None
 
-                processed_jobs = []
-                for job in raw_jobs:
-                    apply_target = job.get("apply_target", "")
-                    apply_mode = job.get("apply_mode", "UNKNOWN").upper()
+            # Robust JSON extraction
+            start_idx = content.find("{")
+            end_idx = content.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                content = content[start_idx:end_idx+1]
+
+            parsed_json = json.loads(content)
+            
+            raw_jobs = parsed_json.get("jobs", [])
+            if not isinstance(raw_jobs, list):
+                if isinstance(parsed_json, dict) and "company" in parsed_json:
+                    raw_jobs = [parsed_json]
+                else:
+                    raw_jobs = []
+
+            processed_jobs = []
+            for job in raw_jobs:
+                apply_target = str(job.get("apply_target") or "")
+                apply_mode = str(job.get("apply_mode") or "UNKNOWN").upper()
+                
+                if "@" in apply_target and not apply_target.startswith("http"):
+                    apply_mode = "EMAIL"
+                elif apply_target.startswith("http"):
+                    apply_mode = "LINK"
                     
-                    if "@" in apply_target and not apply_target.startswith("http"):
-                        apply_mode = "EMAIL"
-                    elif apply_target.startswith("http"):
-                        apply_mode = "LINK"
-                        
-                    processed_jobs.append({
-                        "company": job.get("company", "Company")[:30],
-                        "role": job.get("role", "Software Engineer")[:30],
-                        "batch": job.get("batch", "Any"),
-                        "salary": job.get("salary", "Not Specified"),
-                        "location": job.get("location", "India"),
-                        "requirements": job.get("requirements", []),
-                        "apply_target": apply_target,
-                        "apply_mode": apply_mode,
-                        "subject_line": job.get("subject_line", "")
-                    })
-                return processed_jobs
+                processed_jobs.append({
+                    "company": job.get("company", "Company")[:30],
+                    "role": job.get("role", "Software Engineer")[:30],
+                    "batch": job.get("batch", "Any"),
+                    "salary": job.get("salary", "Not Specified"),
+                    "location": job.get("location", "India"),
+                    "requirements": job.get("requirements", []),
+                    "apply_target": apply_target,
+                    "apply_mode": apply_mode,
+                    "subject_line": job.get("subject_line", "")
+                })
+            return processed_jobs if processed_jobs else None
         except Exception as e:
-            print(f"[Groq Parser Note] Falling back to heuristics ({e})")
+            print(f"[LLM Parser Note] Falling back to heuristics ({e})")
             return None
 
     @staticmethod

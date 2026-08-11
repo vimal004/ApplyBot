@@ -6,6 +6,7 @@ import urllib.request
 import urllib.error
 from typing import Dict, Any, Tuple, List
 from config import config
+from llm_manager import llm_manager, TaskType
 
 class ResumeTailorer:
     """
@@ -153,7 +154,16 @@ class ResumeTailorer:
             )
 
             try:
-                tailored_body = ResumeTailorer.ask_groq_llm(user_prompt, system_prompt, max_tokens=6000)
+                tailored_body = llm_manager.generate(
+                    task=TaskType.RESUME_TAILORING,
+                    prompt=user_prompt,
+                    system_prompt=system_prompt,
+                    max_tokens=4000,
+                    temperature=0.2
+                )
+                if not tailored_body:
+                    print("[ResumeTailorer Note] LLM tailoring returned empty. Using base content body.")
+                    tailored_body = content_body
 
                 # Strip any accidental preamble the LLM might have added
                 if "\\documentclass" in tailored_body:
@@ -204,76 +214,23 @@ class ResumeTailorer:
         return output_tex_path
 
     @staticmethod
-    def ask_multi_provider_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 4096) -> str:
+    def ask_multi_provider_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000) -> str:
         """
-        Multi-provider LLM tier fallback: Groq -> Gemini -> Cerebras -> OpenRouter
+        Delegates job application Q&A and email generation to LLMManager.
         """
-        providers = getattr(config.multi_llm, "providers", [])
-        
-        for p in providers:
-            p_name = p.get("name", "LLM")
-            env_var = p.get("api_key_env", "")
-            raw_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
-            api_key = (raw_key or "").strip().strip('"').strip("'")
-            
-            if not api_key:
-                continue
-                
-            models = p.get("models", [])
-            
-            for m in models:
-                try:
-                    if p_name == "Gemini":
-                        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
-                        payload = {
-                            "contents": [{
-                                "parts": [{"text": f"{system_prompt}\n\n{prompt}"}]
-                            }]
-                        }
-                        req = urllib.request.Request(gemini_url, data=json.dumps(payload).encode('utf-8'), headers={"Content-Type": "application/json"})
-                        with urllib.request.urlopen(req, timeout=15) as response:
-                            res_data = json.loads(response.read().decode('utf-8'))
-                            res_text = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                            print(f"[Gemini AI] Successfully generated response using model '{m}'")
-                            return res_text
-                    else:
-                        endpoint = p.get("endpoint")
-                        headers = {
-                            "Content-Type": "application/json",
-                            "Authorization": f"Bearer {api_key}",
-                            "User-Agent": "ApplyBot/1.0"
-                        }
-                        if p_name == "OpenRouter":
-                            headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
-                            headers["X-Title"] = "ApplyBot"
-                            
-                        payload = {
-                            "model": m,
-                            "messages": [
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": prompt}
-                            ],
-                            "temperature": 0.3,
-                            "max_tokens": max_tokens
-                        }
-                        req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
-                        with urllib.request.urlopen(req, timeout=15) as response:
-                            res_data = json.loads(response.read().decode('utf-8'))
-                            res_text = res_data['choices'][0]['message']['content'].strip()
-                            print(f"[{p_name} AI] Successfully generated response using model '{m}'")
-                            return res_text
-                except urllib.error.HTTPError as e:
-                    err_txt = e.read().decode('utf-8') if e.fp else str(e)
-                    print(f"[{p_name} AI Note] HTTP {e.code} on model '{m}': {err_txt[:150]}")
-                    time.sleep(1)
-                except Exception as e:
-                    print(f"[{p_name} AI Note] Model '{m}' failed: {e}")
-                    
-        print("[Multi-LLM Fallback Warning] All configured LLM API providers rate-limited / unfulfilled. Using local fallback engine.")
+        res = llm_manager.generate(
+            task=TaskType.EMAIL_GENERATION,
+            prompt=prompt,
+            system_prompt=system_prompt,
+            max_tokens=max_tokens,
+            temperature=0.3
+        )
+        if res:
+            return res
         return ResumeTailorer._fallback_human_answer(prompt)
 
     @staticmethod
-    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 4096) -> str:
+    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000) -> str:
         return ResumeTailorer.ask_multi_provider_llm(prompt, system_prompt, max_tokens)
 
     @staticmethod

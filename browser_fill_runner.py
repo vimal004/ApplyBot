@@ -267,142 +267,58 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         for w in getattr(config.profile, "work_experience", [])
     ])
 
+from llm_manager import llm_manager, TaskType
+
+    # Compact profile summary
     system_prompt = (
-        "You are an expert AI Job Application Assistant acting on behalf of Vimal Manoharan, a Computer Science "
-        "Engineering graduate from SRM Institute of Science and Technology (graduated May 2026, CGPA 8.91/10.0).\n\n"
-        "CANDIDATE PROFILE:\n"
-        f"- Full Name: {config.profile.full_name}, Email: {config.profile.email}, Phone: {config.profile.phone} (raw: {config.profile.raw_phone})\n"
-        f"- First Name: {config.profile.first_name}, Last Name: {config.profile.last_name}\n"
-        f"- Location: {config.profile.location}, University: {config.profile.university}\n"
-        f"- Degree: Bachelor of Technology in Computer Science Engineering (B.Tech)\n"
-        f"- Highest Qualification: B.Tech\n"
-        f"- CGPA: {config.profile.gpa}, Graduation Year: {config.profile.graduation_year} (2026 Batch)\n"
-        f"- Last Stipend Paid: {getattr(config.profile, 'last_stipend', '20,000 / month')}\n"
-        f"- LinkedIn: {config.profile.linkedin_url}, GitHub: {config.profile.github_url}\n"
-        f"- Resume Link: {config.profile.resume_gdrive_url}\n\n"
-        f"VIMAL'S REAL PAID WORK EXPERIENCE & INTERNSHIPS:\n{work_exp_summary}\n\n"
-        f"VIMAL'S GITHUB PROJECTS:\n{projects_summary}\n\n"
-        "CRITICAL RULES FOR FORM ANSWERS:\n"
-        "1. INTERNSHIP & PRIOR EXPERIENCE QUESTIONS:\n"
-        "   - Vimal HAS paid internship & freelance work experience! Mention his roles at Aakar Labs (React Native Developer Intern on Aaku AI travel companion) and KSK Electronics (Software Developer Intern on ERP & RAG SOP).\n"
-        "   - DO NOT say 'No prior experience' or 'only personal projects'!\n"
-        "   - For 'Company where most impact work done', specify 'Siddha Shivalayas Clinic (https://siddhashivalayas.vercel.app)' or 'Aakar Labs'.\n"
-        "   - For 'Link to product worked on', give 'https://siddhashivalayas.vercel.app'.\n"
-        "   - For 'last Stipend Paid', answer '20,000 / month'.\n\n"
-        "2. QUALIFICATION & GRADUATION YEAR:\n"
-        "   - Highest Qualification: select/fill 'B.Tech'.\n"
-        "   - Graduation year: select '2026'.\n"
-        "   - DO NOT fill any 'Other:' text input if a standard option (like 2026 or B.Tech) is chosen. Leave 'Other:' text input empty!\n\n"
-        "3. DOMAIN-CURATED ESSAY QUESTIONS (e.g. 'What excites you about the role?'):\n"
-        "   - Carefully analyze target company and role domain (e.g. Product Management, FinTech, AI, Full-Stack).\n"
-        "   - Tailor answer SPECIFICALLY to that domain and company! (e.g. for Product Intern at NxtPe FinTech: focus on product analytics, payments UX, feature roadmap, and reference product-centric work like Aaku AI travel app or QuensultingAI Voice Receptionist).\n"
-        "   - DO NOT mention irrelevant random projects!\n\n"
-        "4. ACTION SCHEME:\n"
-        "   - For text input fields: use action='fill', set 'index', and set 'label' to the field label text.\n"
-        "   - For radio/checkbox/dropdown choice questions: use action='click_option', set 'question_index', set 'label' to the question title, and set 'value' to an EXACT option string listed.\n"
-        "   - ALWAYS include the non-empty 'label' string in every object!\n\n"
-        "Output ONLY a valid JSON array matching this exact format:\n"
-        '[\n'
-        '  {"index": 0, "action": "fill", "label": "Name", "value": "Vimal Manoharan"},\n'
-        '  {"question_index": 5, "action": "click_option", "label": "Highest Qualification", "value": "B.Tech"}\n'
-        ']'
+        f"You are an AI Job Application Assistant acting for Vimal Manoharan (B.Tech CSE SRM 2026, CGPA 8.91).\n"
+        f"PROFILE: Name={config.profile.full_name}, Email={config.profile.email}, Phone={config.profile.phone}, "
+        f"Location={config.profile.location}, Degree=B.Tech, GradYear=2026, LastStipend=20,000/month, "
+        f"LinkedIn={config.profile.linkedin_url}, GitHub={config.profile.github_url}, Portfolio=https://siddhashivalayas.vercel.app.\n"
+        f"EXPERIENCE: Aakar Labs (React Native Intern), KSK Electronics (Software Intern).\n\n"
+        "RULES:\n"
+        "1. Vimal HAS paid internship experience (Aakar Labs, KSK Electronics). Never say 'no experience'.\n"
+        "2. Highest qualification='B.Tech', Grad year='2026'. Leave 'Other:' text input empty if standard option selected.\n"
+        "3. Output ONLY a valid JSON array matching format:\n"
+        '[{"index":0, "action":"fill", "label":"Name", "value":"Vimal Manoharan"}, '
+        '{"question_index":1, "action":"click_option", "label":"Notice Period", "value":"Upto 7 Days"}]'
     )
 
     user_prompt = (
         f"Applying for: {role} at {company}\n"
-        f"Job Summary: {raw_text[:800]}\n\n"
-        f"=== TEXT INPUT FIELDS (use action='fill', reference by 'index') ===\n{json.dumps(fields, indent=2)}\n\n"
-        f"=== RADIO/CHOICE QUESTIONS (use action='click_option', reference by 'question_index') ===\n{json.dumps(radio_questions, indent=2)}\n\n"
-        "Generate a JSON array with actions for ALL text fields AND ALL radio questions."
+        f"Job Summary: {raw_text[:500]}\n\n"
+        f"=== TEXT INPUT FIELDS ===\n{json.dumps(fields, separators=(',', ':'))}\n\n"
+        f"=== CHOICE QUESTIONS ===\n{json.dumps(radio_questions, separators=(',', ':'))}\n\n"
+        "Generate JSON array of actions for ALL text fields AND choice questions."
     )
 
-    providers = getattr(config.multi_llm, "providers", [])
-    
-    for p in providers:
-        p_name = p.get("name", "LLM")
-        env_var = p.get("api_key_env", "")
-        raw_key = os.getenv(env_var, getattr(config.multi_llm, f"{p_name.lower()}_api_key", ""))
-        api_key = (raw_key or "").strip().strip('"').strip("'")
-        
-        if not api_key:
-            log(f"Skipping {p_name}: No API key set for {env_var}")
-            continue
-            
-        models = p.get("models", [])
-        
-        for model_candidate in models:
-            log(f"Calling {p_name} API ({model_candidate}): system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
-            
-            try:
-                if p_name == "Gemini":
-                    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_candidate}:generateContent?key={api_key}"
-                    payload = {
-                        "contents": [{
-                            "parts": [{"text": f"SYSTEM: {system_prompt}\n\nUSER: {user_prompt}"}]
-                        }]
-                    }
-                    req_data = json.dumps(payload).encode("utf-8")
-                    req = urllib.request.Request(gemini_url, data=req_data, headers={"Content-Type": "application/json"})
-                    with urllib.request.urlopen(req, timeout=30) as response:
-                        res_bytes = response.read()
-                        res_data = json.loads(res_bytes.decode("utf-8"))
-                        llm_res = res_data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                else:
-                    endpoint = p.get("endpoint")
-                    headers = {
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {api_key}",
-                        "User-Agent": "ApplyBot/1.0"
-                    }
-                    if p_name == "OpenRouter":
-                        headers["HTTP-Referer"] = "https://github.com/vimal004/ApplyBot"
-                        headers["X-Title"] = "ApplyBot"
-                        
-                    payload = {
-                        "model": model_candidate,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        "temperature": 0.3,
-                        "max_tokens": 2000
-                    }
-                    req_data = json.dumps(payload).encode("utf-8")
-                    req = urllib.request.Request(endpoint, data=req_data, headers=headers)
-                    with urllib.request.urlopen(req, timeout=30) as response:
-                        res_bytes = response.read()
-                        res_data = json.loads(res_bytes.decode("utf-8"))
-                        llm_res = res_data["choices"][0]["message"]["content"].strip()
-                    
-                log(f"LLM response received from {p_name}/{model_candidate} ({len(llm_res)} chars)")
-                
-                # Robust JSON array extraction
-                start_idx = llm_res.find("[")
-                end_idx = llm_res.rfind("]")
-                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                    llm_res = llm_res[start_idx:end_idx+1]
-                elif "```" in llm_res:
-                    parts = llm_res.split("```")
-                    for part in parts:
-                        if "[" in part and "]" in part:
-                            llm_res = part.replace("json", "").strip()
-                            break
-                
-                plan = json.loads(llm_res.strip())
-                log(f"Parsed action plan from {p_name}: {len(plan)} actions")
-                for a in plan:
-                    log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
-                return plan
-            except urllib.error.HTTPError as e:
-                error_body = e.read().decode("utf-8") if e.fp else "N/A"
-                log(f"{p_name} API HTTP Error {e.code} on model {model_candidate}: {error_body[:200]}")
-                time.sleep(1)
-                continue
-            except Exception as e:
-                log(f"{p_name} API Error on model {model_candidate}: {e}")
-                continue
+    log(f"Calling LLMManager for FORM_FILLING: sys_len={len(system_prompt)}, user_len={len(user_prompt)}")
 
-    log("WARNING: Groq API rate limited / unavailable. Executing Local Deterministic Heuristic Plan Generator...")
+    llm_res = llm_manager.generate(
+        task=TaskType.FORM_FILLING,
+        prompt=user_prompt,
+        system_prompt=system_prompt,
+        max_tokens=1500,
+        temperature=0.2,
+        json_mode=True
+    )
+
+    if llm_res:
+        try:
+            start_idx = llm_res.find("[")
+            end_idx = llm_res.rfind("]")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                llm_res = llm_res[start_idx:end_idx+1]
+
+            plan = json.loads(llm_res.strip())
+            log(f"Parsed action plan: {len(plan)} actions")
+            for a in plan:
+                log(f"  Plan: action={a.get('action')}, label='{str(a.get('label',''))[:40]}', value='{str(a.get('value',''))[:50]}'")
+            return plan
+        except Exception as e:
+            log(f"Error parsing LLM action plan: {e}")
+
+    log("WARNING: All LLM providers rate limited / unfulfilled. Executing Local Deterministic Heuristic Plan Generator...")
     fallback_plan = []
     
     # 1. Fill Actions for fields

@@ -5,6 +5,7 @@ from typing import Dict, Any, Tuple
 from config import config
 from form_parser import PlaywrightFormParser
 from tailorer import ResumeTailorer
+from llm_manager import llm_manager, TaskType
 
 class AutomatedBrowserFiller:
     """
@@ -128,14 +129,23 @@ class AutomatedBrowserFiller:
 
         user_prompt = (
             f"Applying for: {role} at {company}\n"
-            f"Job Summary:\n{raw_text[:2000]}\n\n"
-            f"=== TEXT INPUT FIELDS ===\n{json.dumps(fields, indent=2)}\n\n"
-            f"=== RADIO/CHOICE QUESTIONS ===\n{json.dumps(radio_questions, indent=2)}\n\n"
+            f"Job Summary:\n{raw_text[:500]}\n\n"
+            f"=== TEXT INPUT FIELDS ===\n{json.dumps(fields, separators=(',', ':'))}\n\n"
+            f"=== RADIO/CHOICE QUESTIONS ===\n{json.dumps(radio_questions, separators=(',', ':'))}\n\n"
             "Generate JSON array of actions for ALL text fields AND ALL radio questions."
         )
 
         try:
-            llm_res = ResumeTailorer.ask_groq_llm(user_prompt, system_prompt, max_tokens=2000)
+            llm_res = llm_manager.generate(
+                task=TaskType.FORM_FILLING,
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                max_tokens=1500,
+                temperature=0.2,
+                json_mode=True
+            )
+            if not llm_res:
+                raise ValueError("LLMManager returned empty response")
             start_idx = llm_res.find("[")
             end_idx = llm_res.rfind("]")
             if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
