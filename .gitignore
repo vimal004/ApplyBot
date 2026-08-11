@@ -1,7 +1,8 @@
-# Environment secrets
+# Environment secrets & API keys
 .env
 .env.local
 .env.*.local
+*.env
 
 # Python virtual environment & cache
 venv/
@@ -16,22 +17,19 @@ __pycache__/
 browser_profile/
 ms-playwright/
 
-# Generated Outputs & LaTeX temporary files
-outputs/*.pdf
-outputs/*.tex
-outputs/*.aux
-outputs/*.log
-outputs/*.out
-outputs/*.toc
-outputs/*.fls
-outputs/*.fdb_latexmk
-outputs/*.synctex.gz
+# Generated Outputs & Local Data (Resumes, logs, queues, trackers)
+outputs/
 *.log
 *.aux
 *.out
 *.toc
+*.pdf
+*.tex
 
-# OS & IDE generated files
+# Telegram sessions & auth tokens
+*.session*
+
+# macOS & IDE generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -43,11 +41,4 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-
-# Local PDF files
-Vimal_Resume.pdf
-
-# Telegram session (contains auth token — NEVER commit)
-telegram_session.session
-outputs/telegram_checkpoint.json
-outputs/telegram_queue.json
+*.plist
