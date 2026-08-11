@@ -16,6 +16,7 @@ import asyncio
 import datetime
 import threading
 import re
+import time
 from typing import Dict, Any, List, Optional
 
 # Telethon is imported lazily to avoid crashing if not installed
@@ -105,6 +106,41 @@ class TelegramWatcher:
         except (ValueError, TypeError):
             return group
 
+    @staticmethod
+    def clean_old_resumes_and_queue():
+        """
+        Removes generated PDFs and TeX files older than 7 days to save space,
+        and triggers a queue save to prune messages older than 2 days.
+        """
+        # 1. Prune the queue
+        queue = TelegramWatcher._load_queue()
+        TelegramWatcher._save_queue(queue)
+
+        # 2. Clean old files from the outputs directory
+        output_dir = config.output_dir
+        if not os.path.exists(output_dir):
+            return
+
+        now = time.time()
+        one_week_seconds = 7 * 24 * 60 * 60
+        cleaned_count = 0
+
+        for filename in os.listdir(output_dir):
+            if filename.endswith(".pdf") or filename.endswith(".tex"):
+                filepath = os.path.join(output_dir, filename)
+                try:
+                    # Check modification time
+                    mtime = os.path.getmtime(filepath)
+                    if (now - mtime) > one_week_seconds:
+                        os.remove(filepath)
+                        cleaned_count += 1
+                except Exception as e:
+                    print(f"[Cleanup] Error removing {filename}: {e}")
+
+        if cleaned_count > 0:
+            print(f"[Cleanup] Auto-removed {cleaned_count} old resume/LaTeX files (> 7 days old).")
+
+
     # ── Checkpoint Persistence ─────────────────────────────────────────
 
     @staticmethod
@@ -142,8 +178,24 @@ class TelegramWatcher:
     @staticmethod
     def _save_queue(queue: List[Dict[str, Any]]):
         os.makedirs(os.path.dirname(QUEUE_PATH), exist_ok=True)
+        # Automatically keep only messages from the last 2 days (48 hours)
+        cutoff = datetime.datetime.now() - datetime.timedelta(days=2)
+        pruned_queue = []
+        for item in queue:
+            ingested_str = item.get("ingested_at")
+            if ingested_str:
+                try:
+                    ingested_dt = datetime.datetime.strptime(ingested_str, "%Y-%m-%d %H:%M")
+                    if ingested_dt >= cutoff:
+                        pruned_queue.append(item)
+                except Exception:
+                    # Fallback to keep if date format doesn't match
+                    pruned_queue.append(item)
+            else:
+                pruned_queue.append(item)
+
         with open(QUEUE_PATH, "w", encoding="utf-8") as f:
-            json.dump(queue, f, indent=2, ensure_ascii=False)
+            json.dump(pruned_queue, f, indent=2, ensure_ascii=False)
 
     @staticmethod
     def get_queue() -> List[Dict[str, Any]]:

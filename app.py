@@ -501,6 +501,12 @@ def run_server():
     print(f"⚡ ApplyBot Dashboard Running at: http://localhost:{PORT}")
     print(f"============================================================")
 
+    # Run cleanup of old resumes/LaTeX (> 7 days) and old queue items (> 2 days) on startup
+    try:
+        telegram_watcher.clean_old_resumes_and_queue()
+    except Exception as e:
+        print(f"[Cleanup] Error during startup cleanup: {e}")
+
     # Auto-start Telegram watcher if credentials are configured
     if telegram_watcher.is_available:
         print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
