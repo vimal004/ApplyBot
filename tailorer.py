@@ -1,4 +1,6 @@
+import os
 import re
+import time
 import json
 import urllib.request
 import urllib.error
@@ -328,7 +330,8 @@ class ResumeTailorer:
 
     @staticmethod
     def answer_custom_question(question: str, company: str, role: str,
-                               jd_text: str = "", page_context: str = "") -> str:
+                               jd_text: str = "", page_context: str = "",
+                               length_hint: str = "") -> str:
         """
         Generate a personalised, human-sounding answer to a job application question.
         Optionally uses the Job Description (jd_text) and page context (page_context)
@@ -346,6 +349,13 @@ class ResumeTailorer:
             "to this role and company."
         ) if context_section else ""
 
+        if length_hint == "short":
+            length_instruction = "Answer strictly in 1-2 concise, impact-driven sentences."
+        elif length_hint == "detailed":
+            length_instruction = "Answer in 4-6 detailed, comprehensive sentences covering specific technologies and achievements."
+        else:
+            length_instruction = "Answer job application questions in 2-4 genuine, human-sounding sentences. Be specific, confident, and natural."
+
         work_exp_summary = "\n".join([
             f"- {w['role']} at {w['company']} ({w['dates']}): {w['description']}"
             for w in getattr(config.profile, "work_experience", [])
@@ -361,7 +371,7 @@ class ResumeTailorer:
             "and Technology (CGPA: 8.91/10).\n\n"
             f"VIMAL'S REAL PAID WORK EXPERIENCE & INTERNSHIPS:\n{work_exp_summary}\n\n"
             f"VIMAL'S FEATURED GITHUB PROJECTS:\n{projects_summary}\n\n"
-            "Answer job application questions in 2-4 genuine, human-sounding sentences. Be specific, confident, and natural.\n"
+            f"{length_instruction}\n"
             "CRITICAL RULES:\n"
             "1. DOMAIN CURATION: Carefully analyze the target company, role, and JD domain (e.g. Product Management, FinTech, AI, Full-Stack, Mobile). Tailor your excitement and experience SPECIFICALLY to that domain! (e.g. for Product Intern at NxtPe FinTech: focus on product analytics, payments UX, user research, and reference product-centric work like Aaku AI travel companion at Aakar Labs or QuensultingAI Voice Receptionist). DO NOT mention irrelevant random projects!\n"
             "2. PRIOR INTERNSHIP EXPERIENCE: Vimal HAS real paid internship & freelance experience (Aakar Labs, KSK Electronics, Siddha Shivalayas Clinic). Always highlight these when asked about prior internship experience!\n"

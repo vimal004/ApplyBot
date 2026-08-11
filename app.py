@@ -208,9 +208,10 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 r = data.get("role", "Role")
                 jd_text = data.get("jd_text", "")
                 page_context = data.get("page_context", "")
+                length_hint = data.get("length_hint", "")
                 
                 from tailorer import ResumeTailorer
-                ans = ResumeTailorer.answer_custom_question(q, c, r, jd_text=jd_text, page_context=page_context)
+                ans = ResumeTailorer.answer_custom_question(q, c, r, jd_text=jd_text, page_context=page_context, length_hint=length_hint)
                 
                 res_payload = json.dumps({"answer": ans}).encode("utf-8")
                 self.send_response(200)

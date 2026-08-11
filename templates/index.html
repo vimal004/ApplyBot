@@ -837,6 +837,9 @@
                     <span>📋 Application Tracker</span>
                     <span class="badge-count" id="tracker-count-badge">0</span>
                 </button>
+                <button class="nav-tab" id="nav-btn-qa" onclick="switchView('qa')">
+                    <span>🤖 Custom Q&A Assistant</span>
+                </button>
             </nav>
         </div>
         <div class="candidate-badge">
@@ -974,6 +977,75 @@
         </div>
     </div>
 
+    <!-- SCREEN 3: Custom Q&A Assistant -->
+    <div id="view-qa" class="page-view">
+        <div class="container">
+            <!-- Left Column: Context & Question Input -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🤖 Job-Specific Custom Question Assistant</span>
+                    </div>
+                    <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearQAForm()">Clear Form</button>
+                </div>
+
+                <div class="form-grid" style="gap: 0.85rem;">
+                    <div class="form-group">
+                        <label class="form-label">Company Name *</label>
+                        <input type="text" id="qa-company" class="form-input" placeholder="e.g. Blinkit">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Role *</label>
+                        <input type="text" id="qa-role" class="form-input" placeholder="e.g. Business Analyst">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Job Description / Form Context (Optional)</label>
+                    <textarea id="qa-jd" style="height: 90px;" placeholder="Paste relevant Job Description snippet or portal text to give AI deeper context..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Copy-Paste Question from Job Portal *</label>
+                    <textarea id="qa-question" style="height: 120px;" placeholder="e.g. Why do you want to join Blinkit as a Business Analyst? Or: Describe a project where you solved a complex data analysis problem."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div class="sample-section" style="margin-top:0;">
+                        <span class="sample-label">Response Length:</span>
+                        <div class="sample-btns">
+                            <button class="mode-btn active" id="qa-len-std" onclick="setQALength('std')">Standard (2-3 sentences)</button>
+                            <button class="mode-btn" id="qa-len-short" onclick="setQALength('short')">Short (1-2 sentences)</button>
+                            <button class="mode-btn" id="qa-len-detailed" onclick="setQALength('detailed')">Detailed (4+ sentences)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="generateCustomAnswer()">
+                    <span id="btn-qa-text">⚡ Generate Tailored AI Answer</span>
+                </button>
+            </div>
+
+            <!-- Right Column: Tailored Answer Output -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>✨ Tailored Response Output</span>
+                    </div>
+                    <div id="qa-stats" style="font-size: 0.78rem; color: var(--color-text-secondary);">
+                        0 words | 0 chars
+                    </div>
+                </div>
+
+                <div id="qa-output-container">
+                    <div class="empty-state">
+                        Enter the target Company, Role, and copy-paste the unhandled question on the left, then click <b>Generate Tailored AI Answer</b>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL 1: Add Manual Application -->
     <div id="modal-add-app" class="modal-overlay">
         <div class="modal-card">
@@ -1071,17 +1143,140 @@
                 .replace(/'/g, "&#039;");
         }
 
+        let qaLengthMode = 'std';
+
         // View Navigation Switcher
         function switchView(viewName) {
             document.getElementById('view-ingestion').classList.toggle('active', viewName === 'ingestion');
             document.getElementById('view-tracker').classList.toggle('active', viewName === 'tracker');
+            document.getElementById('view-qa').classList.toggle('active', viewName === 'qa');
             
             document.getElementById('nav-btn-ingestion').classList.toggle('active', viewName === 'ingestion');
             document.getElementById('nav-btn-tracker').classList.toggle('active', viewName === 'tracker');
+            document.getElementById('nav-btn-qa').classList.toggle('active', viewName === 'qa');
 
             if (viewName === 'tracker') {
                 loadTracker();
             }
+        }
+
+        function setQALength(mode) {
+            qaLengthMode = mode;
+            document.getElementById('qa-len-std').classList.toggle('active', mode === 'std');
+            document.getElementById('qa-len-short').classList.toggle('active', mode === 'short');
+            document.getElementById('qa-len-detailed').classList.toggle('active', mode === 'detailed');
+        }
+
+        function clearQAForm() {
+            document.getElementById('qa-company').value = '';
+            document.getElementById('qa-role').value = '';
+            document.getElementById('qa-jd').value = '';
+            document.getElementById('qa-question').value = '';
+            document.getElementById('qa-output-container').innerHTML = `
+                <div class="empty-state">
+                    Enter the target Company, Role, and copy-paste the unhandled question on the left, then click <b>Generate Tailored AI Answer</b>.
+                </div>
+            `;
+            document.getElementById('qa-stats').innerText = '0 words | 0 chars';
+        }
+
+        function quickFillQA(company, role, jdText) {
+            document.getElementById('qa-company').value = company || '';
+            document.getElementById('qa-role').value = role || '';
+            if (jdText) document.getElementById('qa-jd').value = jdText;
+            switchView('qa');
+            document.getElementById('qa-question').focus();
+        }
+
+        async function generateCustomAnswer() {
+            const company = document.getElementById('qa-company').value.trim();
+            const role = document.getElementById('qa-role').value.trim();
+            const jd = document.getElementById('qa-jd').value.trim();
+            const question = document.getElementById('qa-question').value.trim();
+
+            if (!question) {
+                alert('Please copy and paste the question asked in the job application.');
+                return;
+            }
+
+            const btnText = document.getElementById('btn-qa-text');
+            btnText.innerHTML = '<div class="spinner"></div> Generating Tailored Answer...';
+
+            try {
+                const response = await fetch('/api/answer_question', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: question,
+                        company: company || 'Target Company',
+                        role: role || 'Target Role',
+                        jd_text: jd,
+                        length_hint: qaLengthMode
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                renderQAOutput(data.answer, question, company, role);
+            } catch (err) {
+                alert('Failed to generate answer: ' + err.message);
+            } finally {
+                btnText.innerText = '⚡ Generate Tailored AI Answer';
+            }
+        }
+
+        function renderQAOutput(answer, question, company, role) {
+            const container = document.getElementById('qa-output-container');
+            const words = answer.trim().split(/\s+/).length;
+            const chars = answer.length;
+
+            document.getElementById('qa-stats').innerText = `${words} words | ${chars} chars`;
+
+            container.innerHTML = `
+                <div class="action-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong style="color: #ffffff; font-size: 0.9rem;">❓ Question Asked</strong>
+                        <span style="font-size: 0.78rem; color: var(--color-text-secondary);">${escapeHtml(company)} - ${escapeHtml(role)}</span>
+                    </div>
+                    <div style="font-style: italic; font-size: 0.82rem; color: var(--color-text-secondary); background: rgba(0,0,0,0.25); padding: 0.65rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                        "${escapeHtml(question)}"
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                        <strong style="color: #ffffff; font-size: 0.9rem;">✨ Tailored Response for Vimal</strong>
+                        <span class="chip-badge">GROQ AI TAILORED</span>
+                    </div>
+
+                    <textarea id="qa-result-text" readonly style="height: 140px; font-family: sans-serif; line-height: 1.6; font-size: 0.9rem; background: rgba(255,255,255,0.02); color: #f4f4f5;">${escapeHtml(answer)}</textarea>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="font-size: 0.78rem; color: var(--color-text-secondary);">
+                            Targeting: <strong style="color: #fff;">${escapeHtml(company || 'Company')}</strong>
+                        </div>
+                        <button id="btn-copy-qa" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.2rem; border-color: #ffffff;" onclick="copyQAToClipboard()">
+                            📋 Copy Answer to Clipboard
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copyQAToClipboard() {
+            const textarea = document.getElementById('qa-result-text');
+            if (!textarea) return;
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const btn = document.getElementById('btn-copy-qa');
+                btn.innerHTML = '✅ Copied to Clipboard!';
+                setTimeout(() => {
+                    btn.innerHTML = '📋 Copy Answer to Clipboard';
+                }, 2000);
+            }).catch(err => {
+                alert('Could not copy: ' + err);
+            });
         }
 
         function setMode(mode) {
@@ -1246,9 +1441,14 @@
                             💡 <strong>Direct Attachment Guidance:</strong> Web browsers prevent external URLs from pre-attaching local files. Click <strong>Send Email Now</strong> to automatically attach & send the tailored PDF resume via Gmail SMTP.
                         </div>
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
-                            <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
-                                📄 Download Tailored PDF Resume
-                            </a>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
+                                    📄 Download Tailored PDF Resume
+                                </a>
+                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA('${escapeHtml(job.company)}', '${escapeHtml(job.role)}', '')">
+                                    ❓ Ask Custom Qs
+                                </button>
+                            </div>
                             <div style="display: flex; gap: 0.5rem;">
                                 <a href="${escapeHtml(currentPayload.gmail_compose_url)}" target="_blank" class="btn-sample" style="background: rgba(255, 255, 255, 0.04); border-color: var(--color-border); color: #fff;">
                                     Compose in Gmail Web
@@ -1281,9 +1481,14 @@
                         </table>
 
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
-                            <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
-                                📄 Download Tailored PDF Resume
-                            </a>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
+                                    📄 Download Tailored PDF Resume
+                                </a>
+                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA('${escapeHtml(job.company)}', '${escapeHtml(job.role)}', '')">
+                                    ❓ Ask Custom Qs
+                                </button>
+                            </div>
                             <button id="btn-autofill" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.1rem; border-color: #ffffff;" onclick="triggerAutoFill()">
                                 Launch Playwright Fill
                             </button>
