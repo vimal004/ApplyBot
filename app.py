@@ -586,7 +586,35 @@ def run_server():
     else:
         print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
 
+    # Self-ping background thread: Pings localhost/server every 5 minutes to prevent Render free tier from sleeping
+    def _keep_alive():
+        import threading
+        import time
+        import urllib.request
+
+        def _ping_loop():
+            # Wait 60s after startup before first ping
+            time.sleep(60)
+            while True:
+                try:
+                    # Ping self on internal PORT
+                    url = f"http://127.0.0.1:{PORT}/"
+                    req = urllib.request.Request(url, headers={"User-Agent": "ApplyBot-KeepAlive/1.0"})
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        _ = resp.read()
+                        print(f"[KeepAlive] Self-ping successful at {datetime.datetime.now().strftime('%H:%M:%S')}")
+                except Exception as e:
+                    print(f"[KeepAlive Note] Self-ping status: {e}")
+                # Ping every 4.5 minutes (270 seconds) -> safely below Render's 15-minute sleep threshold
+                time.sleep(270)
+
+        t = threading.Thread(target=_ping_loop, daemon=True, name="ApplyBotKeepAlive")
+        t.start()
+
+    _keep_alive()
+
     httpd.serve_forever()
 
 if __name__ == "__main__":
     run_server()
+
