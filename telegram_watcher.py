@@ -495,13 +495,9 @@ class TelegramWatcher:
                 if event.message.id > checkpoint.get("last_message_id", 0):
                     self._save_checkpoint(event.message.id)
 
-        # Do a catch-up fetch first
-        try:
-            results = await self._async_fetch(limit=100)
-            if results:
-                print(f"[Telegram] Catch-up: found {len(results)} missed job postings")
-        except Exception as e:
-            print(f"[Telegram] Catch-up fetch warning: {e}")
+        # Real-time listener: process incoming messages as they arrive
+        # (Disabled historical catch-up on startup to avoid auto-sending emails to past backlog messages)
+        print(f"[Telegram] Real-time listener ready for new incoming posts on group {group_id}.")
 
         # Keep running until disconnected
         await self._client.run_until_disconnected()
