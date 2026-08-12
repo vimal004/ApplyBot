@@ -79,8 +79,10 @@ class HREmailSender:
 
     @staticmethod
     def send_email(email_payload: Dict[str, Any]) -> Tuple[bool, str]:
+        brevo_api_key = os.environ.get("BREVO_API_KEY", "")
         resend_api_key = os.environ.get("RESEND_API_KEY", "")
-        sender_email = config.email.sender_email
+        sender_email = config.email.sender_email or "2004.vimal@gmail.com"
+        sender_name = config.profile.full_name or "Vimal Manoharan"
         app_password = config.email.app_password
 
         # Extract all valid email addresses from potentially messy LLM output
@@ -93,39 +95,75 @@ class HREmailSender:
         cc_list   = recipients[1:]   # any extras go to CC
 
         pdf_path = email_payload.get('pdf_path')
-        attachments = []
+        attachments_resend = []
+        attachments_brevo = []
         if pdf_path and os.path.exists(pdf_path):
             import base64
             with open(pdf_path, 'rb') as f:
                 pdf_bytes = f.read()
                 pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
-                attachments.append({
+                attachments_resend.append({
                     "filename": os.path.basename(pdf_path),
                     "content": pdf_b64
                 })
+                attachments_brevo.append({
+                    "name": os.path.basename(pdf_path),
+                    "content": pdf_b64
+                })
 
-        # Method 1: Try Resend REST API (HTTPS port 443 — 100% unblocked on Render)
+        # Method 1: Brevo REST API (HTTPS port 443 — 300 free emails/day to ANY email on Render)
+        if brevo_api_key:
+            try:
+                import urllib.request
+                import json
+
+                payload = {
+                    "sender": {"name": sender_name, "email": sender_email},
+                    "to": [{"email": primary}],
+                    "replyTo": {"email": sender_email, "name": sender_name},
+                    "subject": email_payload['subject'],
+                    "textContent": email_payload['body']
+                }
+                if cc_list:
+                    payload["cc"] = [{"email": addr} for addr in cc_list]
+                if attachments_brevo:
+                    payload["attachment"] = attachments_brevo
+
+                req = urllib.request.Request(
+                    "https://api.brevo.com/v3/smtp/email",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "api-key": brevo_api_key,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    if resp.status in (200, 201):
+                        return True, f"✅ Email sent via Brevo API to {primary}!"
+            except Exception as brevo_err:
+                print(f"[EmailSender] Brevo API error: {brevo_err}. Retrying fallback APIs...")
+
+        # Method 2: Resend REST API
         if resend_api_key:
             try:
                 import urllib.request
                 import json
                 
-                # Sender Display Name and Reply-To configured so HR sees and replies to 2004.vimal@gmail.com
-                sender_name = config.profile.full_name or "Vimal Manoharan"
                 from_address = os.environ.get("RESEND_FROM_EMAIL", f"{sender_name} <onboarding@resend.dev>")
-                reply_to_email = sender_email or "2004.vimal@gmail.com"
                 
                 payload = {
                     "from": from_address,
                     "to": [primary],
-                    "reply_to": reply_to_email,
+                    "reply_to": sender_email,
                     "subject": email_payload['subject'],
                     "text": email_payload['body']
                 }
                 if cc_list:
                     payload["cc"] = cc_list
-                if attachments:
-                    payload["attachments"] = attachments
+                if attachments_resend:
+                    payload["attachments"] = attachments_resend
 
                 req = urllib.request.Request(
                     "https://api.resend.com/emails",
@@ -140,11 +178,12 @@ class HREmailSender:
                     if resp.status in (200, 201):
                         return True, f"✅ Email sent via Resend API to {primary}!"
             except Exception as resend_err:
-                print(f"[EmailSender] Resend API error: {resend_err}. Retrying with direct SMTP...")
+                print(f"[EmailSender] Resend API error: {resend_err}. Retrying direct SMTP...")
 
-        # Method 2: Fallback to direct Gmail SMTP (if app_password configured)
+        # Method 3: Direct Gmail SMTP (Fallback)
         if not app_password:
-            return False, "Neither RESEND_API_KEY nor GMAIL_APP_PASSWORD is valid. Set RESEND_API_KEY in Render environment."
+            return False, "Neither BREVO_API_KEY, RESEND_API_KEY, nor GMAIL_APP_PASSWORD is set. Set BREVO_API_KEY in Render environment."
+
 
         try:
             msg = MIMEMultipart()
