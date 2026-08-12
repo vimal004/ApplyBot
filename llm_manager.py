@@ -67,7 +67,6 @@ class LLMManager:
             # Fast, low-latency extraction (Groq Llama 3.1 8B -> Gemini 3.5 Flash-Lite -> Cerebras)
             for idx, key in enumerate(groq_keys):
                 candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.1-8b-instant", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
-                candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "qwen-2.5-coder-32b", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
             for idx, key in enumerate(gemini_keys):
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash-lite"})
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash"})
