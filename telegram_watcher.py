@@ -475,13 +475,21 @@ class TelegramWatcher:
         self._running = True
         self._status_message = f"Listening on group {group_id}"
 
-        print(f"[Telegram] Connected and listening on group {group_id}")
+        listener_start_time = datetime.datetime.now(datetime.timezone.utc)
 
         # Register new message handler
         @self._client.on(events.NewMessage(chats=group_id))
         async def on_new_message(event):
             if not event.text:
                 return
+
+            # Strict time filter: ignore old cached messages delivered on startup connection
+            msg_date = event.message.date
+            if msg_date:
+                if msg_date.tzinfo is None:
+                    msg_date = msg_date.replace(tzinfo=datetime.timezone.utc)
+                if msg_date < listener_start_time:
+                    return
 
             if not self._is_job_posting(event.text):
                 return
