@@ -39,6 +39,11 @@ QUEUE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "outputs", "telegram_queue.json"
 )
 
+# Settings file path for watcher preferences
+SETTINGS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "outputs", "telegram_settings.json"
+)
+
 # Job posting detection keywords (message must contain at least 3)
 JOB_KEYWORDS = [
     "company", "role", "batch", "stipend", "salary", "ctc",
@@ -61,6 +66,8 @@ class TelegramWatcher:
         self._thread: Optional[threading.Thread] = None
         self._running = False
         self._connected = False
+        settings = self._load_settings()
+        self.auto_send_email = settings.get("auto_send_email", True)
         self._status_message = "Not initialized"
         self._session_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "telegram_session"
@@ -91,6 +98,7 @@ class TelegramWatcher:
             "available": self.is_available,
             "connected": self._connected,
             "listening": self._running,
+            "auto_send_email": self.auto_send_email,
             "group": config.telegram.group_name,
             "message": self._status_message,
             "telethon_installed": _telethon_available,
@@ -162,6 +170,29 @@ class TelegramWatcher:
         }
         with open(CHECKPOINT_PATH, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+
+    # ── Settings Persistence ───────────────────────────────────────────
+
+    @staticmethod
+    def _load_settings() -> Dict[str, Any]:
+        if os.path.exists(SETTINGS_PATH):
+            try:
+                with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {"auto_send_email": True}
+
+    def set_auto_send_email(self, value: bool):
+        self.auto_send_email = value
+        os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
+        try:
+            settings = TelegramWatcher._load_settings()
+            settings["auto_send_email"] = value
+            with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2)
+        except Exception as e:
+            print(f"[TelegramWatcher] Error saving settings: {e}")
 
     # ── Queue Management ───────────────────────────────────────────────
 
@@ -287,8 +318,8 @@ class TelegramWatcher:
                 status = "queued"
                 status_msg = ""
 
-                # Automate mail sending if job requires email application
-                if apply_mode == "EMAIL":
+                # Automate mail sending if job requires email application AND auto_send_email is enabled
+                if apply_mode == "EMAIL" and telegram_watcher.auto_send_email:
                     print(f"[Telegram Auto-Send] Direct EMAIL job detected for {parsed.get('company')} - {parsed.get('role')}. Auto-sending email...")
                     try:
                         from telegram_bot import ApplyBotPipeline
@@ -321,6 +352,7 @@ class TelegramWatcher:
                     "location": parsed.get("location", ""),
                     "apply_target": parsed.get("apply_target", ""),
                     "apply_mode": apply_mode,
+                    "subject_line": parsed.get("subject_line", ""),
                     "is_eligible": parsed.get("is_eligible", False),
                     "requirements": parsed.get("requirements", []),
                     "raw_text": msg_text,

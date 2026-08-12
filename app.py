@@ -421,6 +421,32 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(res_payload)
 
+        elif path == "/api/telegram/settings":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body_bytes = self.rfile.read(content_length)
+            try:
+                data = json.loads(body_bytes.decode("utf-8"))
+                if "auto_send_email" in data:
+                    telegram_watcher.set_auto_send_email(bool(data["auto_send_email"]))
+                res_payload = json.dumps({
+                    "success": True,
+                    "status": telegram_watcher.status
+                }).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(res_payload)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(res_payload)
+            except Exception as e:
+                err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(err)))
+                self.send_cors_headers()
+                self.end_headers()
+                self.wfile.write(err)
+
         elif path == "/api/telegram/queue/process":
             content_length = int(self.headers.get("Content-Length", 0))
             body_bytes = self.rfile.read(content_length)
@@ -429,15 +455,16 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 queue_id = data.get("id", "")
                 raw_text = data.get("raw_text", "")
                 superfast = data.get("superfast_mode", False)
+                job_dict = data.get("job_dict", None)
 
-                if raw_text:
-                    result = ApplyBotPipeline.process_referral(raw_text, superfast)
+                if raw_text or job_dict:
+                    result = ApplyBotPipeline.process_referral(raw_text or "", superfast, job_dict=job_dict)
                     _log_application(result)
                     TelegramWatcher.remove_from_queue(queue_id)
                     response_json = json.dumps(result).encode("utf-8")
                     self.send_response(200)
                 else:
-                    response_json = json.dumps({"error": "No raw_text provided"}).encode("utf-8")
+                    response_json = json.dumps({"error": "No raw_text or job_dict provided"}).encode("utf-8")
                     self.send_response(400)
 
                 self.send_header("Content-Type", "application/json")

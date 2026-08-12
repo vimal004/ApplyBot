@@ -1028,25 +1028,25 @@
     <header>
         <div class="header-left">
             <div class="brand">
-                <div class="brand-icon">⚡</div>
+                <div class="brand-icon">A</div>
                 <div class="brand-text-group">
                     <div class="brand-title">ApplyBot</div>
                 </div>
             </div>
             <nav class="nav-tabs">
                 <button class="nav-tab active" id="nav-btn-ingestion" onclick="switchView('ingestion')">
-                    <span>⚡ Ingestion & Generator</span>
+                    <span>Ingestion</span>
                 </button>
                 <button class="nav-tab" id="nav-btn-telegram" onclick="switchView('telegram')">
-                    <span>📡 Telegram Feed</span>
+                    <span>Feed</span>
                     <span class="badge-count" id="tg-queue-badge">0</span>
                 </button>
                 <button class="nav-tab" id="nav-btn-tracker" onclick="switchView('tracker')">
-                    <span>📋 Application Tracker</span>
+                    <span>Tracker</span>
                     <span class="badge-count" id="tracker-count-badge">0</span>
                 </button>
                 <button class="nav-tab" id="nav-btn-qa" onclick="switchView('qa')">
-                    <span>🤖 Custom Q&A Assistant</span>
+                    <span>Q&A</span>
                 </button>
             </nav>
         </div>
@@ -1063,7 +1063,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span>📩 Telegram Referral Ingestion</span>
+                        <span>Referral Ingestion</span>
                     </div>
                     <div class="mode-selector">
                         <button class="mode-btn active" id="btn-mode-manual" onclick="setMode('MANUAL_REVIEW')">Manual Review</button>
@@ -1091,7 +1091,7 @@
             <div class="card" id="output-card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span>📊 Optimization Report</span>
+                        <span>Optimization Report</span>
                     </div>
                     <div id="eligibility-badge"></div>
                 </div>
@@ -1124,9 +1124,13 @@
                         <option value="EMAIL">Email Apps Only</option>
                         <option value="LINK">Link/Form Apps Only</option>
                     </select>
-                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgFetchNow()" id="tg-btn-fetch">🔄 Fetch Now</button>
-                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgToggleListener()" id="tg-btn-toggle">▶ Start Listener</button>
-                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgClearQueue()">🗑 Clear Queue</button>
+                    <select id="tg-auto-send-select" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(0, 0, 0, 0.6);" onchange="tgToggleAutoSend(this.value)">
+                        <option value="true" selected>Email Auto-Send: ON (Instant Send)</option>
+                        <option value="false">Email Auto-Send: OFF (Review Required)</option>
+                    </select>
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgFetchNow()" id="tg-btn-fetch">Fetch Now</button>
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgToggleListener()" id="tg-btn-toggle">Start Listener</button>
+                    <button class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.8rem;" onclick="tgClearQueue()">Clear Queue</button>
                 </div>
             </div>
 
@@ -1134,7 +1138,7 @@
             <div class="tg-queue-grid">
                 <div class="tg-queue-header">
                     <div class="tg-queue-title">
-                        <span>📥 Queued Job Postings</span>
+                        <span>Queued Job Postings</span>
                         <span class="badge-count" id="tg-queue-count">0</span>
                     </div>
                 </div>
@@ -1142,7 +1146,7 @@
                 <!-- Section: Email Applications -->
                 <div id="tg-section-email-wrapper">
                     <div class="tg-queue-section-header" style="margin-top: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">✉️ Direct Email Applications</span>
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Direct Email Applications</span>
                         <span class="badge-count" id="tg-email-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
                     </div>
                     <div id="tg-queue-list-email" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; margin-top: 1rem;">
@@ -1153,7 +1157,7 @@
                 <!-- Section: Form/Link Applications -->
                 <div id="tg-section-link-wrapper">
                     <div class="tg-queue-section-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">🔗 Web Form / Link Applications</span>
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Web Form Applications</span>
                         <span class="badge-count" id="tg-link-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
                     </div>
                     <div id="tg-queue-list-link" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
@@ -1163,7 +1167,7 @@
                 
                 <!-- Shared empty state template (hidden by default) -->
                 <div id="tg-queue-empty" class="tg-empty-state" style="display: none;">
-                    <div>📡 No job postings in queue</div>
+                    <div>No job postings in queue</div>
                     <p>Click "Fetch Now" to pull recent messages from the Telegram group, or start the real-time listener.</p>
                 </div>
             </div>
@@ -1220,7 +1224,7 @@
                 </div>
 
                 <div style="display: flex; gap: 0.6rem;">
-                    <button class="btn-secondary" onclick="loadTracker()">🔄 Refresh</button>
+                    <button class="btn-secondary" onclick="loadTracker()">Refresh</button>
                     <button class="btn-primary" style="padding: 0.55rem 1.2rem; font-size: 0.85rem;" onclick="openAddModal()">+ Add Application</button>
                 </div>
             </div>
@@ -1257,10 +1261,10 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span>🤖 Job-Specific Custom Question Assistant</span>
+                        <span>Custom Question Assistant</span>
                     </div>
                     <div style="display: flex; gap: 0.4rem;">
-                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="syncFromActiveJob()">⚡ Sync Active Job</button>
+                        <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="syncFromActiveJob()">Sync Active Job</button>
                         <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearQAForm()">Clear Form</button>
                     </div>
                 </div>
@@ -1298,7 +1302,7 @@
                 </div>
 
                 <button class="btn-primary" onclick="generateCustomAnswer()">
-                    <span id="btn-qa-text">⚡ Generate Tailored AI Answer</span>
+                    <span id="btn-qa-text">Generate Tailored Answer</span>
                 </button>
             </div>
 
@@ -1306,7 +1310,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span>✨ Tailored Response Output</span>
+                        <span>Tailored Response</span>
                     </div>
                     <div id="qa-stats" style="font-size: 0.78rem; color: var(--color-text-secondary);">
                         0 words | 0 chars
@@ -1493,7 +1497,7 @@
             }
 
             const btnText = document.getElementById('btn-qa-text');
-            btnText.innerHTML = '<div class="spinner"></div> Generating Tailored Answer...';
+            btnText.innerHTML = '<div class="spinner"></div> Generating...';
 
             try {
                 const response = await fetch('/api/answer_question', {
@@ -1518,7 +1522,7 @@
             } catch (err) {
                 alert('Failed to generate answer: ' + err.message);
             } finally {
-                btnText.innerText = '⚡ Generate Tailored AI Answer';
+                btnText.innerText = 'Generate Tailored Answer';
             }
         }
 
@@ -1532,7 +1536,7 @@
             container.innerHTML = `
                 <div class="action-box">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: #ffffff; font-size: 0.9rem;">❓ Question Asked</strong>
+                        <strong style="color: #ffffff; font-size: 0.9rem;">Question Asked</strong>
                         <span style="font-size: 0.78rem; color: var(--color-text-secondary);">${escapeHtml(company)} - ${escapeHtml(role)}</span>
                     </div>
                     <div style="font-style: italic; font-size: 0.82rem; color: var(--color-text-secondary); background: rgba(0,0,0,0.25); padding: 0.65rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
@@ -1540,7 +1544,7 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                        <strong style="color: #ffffff; font-size: 0.9rem;">✨ Tailored Response for Vimal</strong>
+                        <strong style="color: #ffffff; font-size: 0.9rem;">Tailored Response</strong>
                         <span class="chip-badge">GROQ AI TAILORED</span>
                     </div>
 
@@ -1551,7 +1555,7 @@
                             Targeting: <strong style="color: #fff;">${escapeHtml(company || 'Company')}</strong>
                         </div>
                         <button id="btn-copy-qa" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.2rem; border-color: #ffffff;" onclick="copyQAToClipboard()">
-                            📋 Copy Answer to Clipboard
+                            Copy to Clipboard
                         </button>
                     </div>
                 </div>
@@ -1563,9 +1567,9 @@
             if (!textarea) return;
             navigator.clipboard.writeText(textarea.value).then(() => {
                 const btn = document.getElementById('btn-copy-qa');
-                btn.innerHTML = '✅ Copied to Clipboard!';
+                btn.innerHTML = 'Copied!';
                 setTimeout(() => {
-                    btn.innerHTML = '📋 Copy Answer to Clipboard';
+                    btn.innerHTML = 'Copy to Clipboard';
                 }, 2000);
             }).catch(err => {
                 alert('Could not copy: ' + err);
@@ -1614,7 +1618,7 @@
             } catch (err) {
                 alert('Error processing request: ' + err);
             } finally {
-                btnText.innerText = 'Run ApplyBot Pipeline';
+                btnText.innerText = 'Run Pipeline';
             }
         }
 
@@ -1637,21 +1641,21 @@
                     result = JSON.parse(responseText);
                 } catch (parseErr) {
                     // Server returned non-JSON (e.g. Render 502 HTML page on timeout)
-                    alert('❌ Server error (HTTP ' + response.status + '). The request may have timed out. Please try again.');
+                    alert('Server error (HTTP ' + response.status + '). The request may have timed out. Please try again.');
                     btn.innerHTML = 'Send Email Now';
                     btn.disabled = false;
                     return;
                 }
 
                 if (result.success) {
-                    alert('✅ SUCCESS: ' + result.message);
-                    btn.innerHTML = '✅ Email Sent!';
+                    alert('Email sent: ' + result.message);
+                    btn.innerHTML = 'Email Sent';
                     btn.style.background = 'rgba(255,255,255,0.06)';
                     btn.style.color = '#ffffff';
                     btn.style.borderColor = 'var(--color-border)';
                     fetchTrackerBadge();
                 } else {
-                    alert('❌ FAILED: ' + result.message);
+                    alert('Failed: ' + result.message);
                     btn.innerHTML = 'Send Email Now';
                     btn.disabled = false;
                 }
@@ -1689,8 +1693,8 @@
                     statusDiv.style.background = 'rgba(34, 197, 94, 0.1)';
                     statusDiv.style.border = '1px solid rgba(34, 197, 94, 0.3)';
                     statusDiv.style.color = '#4ade80';
-                    statusDiv.innerHTML = '✅ <strong>Browser launched!</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    btn.innerHTML = '✅ Browser Opened — Review & Submit';
+                    statusDiv.innerHTML = '<strong>Browser launched.</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    btn.innerHTML = 'Browser Opened — Review & Submit';
                     btn.style.background = 'rgba(255,255,255,0.06)';
                     btn.style.color = '#ffffff';
                     btn.style.borderColor = 'var(--color-border)';
@@ -1699,8 +1703,8 @@
                     statusDiv.style.background = 'rgba(239, 68, 68, 0.1)';
                     statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                     statusDiv.style.color = '#f87171';
-                    statusDiv.innerHTML = '❌ <strong>Failed:</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    btn.innerHTML = 'Retry Launch Playwright Fill';
+                    statusDiv.innerHTML = '<strong>Failed:</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    btn.innerHTML = 'Retry Auto-Fill';
                     btn.disabled = false;
                     btn.style.background = '#ffffff';
                     btn.style.color = '#000';
@@ -1712,9 +1716,9 @@
                 const statusDiv = document.createElement('div');
                 statusDiv.id = 'autofill-status';
                 statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;';
-                statusDiv.innerHTML = '❌ <strong>Network error:</strong> ' + String(err).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusDiv.innerHTML = '<strong>Network error:</strong> ' + String(err).replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 btn.parentElement.appendChild(statusDiv);
-                btn.innerHTML = 'Retry Launch Playwright Fill';
+                btn.innerHTML = 'Retry Auto-Fill';
                 btn.disabled = false;
             }
         }
@@ -1726,7 +1730,7 @@
                 document.getElementById('eligibility-badge').innerHTML = '';
                 container.innerHTML = `
                     <div style="background: var(--color-error-container); border: 1px solid var(--color-error); border-radius: var(--radius-md); padding: 1.25rem; color: #ffffff;">
-                        <strong style="color: var(--color-error); font-size: 0.95rem;">⚠️ Unable to Process Referral Message</strong>
+                        <strong style="color: var(--color-error); font-size: 0.95rem;">Unable to Process Referral Message</strong>
                         <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-secondary);">${escapeHtml(data.error)}</p>
                     </div>
                 `;
@@ -1749,8 +1753,8 @@
 
             const isEligible = job.is_eligible;
             const badgeHtml = isEligible 
-                ? `<span class="chip-badge">✅ ELIGIBLE (${escapeHtml(job.batch)})</span>`
-                : `<span class="chip-badge-warn">⚠️ BATCH CHECK (${escapeHtml(job.batch)})</span>`;
+                ? `<span class="chip-badge">ELIGIBLE (${escapeHtml(job.batch)})</span>`
+                : `<span class="chip-badge-warn">BATCH CHECK (${escapeHtml(job.batch)})</span>`;
 
             document.getElementById('eligibility-badge').innerHTML = badgeHtml;
 
@@ -1761,7 +1765,7 @@
                 actionContentHtml = `
                     <div class="action-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.25rem;">
-                            <strong style="color: #ffffff; font-size: 0.9rem;">📧 Recruiter Email Proposal</strong>
+                            <strong style="color: #ffffff; font-size: 0.9rem;">Recruiter Email Proposal</strong>
                             <span style="font-size: 0.78rem; color: var(--color-text-secondary);">${escapeHtml(currentPayload.to_email)}</span>
                         </div>
                         <div style="font-weight: 500; font-size: 0.82rem; color: var(--color-text-secondary);">Subject: <span style="color:#ffffff;">${escapeHtml(currentPayload.subject)}</span></div>
@@ -1769,15 +1773,15 @@
                             ${escapeHtml(currentPayload.body)}
                         </div>
                         <div style="background: rgba(255, 255, 255, 0.01); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.65rem 0.85rem; font-size: 0.78rem; color: var(--color-text-secondary); line-height: 1.5;">
-                            💡 <strong>Direct Attachment Guidance:</strong> Web browsers prevent external URLs from pre-attaching local files. Click <strong>Send Email Now</strong> to automatically attach & send the tailored PDF resume via Gmail SMTP.
+                            <strong>Note:</strong> Web browsers prevent external URLs from pre-attaching local files. Click <strong>Send Email</strong> to automatically attach & send the tailored PDF resume via Gmail SMTP.
                         </div>
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
-                                    📄 Download Tailored PDF Resume
+                                    Download Tailored Resume
                                 </a>
                                 <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
-                                    ❓ Ask Custom Qs
+                                    Ask Custom Qs
                                 </button>
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
@@ -1798,7 +1802,7 @@
                 actionContentHtml = `
                     <div class="action-box">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong style="color: #ffffff; font-size: 0.9rem;">🌐 Web Portal Form Auto-Fill Mapping</strong>
+                            <strong style="color: #ffffff; font-size: 0.9rem;">Web Form Auto-Fill Mapping</strong>
                             <span style="font-size: 0.78rem; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">${escapeHtml(currentPayload.apply_url)}</span>
                         </div>
                         
@@ -1814,14 +1818,14 @@
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
-                                    📄 Download Tailored PDF Resume
+                                    Download Tailored Resume
                                 </a>
                                 <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
-                                    ❓ Ask Custom Qs
+                                    Ask Custom Qs
                                 </button>
                             </div>
                             <button id="btn-autofill" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.1rem; border-color: #ffffff;" onclick="triggerAutoFill()">
-                                Launch Playwright Fill
+                                Auto-Fill Form
                             </button>
                         </div>
                     </div>
@@ -1948,7 +1952,7 @@
                 else if (scoreVal < 80) atsBadgeColor = '#fde047';
 
                 const pdfLink = entry.pdf_filename 
-                    ? `<a href="/outputs/${encodeURIComponent(entry.pdf_filename)}" target="_blank" class="btn-icon">📄 View PDF</a>`
+                    ? `<a href="/outputs/${encodeURIComponent(entry.pdf_filename)}" target="_blank" class="btn-icon">View PDF</a>`
                     : `<span style="color:var(--color-text-muted); font-size:0.78rem;">No PDF</span>`;
 
                 tr.innerHTML = `
@@ -1981,8 +1985,8 @@
                     <td>${pdfLink}</td>
                     <td style="text-align: right;">
                         <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
-                            <button class="btn-icon" onclick="openNotesModal('${escapeHtml(entry.id)}')">📝 Notes</button>
-                            <button class="btn-icon btn-icon-danger" onclick="deleteEntry('${escapeHtml(entry.id)}')">🗑️</button>
+                            <button class="btn-icon" onclick="openNotesModal('${escapeHtml(entry.id)}')">Notes</button>
+                            <button class="btn-icon btn-icon-danger" onclick="deleteEntry('${escapeHtml(entry.id)}')">Delete</button>
                         </div>
                     </td>
                 `;
@@ -2136,29 +2140,65 @@
                     dot.className = 'tg-status-dot connected';
                     title.textContent = 'Connected & Listening';
                     sub.textContent = 'Group: ' + (status.group || 'N/A');
-                    btn.textContent = '⏹ Stop Listener';
+                    btn.textContent = 'Stop Listener';
                     tgListenerActive = true;
                 } else if (status.connected) {
                     dot.className = 'tg-status-dot pending';
                     title.textContent = 'Connected (Idle)';
                     sub.textContent = status.message || 'Listener not running';
-                    btn.textContent = '▶ Start Listener';
+                    btn.textContent = 'Start Listener';
                     tgListenerActive = false;
                 } else if (!status.available) {
                     dot.className = 'tg-status-dot disconnected';
                     title.textContent = 'Not Configured';
                     sub.textContent = status.has_credentials ? 'Run: python telegram_login.py' : 'Add TELEGRAM_API_ID/HASH to .env';
-                    btn.textContent = '▶ Start Listener';
+                    btn.textContent = 'Start Listener';
                     tgListenerActive = false;
                 } else {
                     dot.className = 'tg-status-dot disconnected';
                     title.textContent = 'Disconnected';
                     sub.textContent = status.message || 'Click Start Listener';
-                    btn.textContent = '▶ Start Listener';
+                    btn.textContent = 'Start Listener';
                     tgListenerActive = false;
+                }
+                const autoSendSelect = document.getElementById('tg-auto-send-select');
+                if (autoSendSelect && status.auto_send_email !== undefined) {
+                    autoSendSelect.value = status.auto_send_email ? 'true' : 'false';
                 }
             } catch (e) {
                 console.error('Telegram status error:', e);
+            }
+        }
+
+        async function tgToggleAutoSend(val) {
+            const autoSend = (val === 'true');
+            try {
+                const res = await fetch('/api/telegram/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auto_send_email: autoSend })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    tgRefreshStatus();
+                }
+            } catch (e) {
+                console.error('Failed to toggle auto send:', e);
+            }
+        }
+
+        function tgSwitchCardTab(id, tab, event) {
+            if (event) event.stopPropagation();
+            const structTab = document.getElementById('tab-struct-' + id);
+            const rawTab = document.getElementById('tab-raw-' + id);
+            const structPanel = document.getElementById('panel-struct-' + id);
+            const rawPanel = document.getElementById('panel-raw-' + id);
+
+            if (structTab && rawTab && structPanel && rawPanel) {
+                structTab.classList.toggle('active', tab === 'struct');
+                rawTab.classList.toggle('active', tab === 'raw');
+                structPanel.style.display = tab === 'struct' ? 'flex' : 'none';
+                rawPanel.style.display = tab === 'raw' ? 'block' : 'none';
             }
         }
 
@@ -2231,34 +2271,34 @@
 
                     if (item.location) {
                         const loc = document.createElement('span');
-                        loc.textContent = '📍 ' + item.location;
+                        loc.textContent = item.location;
                         meta.appendChild(loc);
                     }
                     if (item.salary) {
                         const sal = document.createElement('span');
-                        sal.textContent = '💰 ' + item.salary;
+                        sal.textContent = item.salary;
                         meta.appendChild(sal);
                     }
                     if (item.batch) {
                         const batch = document.createElement('span');
-                        batch.textContent = '🎓 ' + item.batch;
+                        batch.textContent = item.batch;
                         meta.appendChild(batch);
                     }
                     if (item.apply_mode) {
                         const mode = document.createElement('span');
-                        mode.textContent = (item.apply_mode === 'EMAIL' ? '✉️ Email' : '🔗 Link');
+                        mode.textContent = (item.apply_mode === 'EMAIL' ? 'Email' : 'Link');
                         meta.appendChild(mode);
                     }
                     if (item.ingested_at) {
                         const time = document.createElement('span');
-                        time.textContent = '🕒 ' + item.ingested_at;
+                        time.textContent = item.ingested_at;
                         meta.appendChild(time);
                     }
                     info.appendChild(meta);
 
                     const badge = document.createElement('div');
                     badge.className = 'tg-badge-eligible ' + (item.is_eligible ? 'yes' : 'no');
-                    badge.textContent = item.is_eligible ? '✓ Eligible' : '✗ Not Eligible';
+                    badge.textContent = item.is_eligible ? 'Eligible' : 'Not Eligible';
                     info.appendChild(badge);
 
                     mainRow.appendChild(info);
@@ -2270,62 +2310,116 @@
                     if (item.status === 'auto_sent') {
                         const sentBadge = document.createElement('span');
                         sentBadge.style.cssText = 'background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
-                        sentBadge.textContent = '✅ Auto-Sent';
+                        sentBadge.textContent = 'Sent';
                         sentBadge.title = item.status_msg || 'Email sent automatically';
                         actions.appendChild(sentBadge);
                     } else if (item.status === 'error') {
                         const errBadge = document.createElement('span');
                         errBadge.style.cssText = 'background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
-                        errBadge.textContent = '⚠️ Auto-Send Failed';
+                        errBadge.textContent = 'Send Failed';
                         errBadge.title = item.status_msg || 'Failed to auto-send email';
                         actions.appendChild(errBadge);
 
                         const retryBtn = document.createElement('button');
                         retryBtn.className = 'btn-primary';
                         retryBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem; margin-left: 0.5rem;';
-                        retryBtn.textContent = '⚡ Retry';
+                        retryBtn.textContent = 'Retry';
                         retryBtn.addEventListener('click', () => tgProcessItem(item));
                         actions.appendChild(retryBtn);
                     } else {
                         const processBtn = document.createElement('button');
                         processBtn.className = 'btn-primary';
                         processBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
-                        processBtn.textContent = '⚡ Process';
+                        processBtn.textContent = 'Process';
                         processBtn.addEventListener('click', () => tgProcessItem(item));
                         actions.appendChild(processBtn);
 
                         const skipBtn = document.createElement('button');
                         skipBtn.className = 'btn-secondary';
                         skipBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
-                        skipBtn.textContent = '⏩ Skip';
+                        skipBtn.textContent = 'Skip';
                         skipBtn.addEventListener('click', () => tgSkipItem(item.id));
                         actions.appendChild(skipBtn);
                     }
 
+                    const detailsToggleBtn = document.createElement('button');
+                    detailsToggleBtn.className = 'btn-secondary';
+                    detailsToggleBtn.style.cssText = 'padding: 0.45rem 1rem; font-size: 0.78rem;';
+                    detailsToggleBtn.textContent = 'View Details';
+                    actions.appendChild(detailsToggleBtn);
+
                     mainRow.appendChild(actions);
                     card.appendChild(mainRow);
 
-                    // Expandable Raw Text Section
-                    const rawTextContainer = document.createElement('div');
-                    rawTextContainer.style.display = 'none';
-                    rawTextContainer.style.width = '100%';
-                    rawTextContainer.style.marginTop = '1rem';
-                    rawTextContainer.style.padding = '1rem';
-                    rawTextContainer.style.background = 'rgba(0, 0, 0, 0.4)';
-                    rawTextContainer.style.border = '1px solid var(--color-border)';
-                    rawTextContainer.style.borderRadius = 'var(--radius-md)';
-                    rawTextContainer.style.fontFamily = "'JetBrains Mono', monospace";
-                    rawTextContainer.style.fontSize = '0.78rem';
-                    rawTextContainer.style.whiteSpace = 'pre-wrap';
-                    rawTextContainer.style.color = 'var(--color-text-secondary)';
-                    rawTextContainer.textContent = item.raw_text || 'No raw text message details available.';
-                    card.appendChild(rawTextContainer);
+                    // Expandable Structured & Raw Details Container
+                    const detailsContainer = document.createElement('div');
+                    detailsContainer.style.display = 'none';
+                    detailsContainer.style.width = '100%';
+                    detailsContainer.style.marginTop = '1rem';
+                    detailsContainer.style.paddingTop = '1rem';
+                    detailsContainer.style.borderTop = '1px solid var(--color-border)';
 
-                    card.addEventListener('click', () => {
-                        const isCollapsed = (rawTextContainer.style.display === 'none');
-                        rawTextContainer.style.display = isCollapsed ? 'block' : 'none';
-                        card.style.borderColor = isCollapsed ? 'var(--color-border-hover)' : 'var(--color-border)';
-                    });
+                    const reqsList = (item.requirements || []).map(r => `<li>${escapeHtml(r)}</li>`).join('');
+                    const targetLink = item.apply_target 
+                        ? (item.apply_mode === 'EMAIL' 
+                            ? `<a href="mailto:${escapeHtml(item.apply_target)}" style="color: #93c5fd; text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`
+                            : `<a href="${escapeHtml(item.apply_target)}" target="_blank" rel="noopener noreferrer" style="color: #c084fc; text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`)
+                        : 'Not Specified';
+
+                    detailsContainer.innerHTML = `
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.85rem;" onclick="event.stopPropagation()">
+                            <button class="mode-btn active" id="tab-struct-${item.id}" onclick="tgSwitchCardTab('${item.id}', 'struct', event)">Structured Details</button>
+                            <button class="mode-btn" id="tab-raw-${item.id}" onclick="tgSwitchCardTab('${item.id}', 'raw', event)">Raw Message</button>
+                        </div>
+                        
+                        <div id="panel-struct-${item.id}" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div class="job-details-grid" style="grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
+                                <div class="info-pill">
+                                    <div class="info-label">Application Target / Link</div>
+                                    <div class="info-value" style="font-size:0.8rem; word-break: break-all;">${targetLink}</div>
+                                </div>
+                                ${item.subject_line ? `
+                                <div class="info-pill">
+                                    <div class="info-label">Target Subject Line</div>
+                                    <div class="info-value" style="font-size:0.8rem;">${escapeHtml(item.subject_line)}</div>
+                                </div>` : ''}
+                                <div class="info-pill">
+                                    <div class="info-label">Batch & CTC / Stipend</div>
+                                    <div class="info-value" style="font-size:0.8rem;">${escapeHtml(item.batch || 'Any')} | ${escapeHtml(item.salary || 'N/A')}</div>
+                                </div>
+                                <div class="info-pill">
+                                    <div class="info-label">Location</div>
+                                    <div class="info-value" style="font-size:0.8rem;">${escapeHtml(item.location || 'Remote / India')}</div>
+                                </div>
+                            </div>
+
+                            ${reqsList ? `
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.85rem;">
+                                <div class="info-label" style="margin-bottom: 0.4rem;">Key Requirements & Scope</div>
+                                <ul style="padding-left: 1.2rem; font-size: 0.8rem; color: var(--color-text-secondary); line-height: 1.5;">
+                                    ${reqsList}
+                                </ul>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div id="panel-raw-${item.id}" style="display: none; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: pre-wrap; color: var(--color-text-secondary);">
+                            ${escapeHtml(item.raw_text || 'No raw message text.')}
+                        </div>
+                    `;
+
+                    card.appendChild(detailsContainer);
+
+                    const toggleFunc = (e) => {
+                        if (e) e.stopPropagation();
+                        const isHidden = (detailsContainer.style.display === 'none');
+                        detailsContainer.style.display = isHidden ? 'block' : 'none';
+                        detailsToggleBtn.textContent = isHidden ? 'Hide Details' : 'View Details';
+                        card.style.borderColor = isHidden ? 'var(--color-border-hover)' : 'var(--color-border)';
+                    };
+
+                    detailsToggleBtn.addEventListener('click', toggleFunc);
+                    card.addEventListener('click', toggleFunc);
 
                     if (item.apply_mode === 'EMAIL') {
                         containerEmail.appendChild(card);
@@ -2361,22 +2455,22 @@
 
         async function tgFetchNow() {
             const btn = document.getElementById('tg-btn-fetch');
-            btn.textContent = '⏳ Fetching...';
+            btn.textContent = 'Fetching...';
             btn.disabled = true;
             try {
                 const res = await fetch('/api/telegram/fetch', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    btn.textContent = '✅ ' + data.message;
+                    btn.textContent = 'Fetched ' + data.message;
                     tgLoadQueue();
-                    setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 2000);
+                    setTimeout(() => { btn.textContent = 'Fetch Now'; btn.disabled = false; }, 2000);
                 } else {
-                    btn.textContent = '❌ ' + (data.message || 'Failed');
-                    setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 3000);
+                    btn.textContent = 'Failed: ' + (data.message || 'Failed');
+                    setTimeout(() => { btn.textContent = 'Fetch Now'; btn.disabled = false; }, 3000);
                 }
             } catch (e) {
-                btn.textContent = '❌ Error';
-                setTimeout(() => { btn.textContent = '🔄 Fetch Now'; btn.disabled = false; }, 3000);
+                btn.textContent = 'Error';
+                setTimeout(() => { btn.textContent = 'Fetch Now'; btn.disabled = false; }, 3000);
             }
         }
 
@@ -2384,7 +2478,7 @@
             const endpoint = tgListenerActive ? '/api/telegram/stop' : '/api/telegram/start';
             const btn = document.getElementById('tg-btn-toggle');
             btn.disabled = true;
-            btn.textContent = '⏳ ...';
+            btn.textContent = '...';
             try {
                 await fetch(endpoint, { method: 'POST' });
                 // Give it a moment to connect
@@ -2399,33 +2493,51 @@
         }
 
         async function tgProcessItem(item) {
+            // Build a job_dict from the already-parsed queue item fields
+            // This ensures we process THIS specific job, not re-parse the whole message
+            const jobDict = {
+                company: item.company || 'Unknown',
+                role: item.role || 'Unknown',
+                batch: item.batch || '',
+                salary: item.salary || '',
+                location: item.location || '',
+                apply_target: item.apply_target || '',
+                apply_mode: item.apply_mode || 'UNKNOWN',
+                is_eligible: item.is_eligible || false,
+                requirements: item.requirements || [],
+                raw_text: item.raw_text || '',
+                subject_line: item.subject_line || ''
+            };
+
+            // Switch to Ingestion view and show loading state
+            switchView('ingestion');
+            const btnText = document.getElementById('btn-text');
+            btnText.innerHTML = '<div class="spinner"></div> Processing...';
+
             try {
-                // Populate the Ingestion input area with this raw telegram message
-                const inputArea = document.getElementById('telegram-input');
-                if (inputArea) {
-                    inputArea.value = item.raw_text || '';
+                const response = await fetch('/api/telegram/queue/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: item.id,
+                        raw_text: item.raw_text || '',
+                        job_dict: jobDict
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    renderReport(data);
+                    fetchTrackerBadge();
                 }
-                
-                // Switch view to the Ingestion & Generator screen
-                switchView('ingestion');
-
-                // Trigger removal from Telegram Queue (moves it out since it's now being manually reviewed/processed)
-                tgSkipItem(item.id);
-                
-                // Automatically click the manual process button to trigger parsing/filling
-                setTimeout(() => {
-                    const processBtn = document.getElementById('btn-process');
-                    if (processBtn) {
-                        processBtn.click();
-                    } else {
-                        // Fallback fallback if btn-process does not exist
-                        const runPipelineBtn = document.querySelector('.card .btn-primary');
-                        if (runPipelineBtn) runPipelineBtn.click();
-                    }
-                }, 100);
-
             } catch (e) {
-                console.error('Process redirect error:', e);
+                alert('Error processing job: ' + e.message);
+            } finally {
+                btnText.innerText = 'Run Pipeline';
+                // Refresh telegram queue to reflect removal
+                tgLoadQueue();
             }
         }
 
