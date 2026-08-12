@@ -3,76 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ApplyBot - Premium Enterprise Dashboard</title>
+    <title>ApplyBot - Premium Pure Dark Material 3 Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Google+Sans+Flex:wght@400;500;600;700;800&family=Google+Sans+Mono:wght@400;500&family=Roboto+Flex:opsz,wght@8..144,400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Premium Monochromatic Theme */
-            --bg-base: #070708;
-            --bg-surface: rgba(18, 18, 22, 0.7);
-            --bg-surface-lowest: #0a0a0c;
-            --bg-surface-low: #111114;
-            --bg-surface-high: #1a1a22;
-            --bg-surface-highest: #22222b;
-            
-            --color-primary: #ffffff;
-            --color-on-primary: #070708;
-            --color-primary-container: rgba(255, 255, 255, 0.08);
-            --color-on-primary-container: #f4f4f5;
-            
-            --color-text-primary: #f4f4f5;
-            --color-text-secondary: #8e8e9f;
-            --color-text-muted: #5c5c6d;
-            
-            --color-border: rgba(255, 255, 255, 0.06);
-            --color-border-hover: rgba(255, 255, 255, 0.12);
-            --color-error: #ff453a;
-            --color-error-container: rgba(255, 69, 58, 0.1);
+            /* ── M3 Surface Container Hierarchy (tone-based) ── */
+            --md-sys-color-surface: #0E1117;
+            --md-sys-color-surface-dim: #0E1117;
+            --md-sys-color-surface-bright: #3B4050;
+            --md-sys-color-surface-container-lowest: #090C12;
+            --md-sys-color-surface-container-low: #1A1E27;
+            --md-sys-color-surface-container: #1E2330;
+            --md-sys-color-surface-container-high: #282F3E;
+            --md-sys-color-surface-container-highest: #33394A;
 
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-full: 9999px;
-            
-            --easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
-            --easing-expressive: cubic-bezier(0.1, 0.8, 0.1, 1);
-            --duration-short: 150ms;
-            --duration-medium: 300ms;
+            /* ── Primary (Google Blue) ── */
+            --md-sys-color-primary: #A8C7FA;
+            --md-sys-color-on-primary: #062E6F;
+            --md-sys-color-primary-container: #17478D;
+            --md-sys-color-on-primary-container: #D6E3FF;
+            --md-sys-color-inverse-primary: #3B6DBF;
+
+            /* ── Secondary (Soft Slate Blue) ── */
+            --md-sys-color-secondary: #BFC6DC;
+            --md-sys-color-on-secondary: #293041;
+            --md-sys-color-secondary-container: #3F4759;
+            --md-sys-color-on-secondary-container: #DBE2F9;
+
+            /* ── Tertiary (Success Green) ── */
+            --md-sys-color-tertiary: #6DD58C;
+            --md-sys-color-on-tertiary: #003919;
+            --md-sys-color-tertiary-container: #005228;
+            --md-sys-color-on-tertiary-container: #6FF59A;
+
+            /* ── Error ── */
+            --md-sys-color-error: #FFB4AB;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-error-container: #93000A;
+            --md-sys-color-on-error-container: #FFDAD6;
+
+            /* ── On Surface / Outline ── */
+            --md-sys-color-on-surface: #E3E3E8;
+            --md-sys-color-on-surface-variant: #C4C6CF;
+            --md-sys-color-outline: #8E9099;
+            --md-sys-color-outline-variant: #44474E;
+
+            /* ── Fixed Accent Colors ── */
+            --md-sys-color-primary-fixed: #D6E3FF;
+            --md-sys-color-on-primary-fixed: #001B3E;
+            --md-sys-color-tertiary-fixed: #A2F4B1;
+            --md-sys-color-on-tertiary-fixed: #00210C;
+
+            /* ── Warning (Amber) ── */
+            --md-custom-color-warning: #FFD54F;
+            --md-custom-color-warning-container: #5C4300;
+            --md-custom-color-on-warning-container: #FFECB3;
+
+            /* ── Corner Radius Tokens ── */
+            --md-sys-shape-corner-none: 0px;
+            --md-sys-shape-corner-extra-small: 4px;
+            --md-sys-shape-corner-small: 8px;
+            --md-sys-shape-corner-medium: 12px;
+            --md-sys-shape-corner-large: 16px;
+            --md-sys-shape-corner-extra-large: 28px;
+            --md-sys-shape-corner-full: 9999px;
+
+            /* ── Physics Motion & Micro-Interactions ── */
+            --md-sys-motion-easing-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+            --md-sys-motion-duration-short: 200ms;
+            --md-sys-motion-duration-medium: 350ms;
+            --md-sys-motion-duration-long: 500ms;
+
+            --md-sys-motion-easing-expressive: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+            --md-sys-motion-easing-expressive-decelerate: cubic-bezier(0.0, 0.0, 0.0, 1.0);
+            --md-sys-motion-easing-expressive-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+
+            /* ── Elevation Tokens ── */
+            --md-sys-elevation-0: none;
+            --md-sys-elevation-1: 0 1px 3px 1px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3);
+            --md-sys-elevation-2: 0 2px 6px 2px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3);
+            --md-sys-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px 0 rgba(0,0,0,0.3);
+            --md-sys-elevation-4: 0 6px 10px 4px rgba(0,0,0,0.15), 0 2px 3px 0 rgba(0,0,0,0.3);
+            --md-sys-elevation-5: 0 8px 12px 6px rgba(0,0,0,0.15), 0 4px 4px 0 rgba(0,0,0,0.3);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Google Sans Flex', 'Google Sans', 'Roboto Flex', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
-            background-color: var(--bg-base);
-            color: var(--color-text-primary);
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.03) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(255, 255, 255, 0.01) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(168, 199, 250, 0.03) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(109, 213, 140, 0.02) 0px, transparent 50%);
         }
 
+        /* Interactive State Layers */
+        .btn-primary, .btn-secondary, .btn-sample, .nav-tab, .mode-btn, .btn-icon, .card, .metric-card, .tg-job-card {
+            position: relative;
+            overflow: hidden;
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+        }
+
+        .btn-primary::before, .btn-secondary::before, .btn-sample::before, .nav-tab::before, .mode-btn::before, .btn-icon::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+            pointer-events: none;
+        }
+
+        .btn-primary:hover::before, .btn-secondary:hover::before, .btn-sample:hover::before, .nav-tab:hover::before, .mode-btn:hover::before, .btn-icon:hover::before {
+            opacity: 0.08;
+        }
+
+        .btn-primary:active::before, .btn-secondary:active::before, .btn-sample:active::before, .nav-tab:active::before, .mode-btn:active::before, .btn-icon:active::before {
+            opacity: 0.12;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--md-sys-color-primary);
+            outline-offset: 2px;
+        }
+
+        /* Top App Bar & Navigation Header */
         header {
-            padding: 1.1rem 2.5rem;
+            padding: 1rem 2.2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(7, 7, 8, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--md-sys-color-surface-container-low);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
             z-index: 50;
-            border-bottom: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
         .header-left {
@@ -88,16 +167,17 @@
         }
 
         .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--color-primary);
-            border-radius: var(--radius-sm);
+            width: 36px;
+            height: 36px;
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border-radius: var(--md-sys-shape-corner-small);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--color-on-primary);
+            font-size: 1.15rem;
+            border: 1px solid var(--md-sys-color-outline-variant);
         }
 
         .brand-text-group {
@@ -106,79 +186,89 @@
         }
 
         .brand-title {
+            font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
             font-weight: 700;
-            font-size: 1.2rem;
-            letter-spacing: -0.02em;
-            color: #ffffff;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            color: var(--md-sys-color-on-surface);
         }
 
-        /* Nav Tabs */
+        /* M3 Nav Tabs */
         .nav-tabs {
             display: flex;
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--md-sys-color-surface-container-lowest);
             padding: 4px;
-            border-radius: var(--radius-full);
-            border: 1px solid var(--color-border);
+            border-radius: var(--md-sys-shape-corner-full);
+            border: 1px solid var(--md-sys-color-outline-variant);
             gap: 4px;
         }
 
         .nav-tab {
-            padding: 7px 16px;
-            border-radius: var(--radius-full);
+            padding: 8px 18px;
+            border-radius: var(--md-sys-shape-corner-full);
             border: none;
             background: transparent;
-            color: var(--color-text-secondary);
-            font-size: 0.82rem;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--duration-short) var(--easing-standard);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.55rem;
+            white-space: nowrap;
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-expressive);
         }
 
         .nav-tab:hover {
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
         }
 
         .nav-tab.active {
-            background: var(--color-primary);
-            color: var(--color-on-primary);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
         }
 
         .badge-count {
-            background: rgba(255, 255, 255, 0.12);
+            background: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface);
             padding: 2px 8px;
-            border-radius: var(--radius-full);
+            border-radius: var(--md-sys-shape-corner-full);
             font-size: 0.72rem;
             font-weight: 700;
             line-height: 1;
         }
 
         .nav-tab.active .badge-count {
-            background: rgba(0, 0, 0, 0.15);
-            color: #000000;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
         }
 
         .candidate-badge {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--color-border);
-            padding: 0.45rem 1rem;
-            border-radius: var(--radius-full);
-            font-size: 0.8rem;
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 0.5rem 1.1rem;
+            border-radius: var(--md-sys-shape-corner-full);
+            font-size: 0.82rem;
             font-weight: 600;
-            color: var(--color-text-primary);
+            color: var(--md-sys-color-on-surface);
             display: flex;
             align-items: center;
-            gap: 0.55rem;
+            gap: 0.6rem;
+            white-space: nowrap;
         }
 
         .status-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #22c55e;
+            width: 8px;
+            height: 8px;
+            background-color: var(--md-sys-color-tertiary);
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 8px var(--md-sys-color-tertiary);
+            animation: pulse-emerald 2s infinite var(--md-sys-motion-easing-standard);
+        }
+
+        @keyframes pulse-emerald {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.6; }
         }
 
         /* Page View Switcher */
@@ -203,28 +293,20 @@
             gap: 2.5rem;
         }
 
-        @media (max-width: 960px) {
-            .container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-
+        /* M3 Elevated Cards */
         .card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-medium);
             padding: 1.75rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            transition: border-color var(--duration-medium) var(--easing-standard);
+            transition: border-color var(--md-sys-motion-duration-medium) var(--md-sys-motion-easing-standard);
         }
 
         .card:hover {
-            border-color: var(--color-border-hover);
+            border-color: var(--md-sys-color-outline);
         }
 
         .card-header {
@@ -232,7 +314,9 @@
             justify-content: space-between;
             align-items: center;
             padding-bottom: 0.85rem;
-            border-bottom: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .card-title {
@@ -240,59 +324,79 @@
             align-items: center;
             gap: 0.5rem;
             text-transform: uppercase;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             letter-spacing: 0.08em;
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-primary);
             font-weight: 700;
         }
 
+        /* M3 Segmented Button Control */
         .mode-selector {
             display: flex;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 3px;
-            border-radius: var(--radius-full);
-            border: 1px solid var(--color-border);
+            background: var(--md-sys-color-surface-container-lowest);
+            padding: 4px;
+            border-radius: var(--md-sys-shape-corner-full);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            gap: 2px;
         }
 
         .mode-btn {
-            padding: 5px 12px;
-            border-radius: var(--radius-full);
+            padding: 5px 14px;
+            border-radius: var(--md-sys-shape-corner-full);
             border: none;
             background: transparent;
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--duration-short) var(--easing-standard);
+            white-space: nowrap;
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-expressive);
         }
 
         .mode-btn.active {
-            background: var(--color-primary);
-            color: var(--color-on-primary);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        /* Form Controls & Inputs */
+        textarea, .form-input, .form-select, .form-textarea, .input-search, .select-filter {
+            width: 100%;
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-small);
+            padding: 0.75rem 1rem;
+            color: var(--md-sys-color-on-surface);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            outline: none;
+            transition: border-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard), box-shadow var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
         }
 
         textarea {
-            width: 100%;
             height: 220px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: 1.1rem;
-            color: var(--color-text-primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
+            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
             resize: vertical;
-            outline: none;
-            transition: border-color var(--duration-short) var(--easing-standard);
         }
 
-        textarea:focus {
-            border-color: var(--color-border-hover);
+        textarea:focus, .form-input:focus, .form-select:focus, .form-textarea:focus, .input-search:focus, .select-filter:focus {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
         }
 
-        textarea::placeholder {
-            color: var(--color-text-muted);
+        textarea::placeholder, .form-input::placeholder, .form-textarea::placeholder, .input-search::placeholder {
+            color: var(--md-sys-color-on-surface-variant);
+            opacity: 0.7;
+        }
+
+        .input-search, .select-filter {
+            border-radius: var(--md-sys-shape-corner-full);
+            padding: 0.55rem 1.1rem;
+            width: auto;
+        }
+
+        .select-filter option, .form-select option {
+            background: var(--md-sys-color-surface-container-high);
+            color: var(--md-sys-color-on-surface);
         }
 
         .sample-section {
@@ -304,7 +408,7 @@
         .sample-label {
             font-size: 0.7rem;
             font-weight: 700;
-            color: var(--color-text-muted);
+            color: var(--md-sys-color-on-surface-variant);
             text-transform: uppercase;
             letter-spacing: 0.08em;
         }
@@ -316,15 +420,15 @@
         }
 
         .btn-sample {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--color-border);
-            color: var(--color-text-secondary);
-            padding: 0.45rem 0.85rem;
-            border-radius: var(--radius-full);
+            background: var(--md-sys-color-surface-container-high);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            color: var(--md-sys-color-on-surface);
+            padding: 0.45rem 0.95rem;
+            border-radius: var(--md-sys-shape-corner-full);
             font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--duration-short) var(--easing-standard);
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -332,34 +436,55 @@
         }
 
         .btn-sample:hover {
-            background: rgba(255, 255, 255, 0.06);
-            color: #ffffff;
-            border-color: var(--color-border-hover);
+            background: var(--md-sys-color-surface-container-highest);
+            border-color: var(--md-sys-color-outline);
+            color: var(--md-sys-color-primary);
         }
 
         .btn-primary {
-            background: var(--color-primary);
-            color: var(--color-on-primary);
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
             border: none;
-            padding: 0.9rem 1.6rem;
-            border-radius: var(--radius-full);
+            padding: 0.85rem 1.8rem;
+            border-radius: var(--md-sys-shape-corner-full);
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
+            letter-spacing: 0.02em;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            transition: all var(--duration-short) var(--easing-standard);
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-expressive);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .btn-primary:hover {
-            opacity: 0.92;
             transform: translateY(-1px);
+            box-shadow: var(--md-sys-elevation-2);
         }
 
         .btn-primary:active {
             transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 0.55rem 1.2rem;
+            border-radius: var(--md-sys-shape-corner-full);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--md-sys-color-outline);
         }
 
         .job-details-grid {
@@ -369,15 +494,15 @@
         }
 
         .info-pill {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--color-border);
-            padding: 0.65rem 0.9rem;
-            border-radius: var(--radius-md);
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 0.65rem 0.95rem;
+            border-radius: var(--md-sys-shape-corner-medium);
         }
 
         .info-label {
-            font-size: 0.65rem;
-            color: var(--color-text-muted);
+            font-size: 0.68rem;
+            color: var(--md-sys-color-on-surface-variant);
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 0.25rem;
@@ -387,13 +512,13 @@
         .info-value {
             font-size: 0.88rem;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
         }
 
         .ats-meter {
-            background: rgba(0, 0, 0, 0.15);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-medium);
             padding: 1.1rem;
             display: flex;
             align-items: center;
@@ -404,7 +529,7 @@
             width: 54px;
             height: 54px;
             border-radius: 50%;
-            background: conic-gradient(var(--color-primary) var(--score-pct, 85%), rgba(255,255,255,0.06) 0);
+            background: conic-gradient(var(--md-sys-color-primary) var(--score-pct, 85%), var(--md-sys-color-surface-container-high) 0);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -419,20 +544,20 @@
             position: absolute;
             width: 42px;
             height: 42px;
-            background: var(--bg-surface-lowest);
+            background: var(--md-sys-color-surface-container-lowest);
             border-radius: 50%;
         }
 
         .ats-score-text {
             position: relative;
             z-index: 2;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
         }
 
         .action-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-medium);
             padding: 1.2rem;
             display: flex;
             flex-direction: column;
@@ -444,28 +569,29 @@
             font-size: 0.8rem;
             border-collapse: collapse;
             margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
         }
 
         .profile-table td {
             padding: 0.45rem 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
         .profile-table td:first-child {
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             font-weight: 500;
             width: 35%;
         }
 
         .profile-table td:last-child {
-            color: var(--color-text-primary);
+            color: var(--md-sys-color-on-surface);
             font-weight: 600;
         }
 
         .empty-state {
             text-align: center;
             padding: 4rem 1rem;
-            color: var(--color-text-muted);
+            color: var(--md-sys-color-on-surface-variant);
             font-size: 0.88rem;
             line-height: 1.6;
         }
@@ -474,9 +600,9 @@
             display: inline-block;
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(0, 0, 0, 0.2);
+            border: 2px solid var(--md-sys-color-on-primary-container);
             border-radius: 50%;
-            border-top-color: #000;
+            border-top-color: var(--md-sys-color-primary);
             animation: spin 0.8s ease-in-out infinite;
         }
 
@@ -485,11 +611,11 @@
         }
 
         .chip-badge {
-            background: rgba(255, 255, 255, 0.06);
-            color: #ffffff;
-            border: 1px solid var(--color-border);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
             padding: 4px 10px;
-            border-radius: var(--radius-full);
+            border-radius: var(--md-sys-shape-corner-full);
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.05em;
@@ -497,11 +623,11 @@
         }
 
         .chip-badge-warn {
-            background: var(--color-error-container);
-            color: #ff453a;
-            border: 1px solid rgba(255, 69, 58, 0.2);
+            background: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-error);
+            border: 1px solid rgba(242, 184, 181, 0.2);
             padding: 4px 10px;
-            border-radius: var(--radius-full);
+            border-radius: var(--md-sys-shape-corner-full);
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.05em;
@@ -525,19 +651,11 @@
             gap: 1.25rem;
         }
 
-        @media (max-width: 900px) {
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
         .metric-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem 1.5rem;
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 1.35rem 1.6rem;
             display: flex;
             flex-direction: column;
             gap: 0.4rem;
@@ -546,21 +664,21 @@
         .metric-label {
             font-size: 0.72rem;
             font-weight: 700;
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             text-transform: uppercase;
             letter-spacing: 0.06em;
         }
 
         .metric-value {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
             letter-spacing: -0.02em;
         }
 
         .metric-sub {
             font-size: 0.75rem;
-            color: var(--color-text-muted);
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         .controls-bar {
@@ -579,87 +697,36 @@
             flex: 1;
         }
 
-        .input-search {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-full);
-            padding: 0.55rem 1.1rem;
-            color: #ffffff;
-            font-size: 0.85rem;
-            outline: none;
-            min-width: 240px;
-            transition: border-color var(--duration-short) var(--easing-standard);
-        }
-
-        .input-search:focus {
-            border-color: var(--color-border-hover);
-        }
-
-        .select-filter {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-full);
-            padding: 0.55rem 1rem;
-            color: var(--color-text-primary);
-            font-size: 0.82rem;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .select-filter option {
-            background: #111114;
-            color: #ffffff;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--color-border);
-            color: #ffffff;
-            padding: 0.55rem 1.1rem;
-            border-radius: var(--radius-full);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--duration-short) var(--easing-standard);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--color-border-hover);
-        }
-
         .tracker-table-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-large);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .tracker-table {
             width: 100%;
+            min-width: 780px;
             border-collapse: collapse;
             font-size: 0.85rem;
             text-align: left;
         }
 
         .tracker-table th {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.9rem 1.1rem;
-            color: var(--color-text-secondary);
+            background: var(--md-sys-color-surface-container-high);
+            padding: 1rem 1.25rem;
+            color: var(--md-sys-color-on-surface-variant);
             font-weight: 700;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            border-bottom: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
         .tracker-table td {
-            padding: 1rem 1.1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
             vertical-align: middle;
         }
 
@@ -668,76 +735,76 @@
         }
 
         .tracker-table tr:hover td {
-            background: rgba(255, 255, 255, 0.015);
+            background: var(--md-sys-color-surface-container-highest);
         }
 
         .company-name {
             font-weight: 700;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
             font-size: 0.92rem;
         }
 
         .role-title {
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             font-size: 0.82rem;
             margin-top: 2px;
         }
 
         .status-select {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--color-border);
-            color: #ffffff;
-            padding: 5px 10px;
-            border-radius: var(--radius-full);
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            color: var(--md-sys-color-on-surface);
+            padding: 5px 12px;
+            border-radius: var(--md-sys-shape-corner-full);
             font-size: 0.78rem;
             font-weight: 600;
             outline: none;
             cursor: pointer;
         }
 
-        .status-select.status-Applied { border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
-        .status-select.status-Interviewing { border-color: rgba(234, 179, 8, 0.4); color: #fde047; }
-        .status-select.status-Offered { border-color: rgba(34, 197, 94, 0.4); color: #86efac; }
-        .status-select.status-Rejected { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
-        .status-select.status-Draft { border-color: rgba(156, 163, 175, 0.4); color: #d1d5db; }
+        .status-select.status-Applied { border-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); }
+        .status-select.status-Interviewing { border-color: var(--md-custom-color-warning-container); color: var(--md-custom-color-warning); }
+        .status-select.status-Offered { border-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-tertiary); }
+        .status-select.status-Rejected { border-color: var(--md-sys-color-error-container); color: var(--md-sys-color-error); }
+        .status-select.status-Draft { border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface-variant); }
 
         .btn-icon {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--color-border);
-            color: var(--color-text-secondary);
-            padding: 5px 10px;
-            border-radius: var(--radius-md);
+            background: var(--md-sys-color-surface-container-high);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            color: var(--md-sys-color-on-surface-variant);
+            padding: 6px 12px;
+            border-radius: var(--md-sys-shape-corner-small);
             font-size: 0.78rem;
             cursor: pointer;
-            transition: all var(--duration-short) var(--easing-standard);
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
         }
 
         .btn-icon:hover {
-            color: #ffffff;
-            border-color: var(--color-border-hover);
-            background: rgba(255, 255, 255, 0.08);
+            color: var(--md-sys-color-on-surface);
+            border-color: var(--md-sys-color-outline);
+            background: var(--md-sys-color-surface-container-highest);
         }
 
         .btn-icon-danger:hover {
-            color: #ff453a;
-            border-color: rgba(255, 69, 58, 0.4);
-            background: rgba(255, 69, 58, 0.1);
+            color: var(--md-sys-color-error);
+            border-color: var(--md-sys-color-error-container);
+            background: var(--md-sys-color-error-container);
         }
 
-        /* Modal Overlay */
+        /* Modal Overlay & Dialogs */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(8px);
             z-index: 100;
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         .modal-overlay.active {
@@ -745,16 +812,18 @@
         }
 
         .modal-card {
-            background: #111115;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 540px;
+            background: var(--md-sys-color-surface-container-high);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-large);
+            width: calc(100% - 2rem);
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
             padding: 1.75rem;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            gap: 1.35rem;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.9);
         }
 
         .modal-header {
@@ -764,21 +833,22 @@
         }
 
         .modal-title {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
         }
 
         .btn-close {
             background: transparent;
             border: none;
-            color: var(--color-text-muted);
-            font-size: 1.2rem;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 1.25rem;
             cursor: pointer;
+            padding: 4px;
         }
 
         .btn-close:hover {
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
         }
 
         .form-grid {
@@ -800,26 +870,12 @@
         .form-label {
             font-size: 0.72rem;
             font-weight: 700;
-            color: var(--color-text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .form-input, .form-select, .form-textarea {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: 0.6rem 0.85rem;
-            color: #ffffff;
-            font-size: 0.85rem;
-            outline: none;
-        }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            border-color: var(--color-border-hover);
-        }
-
-        /* Telegram Feed Styles */
+        /* Telegram Feed M3 Expressive Styles */
         .tg-feed-container {
             max-width: 1280px;
             margin: 0 auto;
@@ -834,12 +890,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: 1rem 1.5rem;
+            background: var(--md-sys-color-surface-container-low);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 1.1rem 1.75rem;
         }
 
         .tg-status-left {
@@ -856,28 +910,23 @@
         }
 
         .tg-status-dot.connected {
-            background-color: #22c55e;
-            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
-            animation: pulse-green 2s infinite;
+            background-color: var(--md-sys-color-tertiary);
+            box-shadow: 0 0 12px var(--md-sys-color-tertiary);
+            animation: pulse-emerald 2s infinite;
         }
 
         .tg-status-dot.disconnected {
-            background-color: #ef4444;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+            background-color: var(--md-sys-color-error);
+            box-shadow: 0 0 12px var(--md-sys-color-error);
         }
 
         .tg-status-dot.pending {
-            background-color: #f59e0b;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-            animation: pulse-yellow 1.5s infinite;
+            background-color: var(--md-custom-color-warning);
+            box-shadow: 0 0 12px var(--md-custom-color-warning);
+            animation: pulse-amber 1.5s infinite;
         }
 
-        @keyframes pulse-green {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes pulse-yellow {
+        @keyframes pulse-amber {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
@@ -890,18 +939,28 @@
 
         .tg-status-title {
             font-weight: 700;
-            font-size: 0.9rem;
-            color: #ffffff;
+            font-size: 0.95rem;
+            color: var(--md-sys-color-on-surface);
         }
 
         .tg-status-sub {
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
+            font-size: 0.78rem;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         .tg-actions {
             display: flex;
+            align-items: center;
             gap: 0.5rem;
+        }
+        
+        .tg-actions select {
+            width: auto;
+        }
+        
+        .tg-actions button {
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .tg-queue-grid {
@@ -917,39 +976,38 @@
         }
 
         .tg-queue-title {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            color: #ffffff;
+            color: var(--md-sys-color-on-surface);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
         .tg-job-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem 1.5rem;
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 1.35rem 1.6rem;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             gap: 1.5rem;
-            transition: border-color var(--duration-short) var(--easing-standard);
+            transition: all var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
         }
 
         .tg-job-card:hover {
-            border-color: var(--color-border-hover);
+            border-color: var(--md-sys-color-outline);
+            background: var(--md-sys-color-surface-container-high);
         }
 
         .tg-job-card.eligible {
-            border-left: 3px solid #22c55e;
+            border-left: 4px solid var(--md-sys-color-tertiary);
         }
 
         .tg-job-card.not-eligible {
-            border-left: 3px solid #f59e0b;
-            opacity: 0.7;
+            border-left: 4px solid var(--md-custom-color-warning);
+            opacity: 0.85;
         }
 
         .tg-job-info {
@@ -961,21 +1019,21 @@
 
         .tg-job-company {
             font-weight: 700;
-            font-size: 1rem;
-            color: #ffffff;
+            font-size: 1.05rem;
+            color: var(--md-sys-color-on-surface);
         }
 
         .tg-job-role {
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
+            font-size: 0.88rem;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         .tg-job-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
+            font-size: 0.78rem;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         .tg-job-meta span {
@@ -995,32 +1053,166 @@
             display: inline-flex;
             align-items: center;
             gap: 0.3rem;
-            padding: 3px 10px;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: var(--md-sys-shape-corner-full);
+            font-size: 0.72rem;
             font-weight: 700;
+            text-transform: uppercase;
         }
 
         .tg-badge-eligible.yes {
-            background: rgba(34, 197, 94, 0.12);
-            color: #86efac;
+            background: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
         }
 
         .tg-badge-eligible.no {
-            background: rgba(245, 158, 11, 0.12);
-            color: #fcd34d;
+            background: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-error);
         }
 
         .tg-empty-state {
             text-align: center;
             padding: 4rem 2rem;
-            color: var(--color-text-muted);
+            color: var(--md-sys-color-on-surface-variant);
             font-size: 0.95rem;
         }
 
         .tg-empty-state p {
             margin-top: 0.5rem;
             font-size: 0.8rem;
+        }
+
+        /* ── Comprehensive Responsive Breakpoints & Fixes ── */
+        @media (max-width: 992px) {
+            header {
+                padding: 0.85rem 1.25rem;
+                flex-wrap: wrap;
+                gap: 0.85rem;
+            }
+
+            .header-left {
+                width: 100%;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                max-width: 100%;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .candidate-badge {
+                padding: 0.4rem 0.85rem;
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (max-width: 960px) {
+            .container, .tracker-container, .tg-feed-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .job-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+
+            .input-search, .select-filter {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.85rem;
+            }
+
+            .tg-status-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .tg-actions {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .tg-actions > * {
+                flex: 1 1 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tg-job-card {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1.1rem;
+            }
+
+            .tg-job-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: 100%;
+                justify-content: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .candidate-badge span {
+                display: inline-block;
+                max-width: 180px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-value {
+                font-size: 1.6rem;
+            }
         }
     </style>
 </head>
@@ -1119,12 +1311,12 @@
                 </div>
                 <div class="tg-actions" style="align-items: center;">
                     <!-- Dropdown Filter -->
-                    <select id="tg-filter-mode" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(0, 0, 0, 0.6);" onchange="tgLoadQueue()">
+                    <select id="tg-filter-mode" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: var(--md-sys-color-surface-container-lowest);" onchange="tgLoadQueue()">
                         <option value="ALL">All Applications</option>
                         <option value="EMAIL">Email Apps Only</option>
                         <option value="LINK">Link/Form Apps Only</option>
                     </select>
-                    <select id="tg-auto-send-select" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(0, 0, 0, 0.6);" onchange="tgToggleAutoSend(this.value)">
+                    <select id="tg-auto-send-select" class="form-select" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: var(--md-sys-color-surface-container-lowest);" onchange="tgToggleAutoSend(this.value)">
                         <option value="true" selected>Email Auto-Send: ON (Instant Send)</option>
                         <option value="false">Email Auto-Send: OFF (Review Required)</option>
                     </select>
@@ -1145,9 +1337,9 @@
 
                 <!-- Section: Email Applications -->
                 <div id="tg-section-email-wrapper">
-                    <div class="tg-queue-section-header" style="margin-top: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Direct Email Applications</span>
-                        <span class="badge-count" id="tg-email-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
+                    <div class="tg-queue-section-header" style="margin-top: 1rem; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: 0.05em;">Direct Email Applications</span>
+                        <span class="badge-count" id="tg-email-count" style="font-size: 0.75rem; background: var(--md-sys-color-surface-container-high);">0</span>
                     </div>
                     <div id="tg-queue-list-email" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; margin-top: 1rem;">
                         <!-- Email jobs will be rendered here -->
@@ -1156,9 +1348,9 @@
 
                 <!-- Section: Form/Link Applications -->
                 <div id="tg-section-link-wrapper">
-                    <div class="tg-queue-section-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Web Form Applications</span>
-                        <span class="badge-count" id="tg-link-count" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.06);">0</span>
+                    <div class="tg-queue-section-header" style="border-bottom: 1px solid var(--md-sys-color-outline-variant); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: 0.05em;">Web Form Applications</span>
+                        <span class="badge-count" id="tg-link-count" style="font-size: 0.75rem; background: var(--md-sys-color-surface-container-high);">0</span>
                     </div>
                     <div id="tg-queue-list-link" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
                         <!-- Link jobs will be rendered here -->
@@ -1186,12 +1378,12 @@
                 </div>
                 <div class="metric-card">
                     <span class="metric-label">Applied / Sent</span>
-                    <span class="metric-value" id="stat-applied" style="color: #93c5fd;">0</span>
+                    <span class="metric-value" id="stat-applied" style="color: var(--md-sys-color-primary);">0</span>
                     <span class="metric-sub">Emails & forms submitted</span>
                 </div>
                 <div class="metric-card">
                     <span class="metric-label">Interviewing / Offers</span>
-                    <span class="metric-value" id="stat-interviews" style="color: #86efac;">0</span>
+                    <span class="metric-value" id="stat-interviews" style="color: var(--md-sys-color-tertiary);">0</span>
                     <span class="metric-sub">Active candidate pipeline</span>
                 </div>
                 <div class="metric-card">
@@ -1223,7 +1415,7 @@
                     </select>
                 </div>
 
-                <div style="display: flex; gap: 0.6rem;">
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
                     <button class="btn-secondary" onclick="loadTracker()">Refresh</button>
                     <button class="btn-primary" style="padding: 0.55rem 1.2rem; font-size: 0.85rem;" onclick="openAddModal()">+ Add Application</button>
                 </div>
@@ -1263,7 +1455,7 @@
                     <div class="card-title">
                         <span>Custom Question Assistant</span>
                     </div>
-                    <div style="display: flex; gap: 0.4rem;">
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                         <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="syncFromActiveJob()">Sync Active Job</button>
                         <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearQAForm()">Clear Form</button>
                     </div>
@@ -1312,7 +1504,7 @@
                     <div class="card-title">
                         <span>Tailored Response</span>
                     </div>
-                    <div id="qa-stats" style="font-size: 0.78rem; color: var(--color-text-secondary);">
+                    <div id="qa-stats" style="font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant);">
                         0 words | 0 chars
                     </div>
                 </div>
@@ -1381,7 +1573,7 @@
                     <textarea id="add-notes" class="form-textarea" style="height: 70px;" placeholder="Referred by John Doe. Initial screen scheduled."></textarea>
                 </div>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem; flex-wrap: wrap;">
                 <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
                 <button class="btn-primary" style="padding: 0.6rem 1.3rem;" onclick="submitAddModal()">Save Application</button>
             </div>
@@ -1400,7 +1592,7 @@
                 <label class="form-label">Notes & Follow-up Log</label>
                 <textarea id="notes-text" class="form-textarea" style="height: 140px;" placeholder="Add interview dates, recruiter feedback, referral contact info..."></textarea>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem; flex-wrap: wrap;">
                 <button class="btn-secondary" onclick="closeNotesModal()">Cancel</button>
                 <button class="btn-primary" style="padding: 0.6rem 1.3rem;" onclick="submitNotesModal()">Save Notes</button>
             </div>
@@ -1536,25 +1728,25 @@
             container.innerHTML = `
                 <div class="action-box">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="color: #ffffff; font-size: 0.9rem;">Question Asked</strong>
-                        <span style="font-size: 0.78rem; color: var(--color-text-secondary);">${escapeHtml(company)} - ${escapeHtml(role)}</span>
+                        <strong style="color: var(--md-sys-color-on-surface); font-size: 0.9rem;">Question Asked</strong>
+                        <span style="font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant);">${escapeHtml(company)} - ${escapeHtml(role)}</span>
                     </div>
-                    <div style="font-style: italic; font-size: 0.82rem; color: var(--color-text-secondary); background: rgba(0,0,0,0.25); padding: 0.65rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+                    <div style="font-style: italic; font-size: 0.82rem; color: var(--md-sys-color-on-surface-variant); background: var(--md-sys-color-surface-container-high); padding: 0.65rem 0.85rem; border-radius: var(--md-sys-shape-corner-medium); border: 1px solid var(--md-sys-color-outline-variant);">
                         "${escapeHtml(question)}"
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                        <strong style="color: #ffffff; font-size: 0.9rem;">Tailored Response</strong>
+                        <strong style="color: var(--md-sys-color-on-surface); font-size: 0.9rem;">Tailored Response</strong>
                         <span class="chip-badge">GROQ AI TAILORED</span>
                     </div>
 
-                    <textarea id="qa-result-text" readonly style="height: 140px; font-family: sans-serif; line-height: 1.6; font-size: 0.9rem; background: rgba(255,255,255,0.02); color: #f4f4f5;">${escapeHtml(answer)}</textarea>
+                    <textarea id="qa-result-text" readonly style="height: 140px; font-family: sans-serif; line-height: 1.6; font-size: 0.9rem; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);">${escapeHtml(answer)}</textarea>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <div style="font-size: 0.78rem; color: var(--color-text-secondary);">
-                            Targeting: <strong style="color: #fff;">${escapeHtml(company || 'Company')}</strong>
+                        <div style="font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant);">
+                            Targeting: <strong style="color: var(--md-sys-color-on-surface);">${escapeHtml(company || 'Company')}</strong>
                         </div>
-                        <button id="btn-copy-qa" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.2rem; border-color: #ffffff;" onclick="copyQAToClipboard()">
+                        <button id="btn-copy-qa" class="btn-primary" style="padding: 0.55rem 1.2rem;" onclick="copyQAToClipboard()">
                             Copy to Clipboard
                         </button>
                     </div>
@@ -1640,7 +1832,6 @@
                 try {
                     result = JSON.parse(responseText);
                 } catch (parseErr) {
-                    // Server returned non-JSON (e.g. Render 502 HTML page on timeout)
                     alert('Server error (HTTP ' + response.status + '). The request may have timed out. Please try again.');
                     btn.innerHTML = 'Send Email Now';
                     btn.disabled = false;
@@ -1650,9 +1841,9 @@
                 if (result.success) {
                     alert('Email sent: ' + result.message);
                     btn.innerHTML = 'Email Sent';
-                    btn.style.background = 'rgba(255,255,255,0.06)';
-                    btn.style.color = '#ffffff';
-                    btn.style.borderColor = 'var(--color-border)';
+                    btn.style.background = 'var(--md-sys-color-surface-container-high)';
+                    btn.style.color = 'var(--md-sys-color-on-surface)';
+                    btn.style.borderColor = 'var(--md-sys-color-outline-variant)';
                     fetchTrackerBadge();
                 } else {
                     alert('Failed: ' + result.message);
@@ -1666,14 +1857,12 @@
             }
         }
 
-
         async function triggerAutoFill() {
             if (!currentPayload) return;
             const btn = document.getElementById('btn-autofill');
             btn.innerHTML = '<div class="spinner"></div> Inspecting DOM & Launching Playwright...';
             btn.disabled = true;
 
-            // Remove any previous status message
             const oldStatus = document.getElementById('autofill-status');
             if (oldStatus) oldStatus.remove();
 
@@ -1687,36 +1876,33 @@
                 const result = await response.json();
                 const statusDiv = document.createElement('div');
                 statusDiv.id = 'autofill-status';
-                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5;';
+                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: var(--md-sys-shape-corner-small); font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5;';
 
                 if (result.success) {
-                    statusDiv.style.background = 'rgba(34, 197, 94, 0.1)';
-                    statusDiv.style.border = '1px solid rgba(34, 197, 94, 0.3)';
-                    statusDiv.style.color = '#4ade80';
-                    statusDiv.innerHTML = '<strong>Browser launched.</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    statusDiv.style.background = 'var(--md-sys-color-tertiary-container)';
+                    statusDiv.style.border = '1px solid var(--md-sys-color-tertiary)';
+                    statusDiv.style.color = 'var(--md-sys-color-on-tertiary-container)';
+                    statusDiv.innerHTML = '<strong>Browser launched.</strong> ' + escapeHtml(result.message);
                     btn.innerHTML = 'Browser Opened — Review & Submit';
-                    btn.style.background = 'rgba(255,255,255,0.06)';
-                    btn.style.color = '#ffffff';
-                    btn.style.borderColor = 'var(--color-border)';
+                    btn.style.background = 'var(--md-sys-color-surface-container-high)';
+                    btn.style.color = 'var(--md-sys-color-on-surface)';
+                    btn.style.borderColor = 'var(--md-sys-color-outline-variant)';
                     fetchTrackerBadge();
                 } else {
-                    statusDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-                    statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                    statusDiv.style.color = '#f87171';
-                    statusDiv.innerHTML = '<strong>Failed:</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    statusDiv.style.background = 'var(--md-sys-color-error-container)';
+                    statusDiv.style.border = '1px solid var(--md-sys-color-error)';
+                    statusDiv.style.color = 'var(--md-sys-color-error)';
+                    statusDiv.innerHTML = '<strong>Failed:</strong> ' + escapeHtml(result.message);
                     btn.innerHTML = 'Retry Auto-Fill';
                     btn.disabled = false;
-                    btn.style.background = '#ffffff';
-                    btn.style.color = '#000';
-                    btn.style.borderColor = '#ffffff';
                 }
 
                 btn.parentElement.appendChild(statusDiv);
             } catch (err) {
                 const statusDiv = document.createElement('div');
                 statusDiv.id = 'autofill-status';
-                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;';
-                statusDiv.innerHTML = '<strong>Network error:</strong> ' + String(err).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: var(--md-sys-shape-corner-small); font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5; background: var(--md-sys-color-error-container); border: 1px solid var(--md-sys-color-error); color: var(--md-sys-color-error);';
+                statusDiv.innerHTML = '<strong>Network error:</strong> ' + escapeHtml(String(err));
                 btn.parentElement.appendChild(statusDiv);
                 btn.innerHTML = 'Retry Auto-Fill';
                 btn.disabled = false;
@@ -1729,9 +1915,9 @@
             if (data.error) {
                 document.getElementById('eligibility-badge').innerHTML = '';
                 container.innerHTML = `
-                    <div style="background: var(--color-error-container); border: 1px solid var(--color-error); border-radius: var(--radius-md); padding: 1.25rem; color: #ffffff;">
-                        <strong style="color: var(--color-error); font-size: 0.95rem;">Unable to Process Referral Message</strong>
-                        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-secondary);">${escapeHtml(data.error)}</p>
+                    <div style="background: var(--md-sys-color-error-container); border: 1px solid var(--md-sys-color-error); border-radius: var(--md-sys-shape-corner-medium); padding: 1.25rem; color: var(--md-sys-color-on-surface);">
+                        <strong style="color: var(--md-sys-color-error); font-size: 0.95rem;">Unable to Process Referral Message</strong>
+                        <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant);">${escapeHtml(data.error)}</p>
                     </div>
                 `;
                 return;
@@ -1744,7 +1930,6 @@
                 raw_text: job.raw_text || ''
             };
 
-            // Auto-fill Q&A Assistant fields right away!
             syncFromActiveJob();
 
             const action = data.action_result;
@@ -1765,30 +1950,30 @@
                 actionContentHtml = `
                     <div class="action-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.25rem;">
-                            <strong style="color: #ffffff; font-size: 0.9rem;">Recruiter Email Proposal</strong>
-                            <span style="font-size: 0.78rem; color: var(--color-text-secondary);">${escapeHtml(currentPayload.to_email)}</span>
+                            <strong style="color: var(--md-sys-color-on-surface); font-size: 0.9rem;">Recruiter Email Proposal</strong>
+                            <span style="font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant);">${escapeHtml(currentPayload.to_email)}</span>
                         </div>
-                        <div style="font-weight: 500; font-size: 0.82rem; color: var(--color-text-secondary);">Subject: <span style="color:#ffffff;">${escapeHtml(currentPayload.subject)}</span></div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: var(--radius-md); font-size: 0.82rem; white-space: pre-line; border: 1px solid var(--color-border); max-height: 180px; overflow-y: auto; color: #cbd5e1; font-family:'JetBrains Mono', monospace; line-height:1.5;">
+                        <div style="font-weight: 500; font-size: 0.82rem; color: var(--md-sys-color-on-surface-variant);">Subject: <span style="color: var(--md-sys-color-on-surface);">${escapeHtml(currentPayload.subject)}</span></div>
+                        <div style="background: var(--md-sys-color-surface-container-high); padding: 1rem; border-radius: var(--md-sys-shape-corner-medium); font-size: 0.82rem; white-space: pre-line; border: 1px solid var(--md-sys-color-outline-variant); max-height: 180px; overflow-y: auto; color: var(--md-sys-color-on-surface); font-family: 'JetBrains Mono', monospace; line-height:1.5;">
                             ${escapeHtml(currentPayload.body)}
                         </div>
-                        <div style="background: rgba(255, 255, 255, 0.01); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.65rem 0.85rem; font-size: 0.78rem; color: var(--color-text-secondary); line-height: 1.5;">
+                        <div style="background: var(--md-sys-color-surface-container-low); border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-medium); padding: 0.65rem 0.85rem; font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant); line-height: 1.5;">
                             <strong>Note:</strong> Web browsers prevent external URLs from pre-attaching local files. Click <strong>Send Email</strong> to automatically attach & send the tailored PDF resume via Gmail SMTP.
                         </div>
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
+                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: var(--md-sys-color-outline); color: var(--md-sys-color-on-surface);">
                                     Download Tailored Resume
                                 </a>
-                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
+                                <button class="btn-sample" style="background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); border-color: var(--md-sys-color-outline-variant);" onclick="quickFillQA()">
                                     Ask Custom Qs
                                 </button>
                             </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <a href="${escapeHtml(currentPayload.gmail_compose_url)}" target="_blank" class="btn-sample" style="background: rgba(255, 255, 255, 0.04); border-color: var(--color-border); color: #fff;">
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="${escapeHtml(currentPayload.gmail_compose_url)}" target="_blank" class="btn-sample" style="background: var(--md-sys-color-surface-container-high); border-color: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface);">
                                     Compose in Gmail Web
                                 </a>
-                                <button id="btn-send-email" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.1rem; border-color: #ffffff;" onclick="triggerSendEmail()">
+                                <button id="btn-send-email" class="btn-primary" style="padding: 0.55rem 1.1rem;" onclick="triggerSendEmail()">
                                     Send Email Now
                                 </button>
                             </div>
@@ -1802,8 +1987,8 @@
                 actionContentHtml = `
                     <div class="action-box">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong style="color: #ffffff; font-size: 0.9rem;">Web Form Auto-Fill Mapping</strong>
-                            <span style="font-size: 0.78rem; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">${escapeHtml(currentPayload.apply_url)}</span>
+                            <strong style="color: var(--md-sys-color-on-surface); font-size: 0.9rem;">Web Form Auto-Fill Mapping</strong>
+                            <span style="font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">${escapeHtml(currentPayload.apply_url)}</span>
                         </div>
                         
                         <table class="profile-table">
@@ -1817,14 +2002,14 @@
 
                         <div style="display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: #ffffff; color: #ffffff;">
+                                <a href="${pdfDownloadUrl}" target="_blank" class="btn-sample" style="border-color: var(--md-sys-color-outline); color: var(--md-sys-color-on-surface);">
                                     Download Tailored Resume
                                 </a>
-                                <button class="btn-sample" style="background: rgba(255, 255, 255, 0.05); color: #8e8e9f; border-color: var(--color-border);" onclick="quickFillQA()">
+                                <button class="btn-sample" style="background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); border-color: var(--md-sys-color-outline-variant);" onclick="quickFillQA()">
                                     Ask Custom Qs
                                 </button>
                             </div>
-                            <button id="btn-autofill" class="btn-sample" style="background: #ffffff; color: #000; font-weight: 700; padding: 0.55rem 1.1rem; border-color: #ffffff;" onclick="triggerAutoFill()">
+                            <button id="btn-autofill" class="btn-primary" style="padding: 0.55rem 1.1rem;" onclick="triggerAutoFill()">
                                 Auto-Fill Form
                             </button>
                         </div>
@@ -1857,9 +2042,9 @@
                         <span class="ats-score-text">${data.ats_score}%</span>
                     </div>
                     <div>
-                        <div style="font-weight: 600; font-size: 0.92rem; color: #ffffff; letter-spacing:0.02em;">ATS Optimization Score</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.25rem; line-height:1.4;">
-                            Target keywords integrated: <span style="color: #ffffff; font-weight:600;">${escapeHtml((data.found_keywords || []).join(', '))}</span>
+                        <div style="font-weight: 600; font-size: 0.92rem; color: var(--md-sys-color-on-surface); letter-spacing:0.02em;">ATS Optimization Score</div>
+                        <div style="font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); margin-top: 0.25rem; line-height:1.4;">
+                            Target keywords integrated: <span style="color: var(--md-sys-color-on-surface); font-weight:600;">${escapeHtml((data.found_keywords || []).join(', '))}</span>
                         </div>
                     </div>
                 </div>
@@ -1891,7 +2076,7 @@
                 computeMetrics(trackerEntries);
                 renderTrackerTable();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color: var(--color-error);">Failed to fetch tracker logs: ${escapeHtml(e)}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color: var(--md-sys-color-error);">Failed to fetch tracker logs: ${escapeHtml(e)}</td></tr>`;
             }
         }
 
@@ -1941,19 +2126,19 @@
                 const tr = document.createElement('tr');
 
                 const modeBadgeHtml = entry.apply_mode === 'EMAIL' 
-                    ? '<span class="chip-badge" style="background:rgba(59,130,246,0.15); color:#93c5fd; border-color:rgba(59,130,246,0.3);">Email</span>'
+                    ? '<span class="chip-badge" style="background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); border-color:var(--md-sys-color-outline-variant);">Email</span>'
                     : (entry.apply_mode === 'WEB_FORM' 
-                        ? '<span class="chip-badge" style="background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.3);">Web Form</span>'
-                        : '<span class="chip-badge" style="background:rgba(255,255,255,0.06); color:#cbd5e1;">Manual</span>');
+                        ? '<span class="chip-badge" style="background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); border-color:var(--md-sys-color-outline-variant);">Web Form</span>'
+                        : '<span class="chip-badge" style="background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface-variant); border-color:var(--md-sys-color-outline-variant);">Manual</span>');
 
                 const scoreVal = Number(entry.ats_score) || 0;
-                let atsBadgeColor = '#86efac'; // Green
-                if (scoreVal < 60) atsBadgeColor = '#fca5a5';
-                else if (scoreVal < 80) atsBadgeColor = '#fde047';
+                let atsBadgeColor = 'var(--md-sys-color-tertiary)';
+                if (scoreVal < 60) atsBadgeColor = 'var(--md-sys-color-error)';
+                else if (scoreVal < 80) atsBadgeColor = 'var(--md-custom-color-warning)';
 
                 const pdfLink = entry.pdf_filename 
                     ? `<a href="/outputs/${encodeURIComponent(entry.pdf_filename)}" target="_blank" class="btn-icon">View PDF</a>`
-                    : `<span style="color:var(--color-text-muted); font-size:0.78rem;">No PDF</span>`;
+                    : `<span style="color:var(--md-sys-color-on-surface-variant); font-size:0.78rem;">No PDF</span>`;
 
                 tr.innerHTML = `
                     <td>
@@ -1961,15 +2146,15 @@
                         <div class="role-title">${escapeHtml(entry.role)}</div>
                     </td>
                     <td>
-                        <div style="font-size:0.85rem; color:#fff;">${escapeHtml(entry.location || '—')}</div>
-                        <div style="font-size:0.75rem; color:var(--color-text-secondary);">${escapeHtml(entry.salary || '')}</div>
+                        <div style="font-size:0.85rem; color:var(--md-sys-color-on-surface);">${escapeHtml(entry.location || '—')}</div>
+                        <div style="font-size:0.75rem; color:var(--md-sys-color-on-surface-variant);">${escapeHtml(entry.salary || '')}</div>
                     </td>
-                    <td style="font-size:0.8rem; color:var(--color-text-secondary); font-family:'JetBrains Mono', monospace;">
+                    <td style="font-size:0.8rem; color:var(--md-sys-color-on-surface-variant); font-family:'JetBrains Mono', monospace;">
                         ${escapeHtml(entry.applied_at)}
                     </td>
                     <td>${modeBadgeHtml}</td>
                     <td>
-                        <span class="chip-badge" style="background:rgba(255,255,255,0.04); color:${atsBadgeColor}; border-color:rgba(255,255,255,0.1); font-family:'JetBrains Mono', monospace;">
+                        <span class="chip-badge" style="background:var(--md-sys-color-surface-container-high); color:${atsBadgeColor}; border-color:var(--md-sys-color-outline-variant); font-family:'JetBrains Mono', monospace;">
                             ${scoreVal}%
                         </span>
                     </td>
@@ -2305,17 +2490,17 @@
 
                     const actions = document.createElement('div');
                     actions.className = 'tg-job-actions';
-                    actions.addEventListener('click', (e) => e.stopPropagation()); // prevent expansion on button clicks
+                    actions.addEventListener('click', (e) => e.stopPropagation());
 
                     if (item.status === 'auto_sent') {
                         const sentBadge = document.createElement('span');
-                        sentBadge.style.cssText = 'background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
+                        sentBadge.style.cssText = 'background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); border: 1px solid var(--md-sys-color-tertiary); padding: 0.4rem 0.8rem; border-radius: var(--md-sys-shape-corner-full); font-size: 0.78rem; font-weight: 600;';
                         sentBadge.textContent = 'Sent';
                         sentBadge.title = item.status_msg || 'Email sent automatically';
                         actions.appendChild(sentBadge);
                     } else if (item.status === 'error') {
                         const errBadge = document.createElement('span');
-                        errBadge.style.cssText = 'background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); padding: 0.4rem 0.8rem; border-radius: 6rem; font-size: 0.78rem; font-weight: 600;';
+                        errBadge.style.cssText = 'background: var(--md-sys-color-error-container); color: var(--md-sys-color-error); border: 1px solid var(--md-sys-color-error); padding: 0.4rem 0.8rem; border-radius: var(--md-sys-shape-corner-full); font-size: 0.78rem; font-weight: 600;';
                         errBadge.textContent = 'Send Failed';
                         errBadge.title = item.status_msg || 'Failed to auto-send email';
                         actions.appendChild(errBadge);
@@ -2357,13 +2542,13 @@
                     detailsContainer.style.width = '100%';
                     detailsContainer.style.marginTop = '1rem';
                     detailsContainer.style.paddingTop = '1rem';
-                    detailsContainer.style.borderTop = '1px solid var(--color-border)';
+                    detailsContainer.style.borderTop = '1px solid var(--md-sys-color-outline-variant)';
 
                     const reqsList = (item.requirements || []).map(r => `<li>${escapeHtml(r)}</li>`).join('');
                     const targetLink = item.apply_target 
                         ? (item.apply_mode === 'EMAIL' 
-                            ? `<a href="mailto:${escapeHtml(item.apply_target)}" style="color: #93c5fd; text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`
-                            : `<a href="${escapeHtml(item.apply_target)}" target="_blank" rel="noopener noreferrer" style="color: #c084fc; text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`)
+                            ? `<a href="mailto:${escapeHtml(item.apply_target)}" style="color: var(--md-sys-color-primary); text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`
+                            : `<a href="${escapeHtml(item.apply_target)}" target="_blank" rel="noopener noreferrer" style="color: var(--md-sys-color-secondary); text-decoration: underline;" onclick="event.stopPropagation()">${escapeHtml(item.apply_target)}</a>`)
                         : 'Not Specified';
 
                     detailsContainer.innerHTML = `
@@ -2394,16 +2579,16 @@
                             </div>
 
                             ${reqsList ? `
-                            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.85rem;">
+                            <div style="background: var(--md-sys-color-surface-container-lowest); border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-medium); padding: 0.85rem;">
                                 <div class="info-label" style="margin-bottom: 0.4rem;">Key Requirements & Scope</div>
-                                <ul style="padding-left: 1.2rem; font-size: 0.8rem; color: var(--color-text-secondary); line-height: 1.5;">
+                                <ul style="padding-left: 1.2rem; font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); line-height: 1.5;">
                                     ${reqsList}
                                 </ul>
                             </div>
                             ` : ''}
                         </div>
 
-                        <div id="panel-raw-${item.id}" style="display: none; background: rgba(0,0,0,0.4); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: pre-wrap; color: var(--color-text-secondary);">
+                        <div id="panel-raw-${item.id}" style="display: none; background: var(--md-sys-color-surface-container-lowest); border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-corner-medium); padding: 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: pre-wrap; color: var(--md-sys-color-on-surface-variant);">
                             ${escapeHtml(item.raw_text || 'No raw message text.')}
                         </div>
                     `;
@@ -2415,7 +2600,7 @@
                         const isHidden = (detailsContainer.style.display === 'none');
                         detailsContainer.style.display = isHidden ? 'block' : 'none';
                         detailsToggleBtn.textContent = isHidden ? 'Hide Details' : 'View Details';
-                        card.style.borderColor = isHidden ? 'var(--color-border-hover)' : 'var(--color-border)';
+                        card.style.borderColor = isHidden ? 'var(--md-sys-color-outline)' : 'var(--md-sys-color-outline-variant)';
                     };
 
                     detailsToggleBtn.addEventListener('click', toggleFunc);
@@ -2481,7 +2666,6 @@
             btn.textContent = '...';
             try {
                 await fetch(endpoint, { method: 'POST' });
-                // Give it a moment to connect
                 setTimeout(() => {
                     tgRefreshStatus();
                     btn.disabled = false;
@@ -2493,8 +2677,6 @@
         }
 
         async function tgProcessItem(item) {
-            // Build a job_dict from the already-parsed queue item fields
-            // This ensures we process THIS specific job, not re-parse the whole message
             const jobDict = {
                 company: item.company || 'Unknown',
                 role: item.role || 'Unknown',
@@ -2509,7 +2691,6 @@
                 subject_line: item.subject_line || ''
             };
 
-            // Switch to Ingestion view and show loading state
             switchView('ingestion');
             const btnText = document.getElementById('btn-text');
             btnText.innerHTML = '<div class="spinner"></div> Processing...';
@@ -2536,7 +2717,6 @@
                 alert('Error processing job: ' + e.message);
             } finally {
                 btnText.innerText = 'Run Pipeline';
-                // Refresh telegram queue to reflect removal
                 tgLoadQueue();
             }
         }
