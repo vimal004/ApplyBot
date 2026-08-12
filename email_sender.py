@@ -110,12 +110,15 @@ class HREmailSender:
                 import urllib.request
                 import json
                 
-                # Resend requires onboarding sender domain or 'onboarding@resend.dev' for test domain
-                from_address = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+                # Sender Display Name and Reply-To configured so HR sees and replies to 2004.vimal@gmail.com
+                sender_name = config.profile.full_name or "Vimal Manoharan"
+                from_address = os.environ.get("RESEND_FROM_EMAIL", f"{sender_name} <onboarding@resend.dev>")
+                reply_to_email = sender_email or "2004.vimal@gmail.com"
                 
                 payload = {
                     "from": from_address,
                     "to": [primary],
+                    "reply_to": reply_to_email,
                     "subject": email_payload['subject'],
                     "text": email_payload['body']
                 }
