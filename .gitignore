@@ -28,6 +28,7 @@ outputs/
 
 # Telegram sessions & auth tokens
 *.session*
+!telegram_session.session
 
 # macOS & IDE generated files
 .DS_Store
