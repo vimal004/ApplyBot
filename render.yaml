@@ -19,3 +19,5 @@ services:
         value: "587"
       - key: AUTO_SEND_EMAIL
         value: "true"
+      - key: RESEND_API_KEY
+        sync: false

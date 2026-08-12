@@ -79,11 +79,9 @@ class HREmailSender:
 
     @staticmethod
     def send_email(email_payload: Dict[str, Any]) -> Tuple[bool, str]:
+        resend_api_key = os.environ.get("RESEND_API_KEY", "")
         sender_email = config.email.sender_email
         app_password = config.email.app_password
-
-        if not app_password:
-            return False, "Gmail App Password not configured in GMAIL_APP_PASSWORD env var. Use the Gmail Preview button to send manually."
 
         # Extract all valid email addresses from potentially messy LLM output
         to_email_raw = email_payload.get('to_email', '')
@@ -93,6 +91,57 @@ class HREmailSender:
 
         primary   = recipients[0]
         cc_list   = recipients[1:]   # any extras go to CC
+
+        pdf_path = email_payload.get('pdf_path')
+        attachments = []
+        if pdf_path and os.path.exists(pdf_path):
+            import base64
+            with open(pdf_path, 'rb') as f:
+                pdf_bytes = f.read()
+                pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+                attachments.append({
+                    "filename": os.path.basename(pdf_path),
+                    "content": pdf_b64
+                })
+
+        # Method 1: Try Resend REST API (HTTPS port 443 — 100% unblocked on Render)
+        if resend_api_key:
+            try:
+                import urllib.request
+                import json
+                
+                # Resend requires onboarding sender domain or 'onboarding@resend.dev' for test domain
+                from_address = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+                
+                payload = {
+                    "from": from_address,
+                    "to": [primary],
+                    "subject": email_payload['subject'],
+                    "text": email_payload['body']
+                }
+                if cc_list:
+                    payload["cc"] = cc_list
+                if attachments:
+                    payload["attachments"] = attachments
+
+                req = urllib.request.Request(
+                    "https://api.resend.com/emails",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {resend_api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    if resp.status in (200, 201):
+                        return True, f"✅ Email sent via Resend API to {primary}!"
+            except Exception as resend_err:
+                print(f"[EmailSender] Resend API error: {resend_err}. Retrying with direct SMTP...")
+
+        # Method 2: Fallback to direct Gmail SMTP (if app_password configured)
+        if not app_password:
+            return False, "Neither RESEND_API_KEY nor GMAIL_APP_PASSWORD is valid. Set RESEND_API_KEY in Render environment."
 
         try:
             msg = MIMEMultipart()
@@ -104,23 +153,19 @@ class HREmailSender:
 
             msg.attach(MIMEText(email_payload['body'], 'plain'))
 
-            pdf_path = email_payload.get('pdf_path')
             if pdf_path and os.path.exists(pdf_path):
                 with open(pdf_path, 'rb') as f:
                     part = MIMEApplication(f.read(), Name=os.path.basename(pdf_path))
                     part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
                     msg.attach(part)
 
-            all_recipients = [primary] + cc_list   # SMTP envelope must include CC addresses
-            
+            all_recipients = [primary] + cc_list
             import socket
             socket.setdefaulttimeout(20.0)
 
-            # On cloud hosts like Render, port 465 (SMTP_SSL) is much more reliable than port 587 (STARTTLS)
             sent_ok = False
             last_err = None
 
-            # Attempt 1: Port 465 (SMTP_SSL) - Preferred on Render
             try:
                 with smtplib.SMTP_SSL(config.email.smtp_server, 465, timeout=20) as server:
                     server.login(sender_email, app_password)
@@ -130,7 +175,6 @@ class HREmailSender:
                 last_err = err1
                 print(f"[EmailSender] Port 465 SSL failed ({err1}). Retrying with Port 587 STARTTLS...")
 
-            # Attempt 2: Port 587 (STARTTLS)
             if not sent_ok:
                 try:
                     with smtplib.SMTP(config.email.smtp_server, config.email.smtp_port, timeout=20) as server:
@@ -139,10 +183,11 @@ class HREmailSender:
                         server.sendmail(sender_email, all_recipients, msg.as_string())
                         sent_ok = True
                 except Exception as err2:
-                    return False, f"SMTP send failed: Port 465 error ({last_err}), Port 587 error ({err2})"
+                    return False, f"Email sending failed via Resend and SMTP: ({last_err}), ({err2})"
 
             if cc_list:
                 return True, f"✅ Email sent to {primary} (CC: {', '.join(cc_list)})!"
             return True, f"✅ Email sent to {primary}!"
         except Exception as e:
             return False, f"Failed to send email: {e}"
+
