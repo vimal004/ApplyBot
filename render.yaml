@@ -17,3 +17,5 @@ services:
         value: smtp.gmail.com
       - key: SMTP_PORT
         value: "587"
+      - key: AUTO_SEND_EMAIL
+        value: "true"

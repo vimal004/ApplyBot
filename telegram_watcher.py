@@ -175,13 +175,16 @@ class TelegramWatcher:
 
     @staticmethod
     def _load_settings() -> Dict[str, Any]:
+        env_auto_send = os.environ.get("AUTO_SEND_EMAIL", "true").lower() in ("true", "1", "yes")
         if os.path.exists(SETTINGS_PATH):
             try:
                 with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    if "auto_send_email" in data:
+                        return data
             except Exception:
                 pass
-        return {"auto_send_email": True}
+        return {"auto_send_email": env_auto_send}
 
     def set_auto_send_email(self, value: bool):
         self.auto_send_email = value
