@@ -525,17 +525,23 @@ class TelegramWatcher:
             return True
 
         def _run():
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
-            try:
-                self._loop.run_until_complete(self._start_listener())
-            except Exception as e:
-                print(f"[Telegram] Listener thread error: {e}")
-                self._status_message = f"Listener error: {e}"
-                self._running = False
-                self._connected = False
-            finally:
-                self._loop.close()
+            while True:
+                self._loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(self._loop)
+                try:
+                    self._loop.run_until_complete(self._start_listener())
+                except Exception as e:
+                    print(f"[Telegram Watcher] Connection dropped ({e}). Auto-reconnecting in 10s...")
+                    self._status_message = f"Reconnecting after error: {e}"
+                    self._running = False
+                    self._connected = False
+                finally:
+                    try:
+                        self._loop.close()
+                    except Exception:
+                        pass
+                # Backoff delay before auto-reconnecting
+                time.sleep(10)
 
         self._thread = threading.Thread(target=_run, daemon=True, name="TelegramWatcher")
         self._thread.start()
