@@ -1,8 +1,12 @@
 import os
+import sys
 import json
 import datetime
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Ensure python output logs are flushed immediately for Render / cloud logs
+sys.stdout.reconfigure(line_buffering=True)
 from telegram_bot import ApplyBotPipeline
 from email_sender import HREmailSender
 from config import config
@@ -381,6 +385,7 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(res_payload)
             except Exception as e:
+                print(f"[ApplyBot API Error] /api/telegram/fetch failed: {e}")
                 err = json.dumps({"success": False, "message": str(e)}).encode("utf-8")
                 self.send_response(500)
                 self.send_header("Content-Type", "application/json")

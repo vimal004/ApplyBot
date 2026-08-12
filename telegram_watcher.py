@@ -381,7 +381,8 @@ class TelegramWatcher:
     async def _async_fetch(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Fetch recent messages from the configured group."""
         if not self._client or not self._client.is_connected():
-            raise RuntimeError("Telegram client is not connected")
+            print("[Telegram] Error: Client not connected during fetch.")
+            return []
 
         group_id = self._resolve_group_id()
         checkpoint = self._load_checkpoint()
@@ -391,39 +392,27 @@ class TelegramWatcher:
         max_id_seen = last_msg_id
 
         try:
-            # Resolve the group entity
             entity = await self._client.get_entity(group_id)
-
-            # Fetch messages newer than our checkpoint
             async for message in self._client.iter_messages(
                 entity, limit=limit, min_id=last_msg_id
             ):
                 if message.id > max_id_seen:
                     max_id_seen = message.id
-
-                if not message.text:
+                if not message.text or not self._is_job_posting(message.text):
                     continue
-
-                if not self._is_job_posting(message.text):
-                    continue
-
-                entries = self._process_message(
-                    message.text, message.id, message.date
-                )
+                entries = self._process_message(message.text, message.id, message.date)
                 if entries:
                     results.extend(entries)
 
-            # Update checkpoint
             if max_id_seen > last_msg_id:
                 self._save_checkpoint(max_id_seen)
-
+            self._status_message = f"Successfully fetched {len(results)} jobs."
+            return results
         except Exception as e:
-            print(f"[Telegram] Fetch error: {e}")
-            self._status_message = f"Fetch error: {e}"
-            raise
-
-        self._status_message = f"Fetched {len(results)} new job postings"
-        return results
+            error_msg = f"Fetch failed: {str(e)}"
+            print(f"[Telegram] {error_msg}")
+            self._status_message = error_msg
+            return []
 
     def fetch_messages(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Synchronous wrapper for fetching messages."""
@@ -434,12 +423,14 @@ class TelegramWatcher:
             future = asyncio.run_coroutine_threadsafe(
                 self._async_fetch(limit), self._loop
             )
-            return future.result(timeout=30)
+            try:
+                return future.result(timeout=30)
+            except Exception as e:
+                print(f"[Telegram] Error in threadsafe fetch: {e}")
+                return []
         else:
-            # Create a temporary event loop
             loop = asyncio.new_event_loop()
             try:
-                # Connect first if needed
                 if not self._client or not self._client.is_connected():
                     self._client = TelegramClient(
                         self._session_path,
