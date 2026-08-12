@@ -42,15 +42,15 @@ class LLMManager:
                 keys.append(cleaned)
         return keys
 
-    def _is_key_available(self, key_id: str) -> bool:
-        cooldown_until = self._key_cooldowns.get(key_id, 0)
+    def _is_key_available(self, route_id: str) -> bool:
+        cooldown_until = self._key_cooldowns.get(route_id, 0)
         if time.time() < cooldown_until:
             return False
         return True
 
-    def _mark_key_cooldown(self, key_id: str, duration_sec: float = 60.0):
-        print(f"[{key_id} Circuit Breaker] Rate limited / unavailable. Cooling down for {int(duration_sec)}s.")
-        self._key_cooldowns[key_id] = time.time() + duration_sec
+    def _mark_key_cooldown(self, route_id: str, duration_sec: float = 60.0):
+        print(f"[{route_id} Circuit Breaker] Rate limited / unavailable. Cooling down for {int(duration_sec)}s.")
+        self._key_cooldowns[route_id] = time.time() + duration_sec
 
     def get_task_routes(self, task: TaskType) -> List[Dict[str, Any]]:
         """
@@ -77,25 +77,27 @@ class LLMManager:
                 candidates.append({"provider": "OpenRouter", "key_id": f"OpenRouter-{idx+1}", "key": key, "model": "openrouter/free", "endpoint": "https://openrouter.ai/api/v1/chat/completions"})
 
         elif task in (TaskType.RESUME_TAILORING, TaskType.FORM_FILLING):
-            # High context / multi-token requests -> Gemini 3.6 Flash (1M TPM limit) primary
+            # High context / multi-token requests -> Gemini & Groq multi-tier
             for idx, key in enumerate(gemini_keys):
-                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.6-flash"})
+                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-1.5-flash"})
+                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-2.5-flash"})
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash"})
-            for idx, key in enumerate(cerebras_keys):
-                candidates.append({"provider": "Cerebras", "key_id": f"Cerebras-{idx+1}", "key": key, "model": "llama-3.3-70b", "endpoint": "https://api.cerebras.ai/v1/chat/completions"})
+                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.6-flash"})
             for idx, key in enumerate(groq_keys):
                 candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.3-70b-versatile", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
                 candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.1-8b-instant", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
+            for idx, key in enumerate(cerebras_keys):
+                candidates.append({"provider": "Cerebras", "key_id": f"Cerebras-{idx+1}", "key": key, "model": "llama-3.3-70b", "endpoint": "https://api.cerebras.ai/v1/chat/completions"})
             for idx, key in enumerate(openrouter_keys):
                 candidates.append({"provider": "OpenRouter", "key_id": f"OpenRouter-{idx+1}", "key": key, "model": "openrouter/free", "endpoint": "https://openrouter.ai/api/v1/chat/completions"})
-                candidates.append({"provider": "OpenRouter", "key_id": f"OpenRouter-{idx+1}", "key": key, "model": "meta-llama/llama-3.3-70b-instruct:free", "endpoint": "https://openrouter.ai/api/v1/chat/completions"})
 
         elif task == TaskType.EMAIL_GENERATION:
             # Human-like writing quality
             for idx, key in enumerate(groq_keys):
                 candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.3-70b-versatile", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
             for idx, key in enumerate(gemini_keys):
-                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.6-flash"})
+                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-1.5-flash"})
+                candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash"})
             for idx, key in enumerate(cerebras_keys):
                 candidates.append({"provider": "Cerebras", "key_id": f"Cerebras-{idx+1}", "key": key, "model": "llama-3.3-70b", "endpoint": "https://api.cerebras.ai/v1/chat/completions"})
             for idx, key in enumerate(openrouter_keys):
@@ -122,8 +124,9 @@ class LLMManager:
             key_id = route["key_id"]
             api_key = route["key"]
             model = route["model"]
+            route_id = f"{key_id}:{model}"
 
-            if not self._is_key_available(key_id):
+            if not self._is_key_available(route_id):
                 continue
 
             try:
@@ -186,12 +189,13 @@ class LLMManager:
                 err_body = e.read().decode("utf-8") if e.fp else str(e)
                 print(f"[{key_id} AI Note] HTTP {e.code} on model '{model}': {err_body[:120]}")
                 if e.code in (429, 503):
-                    self._mark_key_cooldown(key_id, duration_sec=60.0)
-                time.sleep(0.5)
+                    self._mark_key_cooldown(route_id, duration_sec=60.0)
+                time.sleep(0.3)
 
             except Exception as e:
                 print(f"[{key_id} AI Note] Model '{model}' error: {e}")
-                time.sleep(0.5)
+                time.sleep(0.3)
+
 
         print(f"[LLMManager Warning] All configured providers & keys rate-limited/unfulfilled for task {task.name}.")
         return None

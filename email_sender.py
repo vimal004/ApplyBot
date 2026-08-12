@@ -113,17 +113,33 @@ class HREmailSender:
 
             all_recipients = [primary] + cc_list   # SMTP envelope must include CC addresses
             
-            # Try SMTP STARTTLS (port 587) first; fallback to SMTP_SSL (port 465) if network issue occurs
+            import socket
+            socket.setdefaulttimeout(20.0)
+
+            # On cloud hosts like Render, port 465 (SMTP_SSL) is much more reliable than port 587 (STARTTLS)
+            sent_ok = False
+            last_err = None
+
+            # Attempt 1: Port 465 (SMTP_SSL) - Preferred on Render
             try:
-                with smtplib.SMTP(config.email.smtp_server, config.email.smtp_port, timeout=15) as server:
-                    server.starttls()
+                with smtplib.SMTP_SSL(config.email.smtp_server, 465, timeout=20) as server:
                     server.login(sender_email, app_password)
                     server.sendmail(sender_email, all_recipients, msg.as_string())
+                    sent_ok = True
             except Exception as err1:
-                print(f"[EmailSender] Port 587 failed ({err1}). Retrying with SMTP_SSL on port 465...")
-                with smtplib.SMTP_SSL(config.email.smtp_server, 465, timeout=15) as server:
-                    server.login(sender_email, app_password)
-                    server.sendmail(sender_email, all_recipients, msg.as_string())
+                last_err = err1
+                print(f"[EmailSender] Port 465 SSL failed ({err1}). Retrying with Port 587 STARTTLS...")
+
+            # Attempt 2: Port 587 (STARTTLS)
+            if not sent_ok:
+                try:
+                    with smtplib.SMTP(config.email.smtp_server, config.email.smtp_port, timeout=20) as server:
+                        server.starttls()
+                        server.login(sender_email, app_password)
+                        server.sendmail(sender_email, all_recipients, msg.as_string())
+                        sent_ok = True
+                except Exception as err2:
+                    return False, f"SMTP send failed: Port 465 error ({last_err}), Port 587 error ({err2})"
 
             if cc_list:
                 return True, f"✅ Email sent to {primary} (CC: {', '.join(cc_list)})!"
