@@ -1669,6 +1669,10 @@
             btn.innerHTML = '<div class="spinner"></div> Inspecting DOM & Launching Playwright...';
             btn.disabled = true;
 
+            // Remove any previous status message
+            const oldStatus = document.getElementById('autofill-status');
+            if (oldStatus) oldStatus.remove();
+
             try {
                 const response = await fetch('/api/autofill_form', {
                     method: 'POST',
@@ -1677,15 +1681,40 @@
                 });
 
                 const result = await response.json();
-                alert('⚡ ' + result.message);
-                btn.innerHTML = 'Form Auto-Filled (Browser Opened)';
-                btn.style.background = 'rgba(255,255,255,0.06)';
-                btn.style.color = '#ffffff';
-                btn.style.borderColor = 'var(--color-border)';
-                fetchTrackerBadge();
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'autofill-status';
+                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5;';
+
+                if (result.success) {
+                    statusDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+                    statusDiv.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+                    statusDiv.style.color = '#4ade80';
+                    statusDiv.innerHTML = '✅ <strong>Browser launched!</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    btn.innerHTML = '✅ Browser Opened — Review & Submit';
+                    btn.style.background = 'rgba(255,255,255,0.06)';
+                    btn.style.color = '#ffffff';
+                    btn.style.borderColor = 'var(--color-border)';
+                    fetchTrackerBadge();
+                } else {
+                    statusDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                    statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    statusDiv.style.color = '#f87171';
+                    statusDiv.innerHTML = '❌ <strong>Failed:</strong> ' + result.message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    btn.innerHTML = 'Retry Launch Playwright Fill';
+                    btn.disabled = false;
+                    btn.style.background = '#ffffff';
+                    btn.style.color = '#000';
+                    btn.style.borderColor = '#ffffff';
+                }
+
+                btn.parentElement.appendChild(statusDiv);
             } catch (err) {
-                alert('Error launching auto-filler: ' + err);
-                btn.innerHTML = 'Launch Playwright & Auto-Fill Form';
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'autofill-status';
+                statusDiv.style.cssText = 'padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.82rem; margin-top: 0.5rem; line-height: 1.5; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;';
+                statusDiv.innerHTML = '❌ <strong>Network error:</strong> ' + String(err).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                btn.parentElement.appendChild(statusDiv);
+                btn.innerHTML = 'Retry Launch Playwright Fill';
                 btn.disabled = false;
             }
         }

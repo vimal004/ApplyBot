@@ -267,7 +267,7 @@ def inspect_and_generate_live_plan(page, job_data, profile):
         for w in getattr(config.profile, "work_experience", [])
     ])
 
-from llm_manager import llm_manager, TaskType
+    from llm_manager import llm_manager, TaskType
 
     # Compact profile summary
     system_prompt = (

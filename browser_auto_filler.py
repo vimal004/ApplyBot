@@ -63,9 +63,36 @@ class AutomatedBrowserFiller:
         plan_json_str = json.dumps(action_plan)
         profile_json_str = json.dumps(profile_dict)
         job_json_str = json.dumps(job_data or {})
-        subprocess.Popen([python_bin, runner_file, form_url, plan_json_str, pdf_path, profile_json_str, job_json_str])
 
-        return True, f"Launched Playwright browser with pre-filled form fields for {form_url}. Review the opened window and click Submit!", {
+        import time as _time
+
+        proc = subprocess.Popen(
+            [python_bin, runner_file, form_url, plan_json_str, pdf_path, profile_json_str, job_json_str],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE
+        )
+
+        # Wait briefly to confirm the process started and Chrome is launching
+        _time.sleep(5)
+        ret = proc.poll()
+        if ret is not None:
+            # Process already exited — something went wrong
+            stderr_out = ""
+            try:
+                stderr_out = proc.stderr.read().decode("utf-8", errors="replace")[-500:]
+            except Exception:
+                pass
+            stdout_out = ""
+            try:
+                stdout_out = proc.stdout.read().decode("utf-8", errors="replace")[-500:]
+            except Exception:
+                pass
+            err_detail = stderr_out or stdout_out or f"exit code {ret}"
+            print(f"[ApplyBot Auto-Filler] browser_fill_runner.py crashed: {err_detail}")
+            return False, f"Browser failed to launch (exit code {ret}): {err_detail}", {}
+
+        print(f"[ApplyBot Auto-Filler] Browser process started (PID {proc.pid}), Chrome should be visible.")
+        return True, f"Playwright browser launched and filling form at {form_url}. Check the opened Chrome window, review the fields, and click Submit!", {
             "dom_info": dom_info,
             "action_plan": action_plan
         }

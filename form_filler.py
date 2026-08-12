@@ -112,5 +112,5 @@ class JobFormAutoFiller:
         
         if form_url:
             return AutomatedBrowserFiller.process_and_fill_form(form_payload, form_payload, pdf_path)
-            
-        return True, f"Form profile mapped for {form_payload.get('company')}.", form_payload
+        
+        return False, f"No form URL found for {form_payload.get('company', 'this job')}. The job posting did not contain an application link — cannot launch browser auto-filler.", form_payload
