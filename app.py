@@ -72,9 +72,26 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_cors_headers()
         self.end_headers()
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", "15")
+        self.send_cors_headers()
+        self.end_headers()
+
     def do_GET(self):
         parsed_path = urllib.parse.urlparse(self.path)
         path = parsed_path.path
+
+        if path == "/health" or path == "/ping":
+            res_payload = b'{"status":"ok"}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+            return
 
         if path == "/" or path == "/index.html":
             html_path = os.path.join(os.path.dirname(__file__), "templates", "index.html")
@@ -597,7 +614,7 @@ def run_server():
             # Wait 60s after startup before first ping
             time.sleep(60)
             while True:
-                url = f"http://127.0.0.1:{PORT}/"
+                url = f"http://127.0.0.1:{PORT}/health"
                 try:
                     # On Render, ping external public URL so Render's ingress proxy detects activity.
                     # Localhost (127.0.0.1) pings bypass Render's proxy and do not reset Render's 15-min sleep timer.
@@ -606,7 +623,7 @@ def run_server():
                         external_url = "https://automailer-vimal.onrender.com"
 
                     if external_url:
-                        url = external_url.rstrip('/') + '/'
+                        url = external_url.rstrip('/') + '/health'
 
                     req = urllib.request.Request(url, headers={"User-Agent": "ApplyBot-KeepAlive/1.0"})
                     with urllib.request.urlopen(req, timeout=15) as resp:
