@@ -586,27 +586,36 @@ def run_server():
     else:
         print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
 
-    # Self-ping background thread: Pings localhost/server every 5 minutes to prevent Render free tier from sleeping
+    # Self-ping background thread: Pings public Render URL every 4 minutes to prevent Render free tier from sleeping
     def _keep_alive():
         import threading
         import time
         import urllib.request
+        import os
 
         def _ping_loop():
             # Wait 60s after startup before first ping
             time.sleep(60)
             while True:
+                url = f"http://127.0.0.1:{PORT}/"
                 try:
-                    # Ping self on internal PORT
-                    url = f"http://127.0.0.1:{PORT}/"
+                    # On Render, ping external public URL so Render's ingress proxy detects activity.
+                    # Localhost (127.0.0.1) pings bypass Render's proxy and do not reset Render's 15-min sleep timer.
+                    external_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("APP_URL")
+                    if not external_url and os.getenv("RENDER"):
+                        external_url = "https://automailer-vimal.onrender.com"
+
+                    if external_url:
+                        url = external_url.rstrip('/') + '/'
+
                     req = urllib.request.Request(url, headers={"User-Agent": "ApplyBot-KeepAlive/1.0"})
-                    with urllib.request.urlopen(req, timeout=10) as resp:
+                    with urllib.request.urlopen(req, timeout=15) as resp:
                         _ = resp.read()
-                        print(f"[KeepAlive] Self-ping successful at {datetime.datetime.now().strftime('%H:%M:%S')}")
+                        print(f"[KeepAlive] Self-ping successful to {url} at {datetime.datetime.now().strftime('%H:%M:%S')}")
                 except Exception as e:
-                    print(f"[KeepAlive Note] Self-ping status: {e}")
-                # Ping every 4.5 minutes (270 seconds) -> safely below Render's 15-minute sleep threshold
-                time.sleep(270)
+                    print(f"[KeepAlive Note] Self-ping status for {url}: {e}")
+                # Ping every 4 minutes (240 seconds) -> safely below Render's 15-minute sleep threshold
+                time.sleep(240)
 
         t = threading.Thread(target=_ping_loop, daemon=True, name="ApplyBotKeepAlive")
         t.start()
