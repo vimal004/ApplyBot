@@ -94,6 +94,12 @@ class CandidateProfile:
             "description": "Full-stack ERP system built for a traditional Siddha medicine clinic to automate patient registry, inventory tracking, and billing. Implements a multi-tenant database switcher middleware to cleanly isolate demo sandbox databases from production clinic data. Features HSN/GST-compliant invoice generation (PDF/DOCX exports), SOLID-compliant real-time inventory auto-deduction logic preventing race conditions during concurrent checkouts, role-based access control (RBAC), and JWT auth with secure HTTP-only cookies. Deployed in Docker containers managed behind Nginx."
         },
         {
+            "name": "Fleksa Technical Assignment",
+            "url": "https://github.com/vimal004/Fleksa-Assignment",
+            "tech": "Node.js, Express.js, TypeScript, LLM API Integration, Timezone Parsing Engine, REST APIs",
+            "description": "Production-grade backend scheduling and analytics engine. Handles complex multi-region timezone conversions, automated LLM text summaries and synthesis, intelligent time slot scheduling, and robust backend data flow management with zero race conditions."
+        },
+        {
             "name": "Intel Unnati AI Adaptive Quiz Game",
             "url": "https://github.com/vimal004/Intel-Unnati-Gen-AI-Project",
             "live_demo": "https://intel-unnati-game-frontend.vercel.app/",

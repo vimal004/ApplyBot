@@ -242,25 +242,37 @@ class ResumeTailorer:
         salutation = ResumeTailorer.infer_salutation(company, hr_email)
         req_summary = ", ".join(requirements[:4]) if requirements else "software engineering, full-stack development, and AI systems"
         
+        top_projects_context = (
+            "VIMAL'S TOP FLAGSHIP PROJECTS TO CURATE FROM:\n"
+            "1. Quensulting AI Voice Agent Receptionist (GitHub: https://github.com/vimal004/QuensultingAI-Voice-Agent | Live Demo: https://quensultingai-voice-agent.onrender.com):\n"
+            "   - Production AI voice receptionist for dental clinics. Dual-Mode Scheduling (live Google Sheets slot checking + async post-call webhooks). Built with RetellAI, FastAPI, Google Sheets API, Render. Sub-second latency, mid-call interruptions.\n"
+            "2. ApplyBot Stealth Form & Resume Engine (GitHub: https://github.com/vimal004/ApplyBot \n"
+            "   - Autonomous recruitment engine. Telegram job parser, Groq/Gemini LaTeX resume tailoring, ATS matching, auto emailer, self-pinging keep-alive background loops on Render.\n"
+            "3. Fleksa Technical Assignment (GitHub: https://github.com/vimal004/Fleksa-Assignment): Demo video in repo\n"
+            "   - Production backend scheduling & analytics engine handling multi-region timezone conversions, LLM text summaries/synthesis, time slot scheduling, zero race conditions.\n"
+            "4. Siddha Shivalayas Healthcare Management System (GitHub: https://github.com/vimal004/Shivalayas-Siddha-Website | Live Demo: https://siddhashivalayas.vercel.app):\n"
+            "   - Full-stack MERN clinic ERP for 300+ patient records, GST invoicing (PDF/DOCX), real-time inventory deduction logic, multi-tenant sandbox switcher, Docker/Nginx.\n"
+        )
+
         system_prompt = (
-            "You are an executive career advisor writing a detailed, highly persuasive cold email to a recruiter.\n"
+            "You are an executive career advisor writing a personalized, compelling cold email for Vimal Manoharan to a recruiter.\n"
             "MANDATORY RULES:\n"
-            "1. Start directly with the salutation line: 'Dear HR team,'.\n"
-            "2. Structure the body into 3 clear, professional paragraphs:\n"
+            "1. Start directly with the salutation: 'Dear HR team,'.\n"
+            "2. Structure the body into 3 distinct, crisp paragraphs:\n"
             "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Graduate from SRM IST (CGPA 8.91/10.0, Class of 2026).\n"
-            "   - Paragraph 2: Highlight key technical experience directly relevant to the target role requirements (e.g. GenAI/LLM pipelines, AI Agents, React Native, Node.js, FastAPI, Docker, and AWS).\n"
-            "   - Paragraph 3: Note that my resume is attached for their review and request a brief chat.\n"
+            "   - Paragraph 2: CURATE 1 OR 2 OF VIMAL'S TOP PROJECTS that match the target company's domain (e.g. for AI/LLM/Voice roles, mention Quensulting AI Voice Agent & ApplyBot; for Full-Stack/MERN, mention Siddha Shivalayas ERP & Fleksa Assignment; for Backend/Scheduling, mention Fleksa & Quensulting). Include specific technical details, achievements, and links/demos!\n"
+            "   - Paragraph 3: State that the tailored resume is attached for review and request a quick chat.\n"
             "3. Never use placeholder brackets like [Recruiter Name] or [Job Board].\n"
             "4. Do NOT include a Subject line.\n"
             "5. Do NOT include any sign-off or signature at the end (no 'Best regards', no candidate name).\n"
-            "6. Target length: 130 to 170 words."
+            "6. Target length: 140 to 180 words."
         )
         prompt = (
             f"Salutation: 'Dear HR team,'\n"
             f"Candidate: Vimal Manoharan (B.Tech CSE '26, SRM IST, CGPA 8.91/10.0)\n"
             f"Applying for: {role} at {company}\n"
-            f"Key technical highlights: GenAI & RAG pipelines, AI Agents, React Native, Node.js, FastAPI, MongoDB, Docker, AWS EC2.\n"
-            f"Job requirements / context: {req_summary}\n"
+            f"Job requirements / context: {req_summary}\n\n"
+            f"{top_projects_context}\n"
             f"Write ONLY the email body text."
         )
         raw_body = ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=1000)
