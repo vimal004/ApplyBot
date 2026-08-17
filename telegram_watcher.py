@@ -320,10 +320,11 @@ class TelegramWatcher:
                 apply_mode = parsed.get("apply_mode", "UNKNOWN")
                 status = "queued"
                 status_msg = ""
+                is_eligible = parsed.get("is_eligible", False)
 
-                # Automate mail sending if job requires email application AND auto_send_email is enabled
-                if apply_mode == "EMAIL" and telegram_watcher.auto_send_email:
-                    print(f"[Telegram Auto-Send] Direct EMAIL job detected for {parsed.get('company')} - {parsed.get('role')}. Auto-sending email...")
+                # Automate mail sending ONLY if job requires email application AND is 2025/2026 eligible AND auto_send_email is enabled
+                if apply_mode == "EMAIL" and telegram_watcher.auto_send_email and is_eligible:
+                    print(f"[Telegram Auto-Send] Direct EMAIL job detected for {parsed.get('company')} - {parsed.get('role')} (Batch: {parsed.get('batch')}). Auto-sending email...")
                     try:
                         from telegram_bot import ApplyBotPipeline
                         from app import _log_application
@@ -342,6 +343,9 @@ class TelegramWatcher:
                         status = "error"
                         status_msg = str(exc)
                         print(f"[Telegram Auto-Send Exception] {exc}")
+                elif apply_mode == "EMAIL" and not is_eligible:
+                    status_msg = f"Auto-send skipped: Batch '{parsed.get('batch')}' is not eligible for 2025/2026"
+                    print(f"[Telegram Auto-Send Skipped] {parsed.get('company')} - {parsed.get('role')} (Batch: '{parsed.get('batch')}') is not eligible for 2025/2026.")
 
                 entry = {
                     "id": job_id,

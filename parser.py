@@ -40,7 +40,7 @@ Return ONLY valid JSON matching this structure:
         if llm_result:
             for job in llm_result:
                 job["is_eligible"] = TelegramJobParser._check_batch_eligibility(
-                    job.get("batch", ""), candidate_batch="2026"
+                    job.get("batch", ""), candidate_batches=("2025", "2026")
                 )
                 job["raw_text"] = raw_text
             return llm_result
@@ -153,7 +153,7 @@ Return ONLY valid JSON matching this structure:
             apply_target = url_match.group(0)
             apply_mode = "LINK"
 
-        is_eligible = TelegramJobParser._check_batch_eligibility(batch, candidate_batch="2026")
+        is_eligible = TelegramJobParser._check_batch_eligibility(batch, candidate_batches=("2025", "2026"))
 
         return {
             "company": company,
@@ -170,17 +170,38 @@ Return ONLY valid JSON matching this structure:
         }
 
     @staticmethod
-    def _check_batch_eligibility(batch_str: str, candidate_batch: str = "2026") -> bool:
-        if not batch_str or batch_str.lower() in ["any", "all"]:
+    def _check_batch_eligibility(batch_str: str, candidate_batches: tuple = ("2025", "2026")) -> bool:
+        if not batch_str:
             return True
             
-        if candidate_batch in batch_str:
+        batch_lower = batch_str.lower().strip()
+        if batch_lower in ["any", "all", "not specified", "n/a", "any batch", "fresher", "freshers"]:
             return True
-            
-        before_match = re.search(r'(\d{4})\s*and\s*before', batch_str, re.IGNORECASE)
-        if before_match:
-            cutoff = int(before_match.group(1))
-            if int(candidate_batch) > cutoff:
+
+        # Check for year ranges like 2023-2026 or 2024-2025
+        range_match = re.search(r'\b(20\d\d)\s*[\-\u2013\u2014to]+\s*(20\d\d)\b', batch_str)
+        if range_match:
+            start_yr = int(range_match.group(1))
+            end_yr = int(range_match.group(2))
+            years_in_range = [str(y) for y in range(start_yr, end_yr + 1)]
+            if any(b in years_in_range for b in candidate_batches):
+                return True
+            return False
+
+        # Extract all explicit 4-digit years (e.g. 2023, 2024, 2025, 2026, 2027)
+        found_years = re.findall(r'\b(20\d\d)\b', batch_str)
+        if found_years:
+            # If any target candidate batch (2025 or 2026) is in the explicitly listed years -> eligible
+            if any(cb in found_years for cb in candidate_batches):
+                return True
+            # Check "before" phrase e.g. "2025 and before" vs "2024 and before"
+            before_match = re.search(r'\b(20\d\d)\s*(?:and|&)?\s*before\b', batch_str, re.IGNORECASE)
+            if before_match:
+                cutoff = int(before_match.group(1))
+                if any(int(cb) <= cutoff for cb in candidate_batches):
+                    return True
                 return False
-                
+            # Explicit 4-digit years were found, but NONE matched candidate batches 2025 or 2026
+            return False
+
         return True
