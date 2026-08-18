@@ -606,11 +606,19 @@ class TelegramWatcher:
         self._thread.start()
         return True
 
+    async def _async_disconnect(self):
+        """Helper coroutine to disconnect client cleanly."""
+        if self._client:
+            try:
+                await self._client.disconnect()
+            except Exception as e:
+                print(f"[Telegram Watcher] Exception during client disconnect: {e}")
+
     def stop_listener(self):
         """Stop the real-time listener."""
         if self._client and self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(
-                self._client.disconnect(), self._loop
+                self._async_disconnect(), self._loop
             )
         self._running = False
         self._status_message = "Listener stopped"
@@ -626,7 +634,7 @@ class TelegramWatcher:
         print("[Telegram Watcher] Shutdown requested — disconnecting client...")
         if self._client and self._loop and self._loop.is_running():
             future = asyncio.run_coroutine_threadsafe(
-                self._client.disconnect(), self._loop
+                self._async_disconnect(), self._loop
             )
             try:
                 future.result(timeout=timeout)
@@ -636,6 +644,7 @@ class TelegramWatcher:
         self._running = False
         self._connected = False
         self._status_message = "Shut down"
+
 
 
 
