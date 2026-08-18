@@ -459,6 +459,8 @@ class TelegramWatcher:
         """Start the real-time event listener on the Telegram group."""
         group_id = self._resolve_group_id()
 
+        # Always create a fresh client; the caller must ensure the previous
+        # client (if any) has been disconnected and nulled out before calling.
         self._client = TelegramClient(
             self._session_path,
             int(config.telegram.api_id),
@@ -528,24 +530,54 @@ class TelegramWatcher:
             self._status_message = "Listener is already running"
             return True
 
-        def _run():
+        async def _run_with_reconnect():
+            """
+            Async reconnect loop that lives entirely within ONE event loop.
+            Using asyncio.sleep (not time.sleep) keeps the loop alive between
+            retries, so Telethon never encounters a 'bound to different event
+            loop' error on reconnect.
+            """
             while True:
-                self._loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(self._loop)
                 try:
-                    self._loop.run_until_complete(self._start_listener())
+                    await self._start_listener()
                 except Exception as e:
                     print(f"[Telegram Watcher] Connection dropped ({e}). Auto-reconnecting in 10s...")
                     self._status_message = f"Reconnecting after error: {e}"
                     self._running = False
                     self._connected = False
                 finally:
-                    try:
-                        self._loop.close()
-                    except Exception:
-                        pass
-                # Backoff delay before auto-reconnecting
-                time.sleep(10)
+                    # Always cleanly disconnect and discard the old client so
+                    # the next TelegramClient() gets a fresh session slot and
+                    # avoids AuthKeyDuplicatedError ("used under two IPs").
+                    if self._client is not None:
+                        try:
+                            await self._client.disconnect()
+                        except Exception:
+                            pass
+                        self._client = None
+
+                # Backoff delay before auto-reconnecting (runs inside the loop)
+                await asyncio.sleep(10)
+
+        def _run():
+            """
+            Thread entry point: create ONE event loop for the lifetime of the
+            thread and run the async reconnect coroutine inside it.
+            Recreating the loop on every iteration (the old approach) caused
+            Telethon's internal asyncio primitives (Event, Queue) to become
+            bound to the wrong loop after the first reconnect.
+            """
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            self._loop = loop
+            try:
+                loop.run_until_complete(_run_with_reconnect())
+            finally:
+                try:
+                    loop.close()
+                except Exception:
+                    pass
+                self._loop = None
 
         self._thread = threading.Thread(target=_run, daemon=True, name="TelegramWatcher")
         self._thread.start()
