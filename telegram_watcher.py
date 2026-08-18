@@ -23,6 +23,7 @@ from typing import Dict, Any, List, Optional
 _telethon_available = False
 try:
     from telethon import TelegramClient, events
+    from telethon.sessions import StringSession
     from telethon.errors import SessionPasswordNeededError
     _telethon_available = True
 except ImportError:
@@ -69,9 +70,19 @@ class TelegramWatcher:
         settings = self._load_settings()
         self.auto_send_email = settings.get("auto_send_email", True)
         self._status_message = "Not initialized"
-        self._session_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "telegram_session"
-        )
+
+        # Prefer StringSession from env var (required for cloud deployments like Render).
+        # Falls back to a local file session for local development.
+        session_string = os.environ.get("TELEGRAM_SESSION_STRING", "").strip()
+        if session_string and _telethon_available:
+            self._session = StringSession(session_string)
+            print("[Telegram Watcher] Using StringSession from TELEGRAM_SESSION_STRING env var")
+        else:
+            self._session = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "telegram_session"
+            )
+            if not session_string:
+                print("[Telegram Watcher] TELEGRAM_SESSION_STRING not set — falling back to file session")
 
     # ── Public Properties ──────────────────────────────────────────────
 
@@ -437,7 +448,7 @@ class TelegramWatcher:
             try:
                 if not self._client or not self._client.is_connected():
                     self._client = TelegramClient(
-                        self._session_path,
+                        self._session,
                         int(config.telegram.api_id),
                         config.telegram.api_hash
                     )
@@ -462,7 +473,7 @@ class TelegramWatcher:
         # Always create a fresh client; the caller must ensure the previous
         # client (if any) has been disconnected and nulled out before calling.
         self._client = TelegramClient(
-            self._session_path,
+            self._session,
             int(config.telegram.api_id),
             config.telegram.api_hash
         )

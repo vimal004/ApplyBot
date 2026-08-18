@@ -26,9 +26,8 @@ outputs/
 *.pdf
 *.tex
 
-# Telegram sessions & auth tokens
+# Telegram sessions & auth tokens (never commit — use TELEGRAM_SESSION_STRING env var instead)
 *.session*
-!telegram_session.session
 
 # macOS & IDE generated files
 .DS_Store
