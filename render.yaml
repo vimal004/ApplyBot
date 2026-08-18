@@ -12,7 +12,7 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+        value: groq/compound-mini
       - key: SMTP_SERVER
         value: smtp.gmail.com
       - key: SMTP_PORT

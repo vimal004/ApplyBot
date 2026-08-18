@@ -190,7 +190,7 @@ class EmailConfig:
 @dataclass
 class GroqConfig:
     api_key: str = os.getenv("GROQ_API_KEY", "")
-    model_name: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model_name: str = os.getenv("GROQ_MODEL", "groq/compound-mini")
     temperature: float = 0.7
 
 @dataclass
@@ -212,7 +212,7 @@ class MultiLLMConfig:
             "name": "Groq",
             "api_key_env": "GROQ_API_KEY",
             "endpoint": "https://api.groq.com/openai/v1/chat/completions",
-            "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-2.5-coder-32b"]
+            "models": ["groq/compound-mini", "groq/compound", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"]
         },
         {
             "name": "Cerebras",

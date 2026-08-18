@@ -45,8 +45,9 @@ class HREmailSender:
         signature = (
             f"\n\nBest regards,\n"
             f"Vimal Manoharan\n"
-            f"B.Tech Computer Science Engineering (CGPA 8.91/10.0) | SRM IST '26\n"
+            f"Email: {config.profile.email}\n"
             f"Phone: {config.profile.phone}\n"
+            f"B.Tech Computer Science Engineering Graduate (CGPA 8.91/10.0) | SRM IST '26\n"
             f"LinkedIn: {config.profile.linkedin_url}\n"
             f"GitHub: {config.profile.github_url}"
         )

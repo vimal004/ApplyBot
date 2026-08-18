@@ -21,7 +21,7 @@
     resume_gdrive_url: "https://drive.google.com/file/d/1ozzluGbJEgqQkFpfPu97VnXoLoDkE0Rw/view?usp=share_link",
     location: "Chennai, Tamil Nadu, India",
     experience_years: "1+ years (Internships & Freelance)",
-    notice_period: "Immediate / Student (Graduating 2026)",
+    notice_period: "Immediate / Graduate (2026 Batch)",
     expected_salary: "As per industry standards"
   };
 

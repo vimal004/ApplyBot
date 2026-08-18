@@ -22,7 +22,7 @@ const DEFAULT_PROFILE = {
   resume_gdrive_url: "https://drive.google.com/file/d/1ozzluGbJEgqQkFpfPu97VnXoLoDkE0Rw/view?usp=share_link",
   location: "Chennai, Tamil Nadu, India",
   experience_years: "1+ years (Internships & Freelance)",
-  notice_period: "Immediate / Student (Graduating 2026)",
+  notice_period: "Immediate / Graduate (2026 Batch)",
   expected_salary: "As per industry standards"
 };
 
@@ -534,11 +534,11 @@ function buildEmailSubject(p) {
 
 function buildEmailBody(p) {
   const bodies = {
-    referral: `Hi ${p.hr_name || "there"},\n\nI hope this message finds you well. My name is Vimal Manoharan, a final-year B.Tech Computer Science student at SRM Institute of Science and Technology (CGPA: 8.91/10, graduating 2026).\n\nI came across the ${p.role} opportunity at ${p.company} and I'm genuinely excited about it. I'd be incredibly grateful if you could refer me or forward my application internally.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}🔗 LinkedIn: ${DEFAULT_PROFILE.linkedin}\n🐙 GitHub: ${DEFAULT_PROFILE.github}\n📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n\nThank you so much for your time!\n\nBest regards,\nVimal Manoharan\n${DEFAULT_PROFILE.phone} | ${DEFAULT_PROFILE.email}`,
+    referral: `Hi ${p.hr_name || "there"},\n\nI hope this message finds you well. My name is Vimal Manoharan, a B.Tech Computer Science Engineering graduate from SRM Institute of Science and Technology (CGPA: 8.91/10, Class of 2026).\n\nI came across the ${p.role} opportunity at ${p.company} and I'm genuinely excited about it. I'd be incredibly grateful if you could refer me or forward my application internally.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}🔗 LinkedIn: ${DEFAULT_PROFILE.linkedin}\n🐙 GitHub: ${DEFAULT_PROFILE.github}\n📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n\nThank you so much for your time!\n\nBest regards,\nVimal Manoharan\nEmail: 2004.vimal@gmail.com\nPhone: ${DEFAULT_PROFILE.phone}`,
 
-    cold_outreach: `Dear HR team,\n\nI am Vimal Manoharan, a final-year B.Tech CSE student at SRM Institute (CGPA 8.91/10, graduating 2026), and I'm writing to express my strong interest in the ${p.role} role at ${p.company}.\n\nI have hands-on experience in full-stack development and AI/ML through internships and freelance projects, and I'm confident my skills align closely with your team's needs.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n🔗 LinkedIn: ${DEFAULT_PROFILE.linkedin}\n🐙 GitHub: ${DEFAULT_PROFILE.github}\n\nI would love the opportunity to discuss how I can contribute to ${p.company}.\n\nWarm regards,\nVimal Manoharan\n${DEFAULT_PROFILE.phone} | ${DEFAULT_PROFILE.email}`,
+    cold_outreach: `Dear HR team,\n\nI am Vimal Manoharan, a B.Tech CSE graduate from SRM Institute (CGPA 8.91/10, Class of 2026), and I'm writing to express my strong interest in the ${p.role} role at ${p.company}.\n\nI have hands-on experience in full-stack development and AI/ML through internships and freelance projects, and I'm confident my skills align closely with your team's needs.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n🔗 LinkedIn: ${DEFAULT_PROFILE.linkedin}\n🐙 GitHub: ${DEFAULT_PROFILE.github}\n\nI would love the opportunity to discuss how I can contribute to ${p.company}.\n\nWarm regards,\nVimal Manoharan\nEmail: 2004.vimal@gmail.com\nPhone: ${DEFAULT_PROFILE.phone}`,
 
-    follow_up: `Hi ${p.hr_name || "there"},\n\nI wanted to kindly follow up on my application for the ${p.role} position at ${p.company} that I submitted recently.\n\nI remain very enthusiastic about this opportunity and would love to discuss how I can contribute to your team.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n\nThank you for your consideration.\n\nBest,\nVimal Manoharan\n${DEFAULT_PROFILE.phone} | ${DEFAULT_PROFILE.email}`
+    follow_up: `Hi ${p.hr_name || "there"},\n\nI wanted to kindly follow up on my application for the ${p.role} position at ${p.company} that I submitted recently.\n\nI remain very enthusiastic about this opportunity and would love to discuss how I can contribute to your team.\n\n${p.custom_note ? p.custom_note + "\n\n" : ""}📄 Resume: ${DEFAULT_PROFILE.resume_gdrive_url}\n\nThank you for your consideration.\n\nBest regards,\nVimal Manoharan\nEmail: 2004.vimal@gmail.com\nPhone: ${DEFAULT_PROFILE.phone}`
   };
   return bodies[p.template] || bodies.cold_outreach;
 }

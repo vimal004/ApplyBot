@@ -279,7 +279,7 @@ class ResumeTailorer:
             "4. NO REPO LINKS: Do NOT include GitHub repo links in the email text. If a project has a live demo link (e.g. https://siddhashivalayas.vercel.app or https://quensultingai-voice-agent.onrender.com), you may naturally mention 'you can check out a live demo at [URL]' ONLY if that project is selected.\n"
             "5. EMAIL STRUCTURE:\n"
             "   - Start directly with 'Dear HR team,'\n"
-            "   - Sentence 1-2: Express interest in the {role} position at {company}, briefly noting your background as a Computer Science Senior at SRM IST (Class of '26, CGPA 8.91/10.0).\n"
+            "   - Sentence 1-2: Express interest in the {role} position at {company}, briefly noting your background as a Computer Science Engineering Graduate from SRM IST (Class of 2026, CGPA 8.91/10.0).\n"
             "   - Middle Paragraph: Detail 1 or 2 domain-matched projects. Explain the technical problem you solved, key technologies used, and the impact (e.g. real-time inventory deduction, sub-second voice latency, multi-tenant database isolation, Docker deployment).\n"
             "   - Closing Sentence: Mention that your resume is attached for review and express interest in a brief introductory chat.\n"
             "6. DO NOT include a Subject line.\n"
@@ -372,7 +372,7 @@ class ResumeTailorer:
             return (
                 "Dear HR team,\n\n"
                 "I am eager to apply for the software engineering position at your company. "
-                "As a Computer Science Senior at SRM Institute of Science and Technology (Class of 2026, CGPA 8.91/10.0), "
+                "As a Computer Science Engineering graduate from SRM Institute of Science and Technology (Class of 2026, CGPA 8.91/10.0), "
                 "I have developed robust hands-on experience building production full-stack platforms and AI engineering systems.\n\n"
                 "Recently, I architected a full-stack clinic ERP platform using React, Node.js, and MongoDB that manages patient records, "
                 "automates GST-compliant invoicing, and enforces real-time inventory deduction logic with race-condition safety. "
