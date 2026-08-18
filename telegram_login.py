@@ -65,23 +65,8 @@ async def main():
             print("[Warning] Existing session string is not authorized. Re-logging in...")
             await client.disconnect()
 
-    # ── Check if a local file session exists and convert it ───────────
-    if os.path.exists(FILE_SESSION_PATH + ".session"):
-        print("[Info] Found existing local session file. Converting to StringSession...")
-        file_client = TelegramClient(FILE_SESSION_PATH, int(api_id), api_hash)
-        await file_client.connect()
-        if await file_client.is_user_authorized():
-            me = await file_client.get_me()
-            session_string = file_client.session.save()
-            await file_client.disconnect()
-            print(f"\nConverted existing session for: {me.first_name} (@{me.username})")
-            _print_session_instructions(session_string)
-            return
-        else:
-            print("[Warning] Local session file exists but is not authorized. Starting fresh login...")
-            await file_client.disconnect()
-
     # ── Fresh login with StringSession ────────────────────────────────
+    # (The old file session's auth key is likely invalidated — doing a fresh login)
     client = TelegramClient(StringSession(), int(api_id), api_hash)
     await client.connect()
 
