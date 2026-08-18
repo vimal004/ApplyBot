@@ -214,7 +214,7 @@ class ResumeTailorer:
         return output_tex_path
 
     @staticmethod
-    def ask_multi_provider_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000) -> str:
+    def ask_multi_provider_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000, temperature: float = 0.4) -> str:
         """
         Delegates job application Q&A and email generation to LLMManager.
         """
@@ -223,69 +223,89 @@ class ResumeTailorer:
             prompt=prompt,
             system_prompt=system_prompt,
             max_tokens=max_tokens,
-            temperature=0.3
+            temperature=temperature
         )
         if res:
             return res
         return ResumeTailorer._fallback_human_answer(prompt)
 
     @staticmethod
-    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000) -> str:
-        return ResumeTailorer.ask_multi_provider_llm(prompt, system_prompt, max_tokens)
+    def ask_groq_llm(prompt: str, system_prompt: str = "You are a professional assistant writing concise, natural, human responses for job applications.", max_tokens: int = 2000, temperature: float = 0.4) -> str:
+        return ResumeTailorer.ask_multi_provider_llm(prompt, system_prompt, max_tokens, temperature)
 
     @staticmethod
     def infer_salutation(company: str = "", hr_email: str = "") -> str:
-        return "Dear HR team,"
+        if company and company.strip() not in ["Company", "Unknown", "Target Company"]:
+            return f"Dear {company.strip()} Recruiting Team,"
+        return "Dear HR Team,"
+
 
     @staticmethod
     def generate_hr_cover_letter(company: str, role: str, requirements: list, hr_email: str = "") -> str:
         salutation = ResumeTailorer.infer_salutation(company, hr_email)
-        req_summary = ", ".join(requirements[:4]) if requirements else "software engineering, full-stack development, and AI systems"
+        req_summary = ", ".join(requirements[:6]) if requirements else "software engineering, full-stack development, and AI/cloud systems"
         
-        top_projects_context = (
-            "VIMAL'S TOP FLAGSHIP PROJECTS TO CURATE FROM:\n"
-            "1. Quensulting AI Voice Agent Receptionist (GitHub: https://github.com/vimal004/QuensultingAI-Voice-Agent | Live Demo: https://quensultingai-voice-agent.onrender.com):\n"
-            "   - Production AI voice receptionist for dental clinics. Dual-Mode Scheduling (live Google Sheets slot checking + async post-call webhooks). Built with RetellAI, FastAPI, Google Sheets API, Render. Sub-second latency, mid-call interruptions.\n"
-            "2. ApplyBot Stealth Form & Resume Engine (GitHub: https://github.com/vimal004/ApplyBot \n"
-            "   - Autonomous recruitment engine. Telegram job parser, Groq/Gemini LaTeX resume tailoring, ATS matching, auto emailer, self-pinging keep-alive background loops on Render.\n"
-            "3. Fleksa Technical Assignment (GitHub: https://github.com/vimal004/Fleksa-Assignment): Demo video in repo\n"
-            "   - Production backend scheduling & analytics engine handling multi-region timezone conversions, LLM text summaries/synthesis, time slot scheduling, zero race conditions.\n"
-            "4. Siddha Shivalayas Healthcare Management System (GitHub: https://github.com/vimal004/Shivalayas-Siddha-Website | Live Demo: https://siddhashivalayas.vercel.app):\n"
-            "   - Full-stack MERN clinic ERP for 300+ patient records, GST invoicing (PDF/DOCX), real-time inventory deduction logic, multi-tenant sandbox switcher, Docker/Nginx.\n"
+        project_taxonomy_context = (
+            "VIMAL'S PORTFOLIO TAXONOMY (BY TECH DOMAIN):\n"
+            "1. FULL-STACK / MERN / WEB:\n"
+            "   - Full-stack medical clinic ERP: React 18, Node.js, Express, MongoDB Atlas, Docker, Nginx. Built patient registry, HSN/GST-compliant PDF/DOCX invoicing, multi-tenant sandbox switcher, and real-time inventory deduction logic preventing race conditions during concurrent checkouts. Live demo: https://siddhashivalayas.vercel.app\n"
+            "   - MERN E-Commerce Platform: React.js, Redux Toolkit, Node.js, Express, MongoDB, Tailwind. Built category routing, persistent cart state, and admin inventory controls.\n"
+            "   - Interactive Kanban Desk Manager: React, Tailwind, REST APIs. Drag-and-drop workspace manager with local storage state routing.\n\n"
+            "2. AI / GENAI / LLM / VOICE AGENTS / RAG:\n"
+            "   - Production AI Voice Receptionist: RetellAI, FastAPI (Python 3.12+), Google Sheets API, Render. Solved clinic booking latency with dual-mode scheduling (live synchronous Google Sheets slot availability checking + async post-call webhooks to offload heavy I/O and prevent mid-call lag). Live demo: https://quensultingai-voice-agent.onrender.com\n"
+            "   - Autonomous Job Application & ATS Engine: Python, Playwright, Groq/Gemini LLM API, LaTeX compiler, Chrome Extension. Telegram referral crawler, ATS keyword optimization, dynamic resume compilation.\n"
+            "   - Corporate RAG SOP Framework (KSK Electronics Internship): LangChain, Chroma DB, React, Node.js. Built enterprise document QA engine and automated GST validation workflows.\n"
+            "   - AI Adaptive Learning Platform (Intel Unnati): Next.js, Flask, Python, fine-tuned T5 Transformer for dynamic question generation, XGBoost for quiz difficulty scaling, SVD collaborative filtering for recommendations. Live demo: https://intel-unnati-game-frontend.vercel.app/\n\n"
+            "3. BACKEND / API DESIGN / DISTRIBUTED & SCHEDULING ENGINES:\n"
+            "   - Multi-Region Scheduling & Analytics Engine: Node.js, Express, TypeScript, LLM APIs. Multi-region timezone conversion engine, automated LLM synthesis, time-slot allocation without race conditions.\n"
+            "   - Speaker Session Booking Backend: Node.js, Express, MongoDB, JWT auth. Double-booking prevention middleware and transactional email alerts.\n"
+            "   - E-Commerce Catalog & Aggregation Engine: Node.js, Express, MongoDB. Scheduled cron sync jobs, price drop alerts, aggregation pipelines.\n\n"
+            "4. MOBILE DEVELOPMENT (REACT NATIVE / EXPO):\n"
+            "   - Aaku AI Travel Companion (Aakar Labs Internship): React Native, Expo, Agile product team. Engineered reusable UI components and integrated frontend with backend AI trip planning services.\n"
+            "   - Wanderlust Mobile App: React Native, Expo SDK 55, React Navigation v7, Material 3, Reanimated (60FPS liquid animations), local storage caching.\n\n"
+            "5. DEVOPS / CLOUD / INFRASTRUCTURE:\n"
+            "   - Docker & Nginx Reverse Proxy Deployments: Multi-tenant container orchestration, microservices routing, SSL termination, environment secrets, keep-alive background workers on Render & Vercel.\n\n"
+            "6. DATA SCIENCE / MACHINE LEARNING / ANALYTICS:\n"
+            "   - AQI Predictive Regression Model: Python, Scikit-learn (Random Forest, Ridge), Pandas, NumPy. Feature outlier cleaning, multicollinearity reduction, AQI forecasting.\n"
+            "   - Multithreaded Web Scraping & Aggregation: Python ThreadPoolExecutor parallel scraping pipeline across e-commerce domains, feeding AI classification and MongoDB storage.\n"
         )
 
         system_prompt = (
-            "You are an executive career advisor writing a personalized, compelling cold email for Vimal Manoharan to a recruiter.\n"
-            "MANDATORY RULES:\n"
-            "1. Start directly with the salutation: 'Dear HR team,'.\n"
-            "2. Structure the body into 3 distinct, crisp paragraphs:\n"
-            "   - Paragraph 1: Express enthusiasm for the role and introduce academic background as a Computer Science Graduate from SRM IST (CGPA 8.91/10.0, Class of 2026).\n"
-            "   - Paragraph 2: CURATE 1 OR 2 OF VIMAL'S TOP PROJECTS that match the target company's domain (e.g. for AI/LLM/Voice roles, mention Quensulting AI Voice Agent & ApplyBot; for Full-Stack/MERN, mention Siddha Shivalayas ERP & Fleksa Assignment; for Backend/Scheduling, mention Fleksa & Quensulting). Include specific technical details, achievements, and links/demos!\n"
-            "   - Paragraph 3: State that the tailored resume is attached for review and request a quick chat.\n"
-            "3. Never use placeholder brackets like [Recruiter Name] or [Job Board].\n"
-            "4. Do NOT include a Subject line.\n"
-            "5. Do NOT include any sign-off or signature at the end (no 'Best regards', no candidate name).\n"
-            "6. Target length: 140 to 180 words."
+            "You are Vimal Manoharan, a Computer Science Engineering graduate (Class of 2026 from SRM IST, CGPA 8.91/10.0) writing a concise, natural, human-sounding cold email to a recruiter or hiring manager.\n\n"
+            "CRITICAL EMAIL CURATION RULES:\n"
+            "1. INTELLIGENT JD MATCHING: Read the Job Description and Role carefully. Determine what domain the role belongs to (Full-Stack, AI/LLM, Backend/APIs, Mobile, DevOps, Data Science, etc.). Select 1 or 2 projects from Vimal's taxonomy that DIRECTLY match the JD domain.\n"
+            "2. NEVER NAME-DROP OBSCURE PROJECT NAMES: NEVER say project title names like 'Fleksa', 'QuensultingAI', 'Siddha Shivalayas', 'ApplyBot', or 'Aaku'! The recruiter does NOT know what these internal names are and will be confused. Instead, describe WHAT YOU BUILT naturally (e.g., write 'a full-stack clinic management system handling patient records and real-time inventory tracking', or 'a production AI voice receptionist with live scheduling and async webhook processing', or 'a production scheduling engine handling multi-region timezone conversions').\n"
+            "3. NATURAL & HUMAN WRITING: Write like a sharp, confident engineer — NOT like a template or generic AI! Avoid canned phrases like 'I am writing to express my profound enthusiasm' or 'I possess a strong foundation'. Use clean, conversational language.\n"
+            "4. NO REPO LINKS: Do NOT include GitHub repo links in the email text. If a project has a live demo link (e.g. https://siddhashivalayas.vercel.app or https://quensultingai-voice-agent.onrender.com), you may naturally mention 'you can check out a live demo at [URL]' ONLY if that project is selected.\n"
+            "5. EMAIL STRUCTURE:\n"
+            "   - Start directly with 'Dear HR team,'\n"
+            "   - Sentence 1-2: Express interest in the {role} position at {company}, briefly noting your background as a Computer Science Senior at SRM IST (Class of '26, CGPA 8.91/10.0).\n"
+            "   - Middle Paragraph: Detail 1 or 2 domain-matched projects. Explain the technical problem you solved, key technologies used, and the impact (e.g. real-time inventory deduction, sub-second voice latency, multi-tenant database isolation, Docker deployment).\n"
+            "   - Closing Sentence: Mention that your resume is attached for review and express interest in a brief introductory chat.\n"
+            "6. DO NOT include a Subject line.\n"
+            "7. DO NOT include any sign-off or signature at the end (NO 'Best regards', NO candidate name). Signature will be appended automatically.\n"
+            "8. TARGET LENGTH: 120 to 160 words max. Keep it crisp, targeted, and human."
         )
+
         prompt = (
-            f"Salutation: 'Dear HR team,'\n"
-            f"Candidate: Vimal Manoharan (B.Tech CSE '26, SRM IST, CGPA 8.91/10.0)\n"
+            f"Salutation: '{salutation}'\n"
             f"Applying for: {role} at {company}\n"
-            f"Job requirements / context: {req_summary}\n\n"
-            f"{top_projects_context}\n"
+            f"Job Requirements & Key Context: {req_summary}\n\n"
+            f"{project_taxonomy_context}\n\n"
             f"Write ONLY the email body text."
         )
-        raw_body = ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=1000)
+
+        raw_body = ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=800, temperature=0.45)
         
         lines = [line for line in raw_body.split("\n") if not line.lower().startswith("subject:")]
         cleaned = "\n".join(lines).strip()
         
-        for term in ["Best regards", "Sincerely", "Warm regards", "Thanks", "Thank you"]:
+        for term in ["Best regards", "Sincerely", "Warm regards", "Thanks", "Thank you", "Vimal Manoharan"]:
             if term in cleaned:
                 cleaned = cleaned.split(term)[0].strip()
                 
         if not cleaned.startswith("Dear"):
-            cleaned = f"Dear HR team,\n\n" + cleaned
+            cleaned = f"{salutation}\n\n" + cleaned
             
         return cleaned
 
@@ -323,7 +343,7 @@ class ResumeTailorer:
         ])
 
         projects_summary = "\n".join([
-            f"- {p['name']} ({p['tech']}): {p['description']} [Repo: {p['url']}]"
+            f"- {p['name']} ({p['tech']}): {p['description']}"
             for p in config.profile.key_projects
         ])
 
@@ -331,10 +351,10 @@ class ResumeTailorer:
             "You are Vimal Manoharan, a Computer Science Engineering graduate (Class of 2026) from SRM Institute of Science "
             "and Technology (CGPA: 8.91/10).\n\n"
             f"VIMAL'S REAL PAID WORK EXPERIENCE & INTERNSHIPS:\n{work_exp_summary}\n\n"
-            f"VIMAL'S FEATURED GITHUB PROJECTS:\n{projects_summary}\n\n"
+            f"VIMAL'S FEATURED PROJECTS:\n{projects_summary}\n\n"
             f"{length_instruction}\n"
             "CRITICAL RULES:\n"
-            "1. DOMAIN CURATION: Carefully analyze the target company, role, and JD domain (e.g. Product Management, FinTech, AI, Full-Stack, Mobile). Tailor your excitement and experience SPECIFICALLY to that domain! (e.g. for Product Intern at NxtPe FinTech: focus on product analytics, payments UX, user research, and reference product-centric work like Aaku AI travel companion at Aakar Labs or QuensultingAI Voice Receptionist). DO NOT mention irrelevant random projects!\n"
+            "1. DOMAIN CURATION: Carefully analyze the target company, role, and JD domain (e.g. Product Management, FinTech, AI, Full-Stack, Mobile). Tailor your excitement and experience SPECIFICALLY to that domain! DO NOT mention irrelevant random projects or internal project names that sound obscure.\n"
             "2. PRIOR INTERNSHIP EXPERIENCE: Vimal HAS real paid internship & freelance experience (Aakar Labs, KSK Electronics, Siddha Shivalayas Clinic). Always highlight these when asked about prior internship experience!\n"
             "3. STIPEND & PRODUCTS: Last stipend paid is ₹20,000 / month. Key product link is https://siddhashivalayas.vercel.app.\n"
             f"{context_note}"
@@ -344,36 +364,37 @@ class ResumeTailorer:
         if context_section:
             prompt += f"\n\n{context_section}"
 
-        return ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=450)
+        return ResumeTailorer.ask_groq_llm(prompt, system_prompt, max_tokens=450, temperature=0.35)
 
     @staticmethod
     def _fallback_human_answer(prompt: str) -> str:
         if "salutation:" in prompt.lower() or "applying for:" in prompt.lower() or "candidate:" in prompt.lower():
             return (
-                "I am writing to express my strong interest in the software engineering position at your company. "
-                "As a Computer Science Graduate from SRM Institute of Science and Technology (Class of 2026 with an 8.91/10.0 CGPA), "
-                "I have cultivated a strong technical foundation in full-stack development, cloud architecture, and modern AI engineering.\n\n"
-                "My hands-on background includes engineering cross-platform mobile apps with React Native and Expo, building resilient backend REST APIs "
-                "with Node.js and FastAPI, and architecting GenAI workflows, AI Agents, and Retrieval-Augmented Generation (RAG) pipelines using LangChain and Chroma DB. "
-                "I thrive in agile, fast-paced product teams where clean code architecture and rapid iteration are prioritized.\n\n"
-                "I have attached my resume for your review. I would welcome the opportunity to discuss how my technical skills "
-                "and problem-solving drive can contribute to your engineering goals."
+                "Dear HR team,\n\n"
+                "I am eager to apply for the software engineering position at your company. "
+                "As a Computer Science Senior at SRM Institute of Science and Technology (Class of 2026, CGPA 8.91/10.0), "
+                "I have developed robust hands-on experience building production full-stack platforms and AI engineering systems.\n\n"
+                "Recently, I architected a full-stack clinic ERP platform using React, Node.js, and MongoDB that manages patient records, "
+                "automates GST-compliant invoicing, and enforces real-time inventory deduction logic with race-condition safety. "
+                "Additionally, I built a production AI voice receptionist leveraging FastAPI and async webhooks to achieve sub-second booking latency.\n\n"
+                "I have attached my tailored resume for your review and would welcome the opportunity to discuss how my technical skills "
+                "align with your team's goals."
             )
         elif "motivated" in prompt.lower() or "why" in prompt.lower() or "apply" in prompt.lower():
             return (
-                "I am eager to apply because this role matches my hands-on background in full-stack engineering "
-                "and AI systems. Having built production-grade apps with React Native, Node.js, and GenAI workflows, "
-                "I am excited to bring my technical skills and problem-solving drive to your team."
+                "I am eager to apply because this role aligns directly with my hands-on background in full-stack engineering "
+                "and AI systems. Having shipped production applications using React, Node.js, FastAPI, and LLM agent workflows, "
+                "I look forward to contributing clean, resilient code to your team."
             )
         elif "good fit" in prompt.lower() or "fit" in prompt.lower():
             return (
-                "My experience spanning full-stack development, mobile UI engineering, and API design directly "
-                "aligns with your requirements. I thrive in fast-paced environments and pride myself on shipping clean, "
-                "reliable code."
+                "My experience across full-stack web development, API design, and AI automation directly "
+                "matches your engineering requirements. I thrive in fast-paced product environments and take pride in shipping high-quality code."
             )
         else:
             return (
-                "With my background in Computer Science and hands-on project experience in full-stack and AI engineering, "
-                "I am confident in my ability to quickly contribute to team goals."
+                "With my strong Computer Science background and practical project experience across full-stack and AI systems, "
+                "I am confident in my ability to make an immediate, positive impact on your team."
             )
+
 

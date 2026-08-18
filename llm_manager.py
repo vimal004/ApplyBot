@@ -92,16 +92,17 @@ class LLMManager:
 
         elif task == TaskType.EMAIL_GENERATION:
             # Human-like cold email drafting
-            for idx, key in enumerate(groq_keys):
-                candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.3-70b-versatile", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
             for idx, key in enumerate(gemini_keys):
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash-lite"})
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.5-flash"})
                 candidates.append({"provider": "Gemini", "key_id": f"Gemini-{idx+1}", "key": key, "model": "gemini-3.6-flash"})
+            for idx, key in enumerate(groq_keys):
+                candidates.append({"provider": "Groq", "key_id": f"Groq-{idx+1}", "key": key, "model": "llama-3.1-8b-instant", "endpoint": "https://api.groq.com/openai/v1/chat/completions"})
             for idx, key in enumerate(cerebras_keys):
                 candidates.append({"provider": "Cerebras", "key_id": f"Cerebras-{idx+1}", "key": key, "model": "llama-3.3-70b", "endpoint": "https://api.cerebras.ai/v1/chat/completions"})
             for idx, key in enumerate(openrouter_keys):
                 candidates.append({"provider": "OpenRouter", "key_id": f"OpenRouter-{idx+1}", "key": key, "model": "openrouter/free", "endpoint": "https://openrouter.ai/api/v1/chat/completions"})
+
 
         return candidates
 
