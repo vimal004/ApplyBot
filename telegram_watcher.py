@@ -603,6 +603,29 @@ class TelegramWatcher:
         self._running = False
         self._status_message = "Listener stopped"
 
+    def shutdown(self, timeout: float = 10.0):
+        """Gracefully disconnect Telethon and stop the watcher.
+
+        Call this from a SIGTERM / SIGINT handler so Telegram de-registers
+        the session BEFORE the process exits.  This prevents the next
+        deployment from seeing an 'authorization key used under two different
+        IP addresses' error because the old session is cleanly closed first.
+        """
+        print("[Telegram Watcher] Shutdown requested — disconnecting client...")
+        if self._client and self._loop and self._loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(
+                self._client.disconnect(), self._loop
+            )
+            try:
+                future.result(timeout=timeout)
+                print("[Telegram Watcher] Client disconnected cleanly.")
+            except Exception as e:
+                print(f"[Telegram Watcher] Disconnect during shutdown: {e}")
+        self._running = False
+        self._connected = False
+        self._status_message = "Shut down"
+
+
 
 # Singleton instance
 telegram_watcher = TelegramWatcher()

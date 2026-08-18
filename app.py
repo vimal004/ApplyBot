@@ -596,10 +596,30 @@ def run_server():
     except Exception as e:
         print(f"[Cleanup] Error during startup cleanup: {e}")
 
+    # ── Graceful shutdown on SIGTERM / SIGINT ──────────────────────────
+    # Render sends SIGTERM to the old instance before starting a new one.
+    # Catching it lets us explicitly disconnect Telethon so Telegram
+    # de-registers the session from the old IP *before* the new instance
+    # connects.  Without this, both instances briefly hold the same auth
+    # key → AuthKeyDuplicatedError on every redeploy.
+    import signal as _signal
+    import sys as _sys
+
+    def _handle_shutdown(signum, frame):
+        sig_name = "SIGTERM" if signum == _signal.SIGTERM else "SIGINT"
+        print(f"[ApplyBot] Received {sig_name} — shutting down gracefully...")
+        telegram_watcher.shutdown(timeout=10)
+        httpd.shutdown()
+        _sys.exit(0)
+
+    _signal.signal(_signal.SIGTERM, _handle_shutdown)
+    _signal.signal(_signal.SIGINT, _handle_shutdown)
+
     # Auto-start Telegram watcher if credentials are configured
     if telegram_watcher.is_available:
         print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
         telegram_watcher.start_listener_thread()
+
     else:
         print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
 
