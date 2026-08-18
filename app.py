@@ -619,7 +619,6 @@ def run_server():
     if telegram_watcher.is_available:
         print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
         telegram_watcher.start_listener_thread()
-
     else:
         print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
 

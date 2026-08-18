@@ -73,16 +73,25 @@ class TelegramWatcher:
 
         # Prefer StringSession from env var (required for cloud deployments like Render).
         # Falls back to a local file session for local development.
-        session_string = os.environ.get("TELEGRAM_SESSION_STRING", "").strip()
-        if session_string and _telethon_available:
-            self._session = StringSession(session_string)
+        # IMPORTANT: We store the raw string and create a FRESH StringSession each
+        # time a TelegramClient is constructed (via _make_session()), because
+        # StringSession is stateful — after connect() it gets mutated with server
+        # salts and DC info.  Reusing the same mutated instance on reconnect
+        # would carry stale state from the dead connection.
+        self._session_string: Optional[str] = os.environ.get("TELEGRAM_SESSION_STRING", "").strip() or None
+        self._session_file_path: str = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "telegram_session"
+        )
+        if self._session_string and _telethon_available:
             print("[Telegram Watcher] Using StringSession from TELEGRAM_SESSION_STRING env var")
         else:
-            self._session = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "telegram_session"
-            )
-            if not session_string:
-                print("[Telegram Watcher] TELEGRAM_SESSION_STRING not set — falling back to file session")
+            print("[Telegram Watcher] TELEGRAM_SESSION_STRING not set — falling back to file session")
+
+    def _make_session(self):
+        """Create a fresh session object for each new TelegramClient."""
+        if self._session_string and _telethon_available:
+            return StringSession(self._session_string)
+        return self._session_file_path
 
     # ── Public Properties ──────────────────────────────────────────────
 
@@ -448,7 +457,7 @@ class TelegramWatcher:
             try:
                 if not self._client or not self._client.is_connected():
                     self._client = TelegramClient(
-                        self._session,
+                        self._make_session(),
                         int(config.telegram.api_id),
                         config.telegram.api_hash
                     )
@@ -473,7 +482,7 @@ class TelegramWatcher:
         # Always create a fresh client; the caller must ensure the previous
         # client (if any) has been disconnected and nulled out before calling.
         self._client = TelegramClient(
-            self._session,
+            self._make_session(),
             int(config.telegram.api_id),
             config.telegram.api_hash
         )
@@ -548,11 +557,13 @@ class TelegramWatcher:
             retries, so Telethon never encounters a 'bound to different event
             loop' error on reconnect.
             """
+            backoff = 10  # seconds; doubles after each failure, capped at 120
             while True:
                 try:
                     await self._start_listener()
+                    backoff = 10  # reset on clean exit
                 except Exception as e:
-                    print(f"[Telegram Watcher] Connection dropped ({e}). Auto-reconnecting in 10s...")
+                    print(f"[Telegram Watcher] Connection dropped ({e}). Auto-reconnecting in {backoff}s...")
                     self._status_message = f"Reconnecting after error: {e}"
                     self._running = False
                     self._connected = False
@@ -567,8 +578,9 @@ class TelegramWatcher:
                             pass
                         self._client = None
 
-                # Backoff delay before auto-reconnecting (runs inside the loop)
-                await asyncio.sleep(10)
+                # Exponential backoff before auto-reconnecting (capped at 120s)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 120)
 
         def _run():
             """

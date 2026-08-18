@@ -1,7 +1,7 @@
 import re
 import json
 import urllib.request
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from config import config
 
 from llm_manager import llm_manager, TaskType
