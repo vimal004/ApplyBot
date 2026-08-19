@@ -639,24 +639,30 @@ def run_server():
     _signal.signal(_signal.SIGINT, _handle_shutdown)
 
     # Auto-start Telegram watcher if credentials are configured
+    _tg_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     _tg_api_id = os.environ.get("TELEGRAM_API_ID", "")
     _tg_api_hash = os.environ.get("TELEGRAM_API_HASH", "")
     _tg_session = os.environ.get("TELEGRAM_SESSION_STRING", "")
     _tg_group = os.environ.get("TELEGRAM_GROUP", config.telegram.group_name)
-    print(f"[Telegram Diagnostics] API_ID set: {bool(_tg_api_id)} | API_HASH set: {bool(_tg_api_hash)} | SESSION_STRING set: {bool(_tg_session)} | GROUP: '{_tg_group}'")
+    print(f"[Telegram Diagnostics] BOT_TOKEN set: {bool(_tg_bot_token)} | API_ID set: {bool(_tg_api_id)} | API_HASH set: {bool(_tg_api_hash)} | SESSION_STRING set: {bool(_tg_session)} | GROUP: '{_tg_group}'")
 
     if telegram_watcher.is_available:
-        if not _tg_session:
-            print(f"⚠️  Telegram WARNING: TELEGRAM_SESSION_STRING is not set. The listener will start but will fail authorization on Render (no file session in cloud). Run telegram_login.py locally and add the printed session string to Render env vars.")
-        print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
+        if telegram_watcher.is_bot_api_mode:
+            print(f"📡 Telegram auto-ingestion: Starting Bot API listener (permanent, zero-maintenance) for '{config.telegram.group_name}'...")
+        else:
+            if not _tg_session:
+                print(f"⚠️  Telegram WARNING: TELEGRAM_SESSION_STRING is not set. Consider switching to Bot API (TELEGRAM_BOT_TOKEN) for zero-maintenance operation.")
+            print(f"📡 Telegram auto-ingestion: Starting Telethon listener (legacy) for '{config.telegram.group_name}'...")
         telegram_watcher.start_listener_thread()
     else:
         missing = []
+        if not _tg_bot_token:
+            missing.append("TELEGRAM_BOT_TOKEN (recommended)")
         if not _tg_api_id:
             missing.append("TELEGRAM_API_ID")
         if not _tg_api_hash:
             missing.append("TELEGRAM_API_HASH")
-        print(f"📡 Telegram auto-ingestion: DISABLED — missing env vars: {', '.join(missing)}. Add them in Render dashboard under Environment Variables.")
+        print(f"📡 Telegram auto-ingestion: DISABLED — missing env vars: {', '.join(missing)}.")
 
     # Self-ping background thread: Pings public Render URL every 4 minutes to prevent Render free tier from sleeping
     def _keep_alive():

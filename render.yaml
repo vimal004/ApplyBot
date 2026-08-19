@@ -24,6 +24,8 @@ services:
       - key: RESEND_API_KEY
         sync: false
       # Telegram auto-ingestion credentials
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
       - key: TELEGRAM_API_ID
         sync: false
       - key: TELEGRAM_API_HASH

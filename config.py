@@ -234,7 +234,13 @@ class MultiLLMConfig:
 
 @dataclass
 class TelegramConfig:
-    """Telegram Client API credentials for automated group ingestion."""
+    """Telegram credentials for automated group ingestion.
+    
+    Supports two modes (in priority order):
+    1. Bot API (TELEGRAM_BOT_TOKEN) — permanent, zero-maintenance, recommended
+    2. Client API (TELEGRAM_API_ID + TELEGRAM_API_HASH + TELEGRAM_SESSION_STRING) — legacy fallback
+    """
+    bot_token: str = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     api_id: str = os.environ.get("TELEGRAM_API_ID", "")
     api_hash: str = os.environ.get("TELEGRAM_API_HASH", "")
     group_name: str = os.environ.get("TELEGRAM_GROUP", "SDE Premium Referrals 2.0")

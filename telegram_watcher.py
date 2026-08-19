@@ -17,6 +17,8 @@ import datetime
 import threading
 import re
 import time
+import urllib.request
+import urllib.error
 from typing import Dict, Any, List, Optional
 
 # Telethon is imported lazily to avoid crashing if not installed
@@ -56,8 +58,9 @@ JOB_KEYWORDS = [
 class TelegramWatcher:
     """
     Automated Telegram group message watcher.
-    Connects via Telethon Client API, filters job postings,
-    and queues them for processing by ApplyBot.
+    Supports two modes (in priority order):
+    1. Bot API (TELEGRAM_BOT_TOKEN) — permanent, zero-maintenance, recommended
+    2. Client API / Telethon (TELEGRAM_API_ID + HASH) — legacy fallback
     """
 
     def __init__(self):
@@ -67,25 +70,27 @@ class TelegramWatcher:
         self._thread: Optional[threading.Thread] = None
         self._running = False
         self._connected = False
+        self._stop_event = threading.Event()  # Used to signal Bot API polling to stop
         settings = self._load_settings()
         self.auto_send_email = settings.get("auto_send_email", True)
         self._status_message = "Not initialized"
+        self._mode = "none"  # "bot_api", "telethon", or "none"
 
-        # Prefer StringSession from env var (required for cloud deployments like Render).
-        # Falls back to a local file session for local development.
-        # IMPORTANT: We store the raw string and create a FRESH StringSession each
-        # time a TelegramClient is constructed (via _make_session()), because
-        # StringSession is stateful — after connect() it gets mutated with server
-        # salts and DC info.  Reusing the same mutated instance on reconnect
-        # would carry stale state from the dead connection.
+        # ── Bot API mode (preferred) ────────────────────────────────────
+        self._bot_token: Optional[str] = config.telegram.bot_token.strip() or None
+        if self._bot_token:
+            print(f"[Telegram Watcher] Bot API token detected (length={len(self._bot_token)}). Will use Bot API mode (permanent, zero-maintenance).")
+
+        # ── Telethon / Client API mode (legacy fallback) ────────────────
         self._session_string: Optional[str] = os.environ.get("TELEGRAM_SESSION_STRING", "").strip() or None
         self._session_file_path: str = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "telegram_session"
         )
-        if self._session_string and _telethon_available:
-            print("[Telegram Watcher] Using StringSession from TELEGRAM_SESSION_STRING env var")
-        else:
-            print("[Telegram Watcher] TELEGRAM_SESSION_STRING not set — falling back to file session")
+        if not self._bot_token:
+            if self._session_string and _telethon_available:
+                print("[Telegram Watcher] No Bot API token. Using Telethon StringSession (legacy).")
+            else:
+                print("[Telegram Watcher] No Bot API token and no Telethon session available.")
 
     def _make_session(self):
         """Create a fresh session object for each new TelegramClient."""
@@ -97,12 +102,19 @@ class TelegramWatcher:
 
     @property
     def is_available(self) -> bool:
-        """Check if Telethon is installed and credentials are configured."""
+        """Check if any Telegram mode is configured (Bot API or Telethon)."""
+        if self._bot_token:
+            return True
         return (
             _telethon_available
             and bool(config.telegram.api_id)
             and bool(config.telegram.api_hash)
         )
+
+    @property
+    def is_bot_api_mode(self) -> bool:
+        """True if Bot API token is configured (preferred mode)."""
+        return bool(self._bot_token)
 
     @property
     def is_connected(self) -> bool:
@@ -116,11 +128,13 @@ class TelegramWatcher:
     def status(self) -> Dict[str, Any]:
         return {
             "available": self.is_available,
+            "mode": self._mode,
             "connected": self._connected,
             "listening": self._running,
             "auto_send_email": self.auto_send_email,
             "group": config.telegram.group_name,
             "message": self._status_message,
+            "bot_api_configured": bool(self._bot_token),
             "telethon_installed": _telethon_available,
             "has_credentials": bool(config.telegram.api_id and config.telegram.api_hash),
         }
@@ -557,28 +571,156 @@ class TelegramWatcher:
         print(f"[Telegram Watcher] run_until_disconnected() returned — listener stopped.")
         return "disconnected"
 
+    # ── Bot API Polling (Primary / Permanent) ──────────────────────────
+
+    def _run_bot_api_polling(self):
+        """
+        Poll Telegram Bot API's getUpdates endpoint.
+        Uses only Python stdlib (urllib.request + json) — zero external dependencies.
+        Bot tokens never expire and are not IP-sensitive → zero maintenance.
+        """
+        token = self._bot_token
+        group_id = self._resolve_group_id()
+        base_url = f"https://api.telegram.org/bot{token}"
+        offset = 0  # Tracks the last processed update to avoid re-processing
+        backoff = 5
+        poll_timeout = 30  # Long polling timeout (Telegram holds the connection)
+        last_heartbeat = time.time()
+
+        self._mode = "bot_api"
+        self._connected = True
+        self._running = True
+        self._status_message = f"Bot API polling on group {group_id}"
+        print(f"[Telegram Bot API] ✅ Polling started for group {group_id} (long-poll timeout={poll_timeout}s)")
+
+        while not self._stop_event.is_set():
+            try:
+                url = f"{base_url}/getUpdates?offset={offset}&timeout={poll_timeout}&allowed_updates=[%22message%22]"
+                req = urllib.request.Request(url, headers={"User-Agent": "ApplyBot/1.0"})
+                with urllib.request.urlopen(req, timeout=poll_timeout + 10) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+
+                if not data.get("ok"):
+                    print(f"[Telegram Bot API] API returned ok=false: {data}")
+                    time.sleep(backoff)
+                    continue
+
+                results = data.get("result", [])
+                backoff = 5  # Reset backoff on success
+
+                for update in results:
+                    update_id = update.get("update_id", 0)
+                    if update_id >= offset:
+                        offset = update_id + 1  # Acknowledge this update
+
+                    message = update.get("message") or update.get("channel_post", {})
+                    if not message:
+                        continue
+
+                    # Filter: only process messages from our target group
+                    chat = message.get("chat", {})
+                    chat_id = chat.get("id", 0)
+                    if group_id and chat_id != group_id:
+                        continue
+
+                    msg_text = message.get("text", "")
+                    msg_id = message.get("message_id", 0)
+                    msg_date_unix = message.get("date", 0)
+                    msg_date = datetime.datetime.fromtimestamp(msg_date_unix, tz=datetime.timezone.utc) if msg_date_unix else None
+
+                    if not msg_text:
+                        continue
+
+                    if not self._is_job_posting(msg_text):
+                        continue
+
+                    entries = self._process_message(msg_text, msg_id, msg_date)
+                    if entries:
+                        checkpoint = self._load_checkpoint()
+                        if msg_id > checkpoint.get("last_message_id", 0):
+                            self._save_checkpoint(msg_id)
+
+                # Heartbeat every 10 minutes
+                now = time.time()
+                if now - last_heartbeat >= 600:
+                    print(f"[Telegram Heartbeat] LISTENING | Bot API | {self._status_message}")
+                    last_heartbeat = now
+
+            except (urllib.error.URLError, urllib.error.HTTPError, OSError) as e:
+                error_str = str(e)
+                # HTTP 409 = conflict (another getUpdates running) — usually transient
+                if hasattr(e, 'code') and e.code == 409:
+                    print(f"[Telegram Bot API] Conflict (409) — another poller may be active. Retrying in {backoff}s...")
+                else:
+                    print(f"[Telegram Bot API] Network error: {error_str}. Retrying in {backoff}s...")
+                self._status_message = f"Reconnecting after: {error_str}"
+                time.sleep(backoff)
+                backoff = min(backoff * 2, 120)
+            except json.JSONDecodeError as e:
+                print(f"[Telegram Bot API] Invalid JSON response: {e}. Retrying in {backoff}s...")
+                time.sleep(backoff)
+            except Exception as e:
+                print(f"[Telegram Bot API] Unexpected error: {type(e).__name__}: {e}. Retrying in {backoff}s...")
+                self._status_message = f"Error: {e}"
+                time.sleep(backoff)
+                backoff = min(backoff * 2, 120)
+
+        self._running = False
+        self._connected = False
+        self._status_message = "Bot API polling stopped"
+        print(f"[Telegram Bot API] Polling stopped.")
+
+    # ── Start / Stop ───────────────────────────────────────────────────
+
     def start_listener_thread(self):
-        """Start the Telegram listener in a background thread."""
+        """Start the Telegram listener in a background thread.
+        
+        Priority:
+        1. Bot API (TELEGRAM_BOT_TOKEN) — permanent, zero-maintenance
+        2. Telethon Client API (TELEGRAM_API_ID + HASH) — legacy fallback
+        """
         if not self.is_available:
-            self._status_message = "Telegram not configured. Add TELEGRAM_API_ID and TELEGRAM_API_HASH to .env"
+            self._status_message = "Telegram not configured. Set TELEGRAM_BOT_TOKEN (recommended) or TELEGRAM_API_ID/HASH in env vars."
             return False
 
         if self._running:
             self._status_message = "Listener is already running"
             return True
 
+        self._stop_event.clear()
+
+        # ── Prefer Bot API (permanent, zero-maintenance) ──────────────
+        if self._bot_token:
+            self._mode = "bot_api"
+            print(f"[Telegram Watcher] Using Bot API mode (permanent token, zero-maintenance)")
+
+            def _run_bot_api():
+                try:
+                    self._run_bot_api_polling()
+                except Exception as e:
+                    print(f"[Telegram Bot API] ❌ Thread crashed: {type(e).__name__}: {e}")
+                finally:
+                    self._running = False
+                    self._connected = False
+                    print(f"[Telegram Bot API] Thread exiting.")
+
+            self._thread = threading.Thread(target=_run_bot_api, daemon=True, name="TelegramBotAPI")
+            self._thread.start()
+            return True
+
+        # ── Fallback: Telethon Client API ─────────────────────────────
+        self._mode = "telethon"
+        print(f"[Telegram Watcher] Using Telethon Client API mode (legacy)")
+
         async def _run_with_reconnect():
             """
             Async reconnect loop that lives entirely within ONE event loop.
-            Using asyncio.sleep (not time.sleep) keeps the loop alive between
-            retries, so Telethon never encounters a 'bound to different event
-            loop' error on reconnect.
             """
-            backoff = 10  # seconds; doubles after each failure, capped at 120
+            backoff = 10
             attempt = 0
             consecutive_auth_failures = 0
 
-            while True:
+            while not self._stop_event.is_set():
                 attempt += 1
                 exit_reason = None
                 print(f"[Telegram Watcher] === Attempt #{attempt} — starting listener (backoff={backoff}s) ===")
@@ -590,23 +732,20 @@ class TelegramWatcher:
                         consecutive_auth_failures += 1
                         print(f"[Telegram Watcher] Auth failure #{consecutive_auth_failures}. "
                               f"Will retry in {backoff}s...")
-                        # If auth has failed many times in a row, extend the backoff
-                        # significantly — the session string likely needs regeneration
                         if consecutive_auth_failures >= 5:
-                            backoff = 300  # 5 minutes
+                            backoff = 300
                             print(f"[Telegram Watcher] ⚠️  {consecutive_auth_failures} consecutive auth failures. "
                                   f"Session string is likely expired. "
-                                  f"Please re-run: python telegram_login.py and update TELEGRAM_SESSION_STRING. "
-                                  f"Backing off to {backoff}s between retries.")
+                                  f"RECOMMENDED: Switch to Bot API by setting TELEGRAM_BOT_TOKEN. "
+                                  f"Or re-run: python telegram_login.py and update TELEGRAM_SESSION_STRING.")
                     else:
-                        # Clean disconnect (e.g., run_until_disconnected returned)
                         consecutive_auth_failures = 0
                         backoff = 10
                         print(f"[Telegram Watcher] Listener exited cleanly (reason={exit_reason}). "
                               f"Reconnecting in {backoff}s...")
 
                 except Exception as e:
-                    consecutive_auth_failures = 0  # not an auth issue
+                    consecutive_auth_failures = 0
                     error_str = str(e)
                     print(f"[Telegram Watcher] Connection dropped: {type(e).__name__}: {error_str}")
                     print(f"[Telegram Watcher] Auto-reconnecting in {backoff}s...")
@@ -614,9 +753,6 @@ class TelegramWatcher:
                     self._running = False
                     self._connected = False
                 finally:
-                    # Always cleanly disconnect and discard the old client so
-                    # the next TelegramClient() gets a fresh session slot and
-                    # avoids AuthKeyDuplicatedError ("used under two IPs").
                     if self._client is not None:
                         try:
                             await self._client.disconnect()
@@ -624,34 +760,21 @@ class TelegramWatcher:
                             pass
                         self._client = None
 
-                # Exponential backoff before auto-reconnecting (capped at 120s normally)
                 await asyncio.sleep(backoff)
                 if exit_reason != "auth_failed":
                     backoff = min(backoff * 2, 120)
 
         async def _heartbeat():
-            """Periodic heartbeat log so we can confirm the listener thread is alive."""
-            while True:
-                await asyncio.sleep(600)  # every 10 minutes
+            while not self._stop_event.is_set():
+                await asyncio.sleep(600)
                 status = "LISTENING" if self._running else "NOT LISTENING"
                 connected = "CONNECTED" if self._connected else "DISCONNECTED"
-                print(f"[Telegram Heartbeat] {status} | {connected} | {self._status_message}")
+                print(f"[Telegram Heartbeat] {status} | {connected} | Telethon | {self._status_message}")
 
         async def _run_all():
-            """Run the reconnect loop and heartbeat concurrently."""
-            await asyncio.gather(
-                _run_with_reconnect(),
-                _heartbeat(),
-            )
+            await asyncio.gather(_run_with_reconnect(), _heartbeat())
 
         def _run():
-            """
-            Thread entry point: create ONE event loop for the lifetime of the
-            thread and run the async reconnect coroutine inside it.
-            Recreating the loop on every iteration (the old approach) caused
-            Telethon's internal asyncio primitives (Event, Queue) to become
-            bound to the wrong loop after the first reconnect.
-            """
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             self._loop = loop
@@ -680,7 +803,8 @@ class TelegramWatcher:
                 print(f"[Telegram Watcher] Exception during client disconnect: {e}")
 
     def stop_listener(self):
-        """Stop the real-time listener."""
+        """Stop the listener (works for both Bot API and Telethon modes)."""
+        self._stop_event.set()  # Signal Bot API polling loop to stop
         if self._client and self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(
                 self._async_disconnect(), self._loop
@@ -689,26 +813,27 @@ class TelegramWatcher:
         self._status_message = "Listener stopped"
 
     def shutdown(self, timeout: float = 10.0):
-        """Gracefully disconnect Telethon and stop the watcher.
+        """Gracefully stop the watcher and disconnect any Telethon client.
 
-        Call this from a SIGTERM / SIGINT handler so Telegram de-registers
-        the session BEFORE the process exits.  This prevents the next
-        deployment from seeing an 'authorization key used under two different
-        IP addresses' error because the old session is cleanly closed first.
+        Call this from a SIGTERM / SIGINT handler.
+        For Bot API mode, simply signals the polling loop to stop.
+        For Telethon mode, also disconnects the client cleanly.
         """
-        print("[Telegram Watcher] Shutdown requested — disconnecting client...")
+        print("[Telegram Watcher] Shutdown requested...")
+        self._stop_event.set()  # Signal Bot API polling loop to stop
         if self._client and self._loop and self._loop.is_running():
             future = asyncio.run_coroutine_threadsafe(
                 self._async_disconnect(), self._loop
             )
             try:
                 future.result(timeout=timeout)
-                print("[Telegram Watcher] Client disconnected cleanly.")
+                print("[Telegram Watcher] Telethon client disconnected cleanly.")
             except Exception as e:
                 print(f"[Telegram Watcher] Disconnect during shutdown: {e}")
         self._running = False
         self._connected = False
         self._status_message = "Shut down"
+        print("[Telegram Watcher] Shutdown complete.")
 
 
 
