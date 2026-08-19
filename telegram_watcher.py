@@ -503,12 +503,17 @@ class TelegramWatcher:
 
         print(f"[Telegram Watcher] Connecting to Telegram (group: {group_id})...")
 
-        # Always create a fresh client; the caller must ensure the previous
-        # client (if any) has been disconnected and nulled out before calling.
+        # Always create a fresh client with aggressive retry settings.
+        # connection_retries and auto_reconnect let Telethon handle transient
+        # network blips internally before our outer reconnect loop kicks in.
         self._client = TelegramClient(
             self._make_session(),
             int(config.telegram.api_id),
-            config.telegram.api_hash
+            config.telegram.api_hash,
+            connection_retries=5,
+            retry_delay=5,
+            auto_reconnect=True,
+            request_retries=3
         )
 
         await self._client.connect()
@@ -528,6 +533,20 @@ class TelegramWatcher:
         self._connected = True
         self._running = True
         self._status_message = f"Listening on group {group_id}"
+
+        # ── Save updated session string ────────────────────────────────
+        # After successful auth, the session may have been updated (DC migration,
+        # new server salts, etc.).  Saving it here means future reconnects use
+        # the LATEST session state instead of the stale env var string.
+        # This is THE key to making Telethon sessions last as long as possible.
+        try:
+            updated_session = self._client.session.save()
+            if updated_session and updated_session != self._session_string:
+                self._session_string = updated_session
+                print(f"[Telegram Watcher] Session string updated in memory (length={len(updated_session)}). "
+                      f"Future reconnects will use the fresh session.")
+        except Exception as e:
+            print(f"[Telegram Watcher] Note: Could not save updated session: {e}")
 
         listener_start_time = datetime.datetime.now(datetime.timezone.utc)
         print(f"[Telegram Watcher] ✅ Authorized. Listener start time: {listener_start_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
