@@ -164,6 +164,29 @@ class ApplyBotHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(res_payload)
 
         # ── Telegram Watcher Endpoints ──
+        elif path == "/api/telegram/debug":
+            # Diagnostic endpoint — shows env var presence (never values) for Telegram config
+            import os as _os
+            debug_info = {
+                "TELEGRAM_API_ID_set": bool(_os.environ.get("TELEGRAM_API_ID")),
+                "TELEGRAM_API_HASH_set": bool(_os.environ.get("TELEGRAM_API_HASH")),
+                "TELEGRAM_SESSION_STRING_set": bool(_os.environ.get("TELEGRAM_SESSION_STRING")),
+                "TELEGRAM_SESSION_STRING_length": len(_os.environ.get("TELEGRAM_SESSION_STRING", "")),
+                "TELEGRAM_GROUP": _os.environ.get("TELEGRAM_GROUP", config.telegram.group_name),
+                "telethon_installed": telegram_watcher.status.get("telethon_installed"),
+                "watcher_available": telegram_watcher.is_available,
+                "watcher_connected": telegram_watcher.is_connected,
+                "watcher_listening": telegram_watcher.is_running,
+                "watcher_status_message": telegram_watcher._status_message,
+            }
+            res_payload = json.dumps(debug_info, indent=2).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(res_payload)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(res_payload)
+
         elif path == "/api/telegram/status":
             res_payload = json.dumps(telegram_watcher.status).encode("utf-8")
             self.send_response(200)
@@ -616,11 +639,24 @@ def run_server():
     _signal.signal(_signal.SIGINT, _handle_shutdown)
 
     # Auto-start Telegram watcher if credentials are configured
+    _tg_api_id = os.environ.get("TELEGRAM_API_ID", "")
+    _tg_api_hash = os.environ.get("TELEGRAM_API_HASH", "")
+    _tg_session = os.environ.get("TELEGRAM_SESSION_STRING", "")
+    _tg_group = os.environ.get("TELEGRAM_GROUP", config.telegram.group_name)
+    print(f"[Telegram Diagnostics] API_ID set: {bool(_tg_api_id)} | API_HASH set: {bool(_tg_api_hash)} | SESSION_STRING set: {bool(_tg_session)} | GROUP: '{_tg_group}'")
+
     if telegram_watcher.is_available:
+        if not _tg_session:
+            print(f"⚠️  Telegram WARNING: TELEGRAM_SESSION_STRING is not set. The listener will start but will fail authorization on Render (no file session in cloud). Run telegram_login.py locally and add the printed session string to Render env vars.")
         print(f"📡 Telegram auto-ingestion: Starting listener for '{config.telegram.group_name}'...")
         telegram_watcher.start_listener_thread()
     else:
-        print(f"📡 Telegram auto-ingestion: Not configured (add TELEGRAM_API_ID/HASH to .env)")
+        missing = []
+        if not _tg_api_id:
+            missing.append("TELEGRAM_API_ID")
+        if not _tg_api_hash:
+            missing.append("TELEGRAM_API_HASH")
+        print(f"📡 Telegram auto-ingestion: DISABLED — missing env vars: {', '.join(missing)}. Add them in Render dashboard under Environment Variables.")
 
     # Self-ping background thread: Pings public Render URL every 4 minutes to prevent Render free tier from sleeping
     def _keep_alive():

@@ -23,3 +23,19 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      # Telegram auto-ingestion credentials
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_SESSION_STRING
+        sync: false
+      - key: TELEGRAM_GROUP
+        value: "SDE Premium Referrals 2.O"
+      # LLM API keys for parsing & tailoring
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false

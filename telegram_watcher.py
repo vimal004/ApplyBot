@@ -476,8 +476,18 @@ class TelegramWatcher:
     # ── Real-time Listener ─────────────────────────────────────────────
 
     async def _start_listener(self):
-        """Start the real-time event listener on the Telegram group."""
+        """Start the real-time event listener on the Telegram group.
+
+        Returns:
+            str: A status code indicating how the listener exited:
+                 "auth_failed" – session is not authorized
+                 "disconnected" – run_until_disconnected() returned normally
+        Raises:
+            Exception: on connection or unexpected errors (caught by reconnect loop)
+        """
         group_id = self._resolve_group_id()
+
+        print(f"[Telegram Watcher] Connecting to Telegram (group: {group_id})...")
 
         # Always create a fresh client; the caller must ensure the previous
         # client (if any) has been disconnected and nulled out before calling.
@@ -488,6 +498,7 @@ class TelegramWatcher:
         )
 
         await self._client.connect()
+        print(f"[Telegram Watcher] TCP connection established.")
 
         if not await self._client.is_user_authorized():
             self._status_message = (
@@ -495,13 +506,17 @@ class TelegramWatcher:
                 "python telegram_login.py"
             )
             self._connected = False
-            return
+            print(f"[Telegram Watcher] ❌ AUTH FAILED — session is not authorized. "
+                  f"The session string may be expired or invalidated (Render IP change?). "
+                  f"Re-run: python telegram_login.py locally and update TELEGRAM_SESSION_STRING in Render env vars.")
+            return "auth_failed"
 
         self._connected = True
         self._running = True
         self._status_message = f"Listening on group {group_id}"
 
         listener_start_time = datetime.datetime.now(datetime.timezone.utc)
+        print(f"[Telegram Watcher] ✅ Authorized. Listener start time: {listener_start_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
         # Register new message handler
         @self._client.on(events.NewMessage(chats=group_id))
@@ -539,6 +554,8 @@ class TelegramWatcher:
         self._running = False
         self._connected = False
         self._status_message = "Listener stopped"
+        print(f"[Telegram Watcher] run_until_disconnected() returned — listener stopped.")
+        return "disconnected"
 
     def start_listener_thread(self):
         """Start the Telegram listener in a background thread."""
@@ -558,13 +575,42 @@ class TelegramWatcher:
             loop' error on reconnect.
             """
             backoff = 10  # seconds; doubles after each failure, capped at 120
+            attempt = 0
+            consecutive_auth_failures = 0
+
             while True:
+                attempt += 1
+                exit_reason = None
+                print(f"[Telegram Watcher] === Attempt #{attempt} — starting listener (backoff={backoff}s) ===")
+
                 try:
-                    await self._start_listener()
-                    backoff = 10  # reset on clean exit
+                    exit_reason = await self._start_listener()
+
+                    if exit_reason == "auth_failed":
+                        consecutive_auth_failures += 1
+                        print(f"[Telegram Watcher] Auth failure #{consecutive_auth_failures}. "
+                              f"Will retry in {backoff}s...")
+                        # If auth has failed many times in a row, extend the backoff
+                        # significantly — the session string likely needs regeneration
+                        if consecutive_auth_failures >= 5:
+                            backoff = 300  # 5 minutes
+                            print(f"[Telegram Watcher] ⚠️  {consecutive_auth_failures} consecutive auth failures. "
+                                  f"Session string is likely expired. "
+                                  f"Please re-run: python telegram_login.py and update TELEGRAM_SESSION_STRING. "
+                                  f"Backing off to {backoff}s between retries.")
+                    else:
+                        # Clean disconnect (e.g., run_until_disconnected returned)
+                        consecutive_auth_failures = 0
+                        backoff = 10
+                        print(f"[Telegram Watcher] Listener exited cleanly (reason={exit_reason}). "
+                              f"Reconnecting in {backoff}s...")
+
                 except Exception as e:
-                    print(f"[Telegram Watcher] Connection dropped ({e}). Auto-reconnecting in {backoff}s...")
-                    self._status_message = f"Reconnecting after error: {e}"
+                    consecutive_auth_failures = 0  # not an auth issue
+                    error_str = str(e)
+                    print(f"[Telegram Watcher] Connection dropped: {type(e).__name__}: {error_str}")
+                    print(f"[Telegram Watcher] Auto-reconnecting in {backoff}s...")
+                    self._status_message = f"Reconnecting after error: {error_str}"
                     self._running = False
                     self._connected = False
                 finally:
@@ -578,9 +624,25 @@ class TelegramWatcher:
                             pass
                         self._client = None
 
-                # Exponential backoff before auto-reconnecting (capped at 120s)
+                # Exponential backoff before auto-reconnecting (capped at 120s normally)
                 await asyncio.sleep(backoff)
-                backoff = min(backoff * 2, 120)
+                if exit_reason != "auth_failed":
+                    backoff = min(backoff * 2, 120)
+
+        async def _heartbeat():
+            """Periodic heartbeat log so we can confirm the listener thread is alive."""
+            while True:
+                await asyncio.sleep(600)  # every 10 minutes
+                status = "LISTENING" if self._running else "NOT LISTENING"
+                connected = "CONNECTED" if self._connected else "DISCONNECTED"
+                print(f"[Telegram Heartbeat] {status} | {connected} | {self._status_message}")
+
+        async def _run_all():
+            """Run the reconnect loop and heartbeat concurrently."""
+            await asyncio.gather(
+                _run_with_reconnect(),
+                _heartbeat(),
+            )
 
         def _run():
             """
@@ -594,8 +656,11 @@ class TelegramWatcher:
             asyncio.set_event_loop(loop)
             self._loop = loop
             try:
-                loop.run_until_complete(_run_with_reconnect())
+                loop.run_until_complete(_run_all())
+            except Exception as e:
+                print(f"[Telegram Watcher] ❌ Event loop crashed: {type(e).__name__}: {e}")
             finally:
+                print(f"[Telegram Watcher] ❌ Listener thread exiting.")
                 try:
                     loop.close()
                 except Exception:
